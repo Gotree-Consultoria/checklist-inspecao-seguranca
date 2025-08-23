@@ -1,0 +1,43 @@
+<section class="checklist-page">
+    <div class="container">
+        <h1 class="page-title">Check List de Inspeção de Segurança do Trabalho</h1>
+
+        <div class="form-group">
+            <div class="empresa-container">
+            <label for="empresaCliente" class="form-label">Empresa Cliente:</label>
+            <select id="empresaCliente" name="empresaCliente" class="form-select">
+                <option value="">Selecione uma empresa</option>
+            </select>
+            <button type="button" class="btn-add-empresa" onclick="addEmpresa()">Adicionar Empresa</button>
+            </div>
+            <div>
+            <label for="dataInspecao" class="form-label">Data da Inspeção:</label>
+            <input type="date" id="dataInspecao" name="dataInspecao" class="form-control" required />
+            </div>
+            <div>
+            <label for="responsavel" class="form-label">Responsável pela Inspeção:</label>
+            <input type="text" id="responsavel" name="responsavel" class="form-control" required />
+            </div>
+            <div>
+            <label for="localInspecao" class="form-label">Local da Inspeção:</label>
+            <input type="text" id="localInspecao" name="localInspecao" class="form-control" required />
+            </div>
+        </div>
+
+        <form id="checklistForm" class="checklist-form" onsubmit="handleChecklistSubmit(event)">
+            <div id="checklistContainer"></div>
+
+            <div class="form-group">
+                <label for="anotacoes" class="form-label">Anotações:</label>
+                <textarea id="anotacoes" name="anotacoes" class="form-control" rows="5"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="observacoes" class="form-label">Observações:</label>
+                <textarea id="observacoes" name="observacoes" class="form-control" rows="5"></textarea>
+            </div>
+
+            <button type="submit" class="btn-submit">Enviar Checklist</button>
+        </form>
+    </div>
+</section>

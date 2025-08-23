@@ -1,0 +1,338 @@
+/* Estilo base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+
+    /* Paleta de cores */
+    --verde-escuro: #005a32;
+    --verde-claro: #bfd83a;
+    --vermelho-coral: #e65f3c;
+    --cinza-claro: #4b4b4b;
+    --cinza-escuro: #333;
+    --preto: #000000;
+    --branco: #ffffff;
+
+    /* Typography */
+    --font-family: 'Montserrat', sans-serif;
+    --font-size-base: 14px;
+    --line-height-base: 1.6;
+
+    /* Spacing */
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 1rem;
+    --spacing-md: 1.5rem;
+    --spacing-lg: 2rem;
+    --spacing-xl: 3rem;
+    --spacing-xxl: 4rem;
+
+    /* Border Radius */
+    --border-radius-sm: 4px;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.15);
+
+    /* Transitions */
+    --transition-fast: 0.2s ease;
+    --transition-normal: 0.3s ease;
+    --transition-slow: 0.5s ease;
+}
+
+body {
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-base);
+    color: var(--verde-escuro);
+    background-color: var(--branco);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Adicione esta regra */
+main {
+    flex-grow: 1;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Tipografia */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-weight: 600;
+    color: var(--verde-escuro);
+}
+
+h1 {
+    font-size: 2rem;
+    line-height: 1.2;
+}
+
+h2 {
+    font-size: 1.75rem;
+    line-height: 1.3;
+}
+
+h3 {
+    font-size: 1.5rem;
+    line-height: 1.4;
+}
+
+h4 {
+    font-size: 1.25rem;
+    line-height: 1.4;
+}
+
+p {
+    margin-bottom: var(--spacing-sm);
+    color: var(--gray-medium);
+}
+
+/* Formulário de Login */
+.form-login-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.hero {
+    background-color: var(--verde-claro);
+    color: var(--branco);
+    padding: var(--spacing-lg) 0;
+    text-align: center;
+}
+
+.login-fields input {
+    width: 100%;
+    padding: var(--spacing-sm);
+    border: 1px solid var(--cinza-escuro);
+    border-radius: var(--border-radius-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.login-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: var(--spacing-md);
+}
+
+.login-buttons button {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: var(--verde-escuro);
+    color: var(--branco);
+    border: none;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+}
+
+/* Footer Page */
+footer {
+    background-color: var(--verde-escuro);
+    color: var(--branco);
+    padding: var(--spacing-md);
+    text-align: center;
+    width: 100%;
+}
+
+/* Estilos Específicos para a Página do Checklist */
+.checklist-page {
+    padding: var(--spacing-lg) 0;
+}
+
+.page-title {
+    color: var(--verde-escuro);
+    text-align: center;
+    margin-bottom: var(--spacing-xxl);
+}
+
+.form-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.form-label {
+    display: block;
+    margin-bottom: var(--spacing-xs);
+    font-weight: 600;
+    color: var(--cinza-escuro);
+}
+
+.form-select,
+.form-control {
+    width: 100%;
+    padding: var(--spacing-sm);
+    border: 1px solid var(--cinza-claro);
+    border-radius: var(--border-radius-sm);
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.form-select:focus,
+.form-control:focus,
+.form-select:hover,
+.form-control:hover {
+    outline: none;
+    border-color: var(--verde-claro);
+    box-shadow: 0 0 0 2px rgba(191, 216, 58, 0.3);
+}
+
+.btn-add-empresa {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: var(--verde-claro);
+    color: var(--branco);
+    border: none;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color var(--transition-fast);
+}
+
+.btn-add-empresa:hover {
+    background-color: var(--verde-escuro);
+}
+
+/* Estilos do Formulário Dinâmico */
+.section-container {
+    background-color: #f9f9f9;
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-sm);
+    padding-bottom: var(--spacing-xs);
+    border-bottom: 1px solid var(--cinza-claro);
+}
+
+.section-number {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--vermelho-coral);
+    margin-right: var(--spacing-xs);
+}
+
+.section-title {
+    flex-grow: 1;
+    color: var(--verde-escuro);
+}
+
+.checklist-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm) 0;
+    border-bottom: 1px solid #eee;
+}
+
+.checklist-item:last-child {
+    border-bottom: none;
+}
+
+.question-text {
+    flex-grow: 1;
+    color: var(--cinza-escuro);
+    margin: 0;
+}
+
+.radio-options {
+    display: flex;
+    gap: var(--spacing-md);
+}
+
+.radio-options label {
+    cursor: pointer;
+    color: var(--cinza-escuro);
+    font-weight: normal;
+}
+
+.radio-options input[type="radio"] {
+    display: none;
+}
+
+.radio-options input[type="radio"] + label {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border: 1px solid var(--cinza-claro);
+    border-radius: var(--border-radius-sm);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.radio-options input[type="radio"]:checked + label {
+    background-color: var(--verde-claro);
+    border-color: var(--verde-claro);
+    color: var(--branco);
+    font-weight: 600;
+}
+
+.empresa-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm); /* Espaço entre a caixa de seleção e o botão */
+}
+
+.form-group > div {
+    /* Garanta que o container de cada campo do formulário também tenha um display flex */
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+/* Estilo para botões de submissão */
+.btn-submit {
+    max-width: 300px;
+    display: block;
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-top: var(--spacing-lg);
+    background-color: var(--vermelho-coral);
+    color: var(--branco);
+    border: none;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color var(--transition-fast);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.btn-submit:hover {
+    background-color: var(--verde-escuro);
+}
+
+/* Estilo para áreas de texto de anotações e observações */
+.form-control.textarea {
+    resize: vertical;
+}
+
+.form-group-textarea {
+    margin-top: var(--spacing-lg);
+}
+
+/* Fim dos Estilos Específicos para a Página do Checklist */
