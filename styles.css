@@ -118,7 +118,7 @@ p {
 .hero {
     background-color: var(--verde-claro);
     color: var(--branco);
-    padding: var(--spacing-lg) 0;
+    padding: var(--spacing-sm) 0;
     text-align: center;
 }
 
@@ -150,7 +150,7 @@ p {
 footer {
     background-color: var(--verde-escuro);
     color: var(--branco);
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm);
     text-align: center;
     width: 100%;
 }
@@ -336,3 +336,479 @@ footer {
 }
 
 /* Fim dos Estilos Específicos para a Página do Checklist */
+
+/* Estilos Específicos para a Página de Grupo (Dashboard) */
+.group-page {
+    padding: var(--spacing-lg) 0;
+}
+
+.action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xxl);
+}
+
+.button-card {
+    background-color: var(--branco);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-md);
+    text-align: center;
+    flex: 1;
+    max-width: 400px;
+    transition: all var(--transition-normal);
+}
+
+.button-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-5px);
+}
+
+.create-checklist {
+    border: 2px solid var(--verde-claro);
+}
+
+.create-report {
+    border: 2px solid var(--vermelho-coral);
+}
+
+.button-card h2 {
+    color: var(--cinza-escuro);
+    font-size: 1.25rem;
+    margin-bottom: var(--spacing-md);
+}
+
+.btn-primary {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background-color: var(--verde-escuro);
+    color: var(--branco);
+    border: none;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color var(--transition-fast);
+}
+
+.btn-primary:hover {
+    background-color: var(--cinza-escuro);
+}
+
+.history-section {
+    padding: var(--spacing-md);
+    background-color: #f9f9f9;
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.history-section h2 {
+    color: var(--verde-escuro);
+    margin-bottom: var(--spacing-md);
+    border-bottom: 2px solid var(--verde-claro);
+    padding-bottom: var(--spacing-xs);
+}
+
+.table-container {
+    overflow-x: auto; /* Garante que a tabela seja responsiva em telas menores */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--font-size-base);
+}
+
+th, td {
+    padding: var(--spacing-sm) var(--spacing-md);
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+thead {
+    background-color: var(--cinza-claro);
+    color: var(--branco);
+}
+
+th {
+    font-weight: 600;
+}
+
+tbody tr:last-child {
+    border-bottom: none;
+}
+
+tbody tr:hover {
+    background-color: #efefef;
+}
+
+/* Estilo para links na tabela */
+.history-section a {
+    color: var(--vermelho-coral);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color var(--transition-fast);
+}
+
+.history-section a:hover {
+    color: var(--verde-escuro);
+    text-decoration: underline;
+}
+
+/* Fim dos Estilos Específicos para a Página de Grupo (Dashboard) */
+
+/* Estilos do Botão do Menu */
+.menu-toggle-btn {
+    background-color: transparent;
+    border: none;
+    font-size: 2rem;
+    color: var(--verde-escuro);
+    cursor: pointer;
+    z-index: 1001; /* Garante que fique acima de outros elementos */
+    padding: var(--spacing-sm);
+}
+
+/* Estilos do Menu Lateral (Sidebar) */
+.sidebar {
+    position: fixed;
+    top: 0;
+    right: -300px; /* Esconde o menu fora da tela */
+    width: 280px;
+    height: 100%;
+    background-color: var(--branco);
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
+    transition: right var(--transition-normal) ease-in-out;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar.active {
+    right: 0; /* Move o menu para dentro da tela */
+}
+
+/* Estilos do Perfil do Usuário */
+.user-profile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--spacing-md);
+    background-color: var(--verde-escuro);
+    color: var(--branco);
+    text-align: center;
+}
+
+.user-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: var(--verde-claro);
+    color: var(--cinza-escuro);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.5rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+.user-name {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.user-role {
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+/* Estilos da Lista de Menu */
+.sidebar-menu {
+    list-style: none;
+    padding: var(--spacing-sm) 0;
+}
+
+.sidebar-menu li a {
+    display: block;
+    padding: var(--spacing-md);
+    color: var(--cinza-escuro);
+    text-decoration: none;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.sidebar-menu li a:hover {
+    background-color: var(--cinza-claro);
+    color: var(--branco);
+}
+
+/* Estilo de sobreposição (Overlay) */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    display: none; /* Inicia oculto */
+}
+
+.overlay.active {
+    display: block; /* Mostra a sobreposição */
+}
+/* Fim dos Estilos do botão do menu */
+
+/* Estilos Específicos para a Página de Dashboard */
+.dashboard-page {
+    padding: var(--spacing-lg) 0;
+}
+
+.dashboard-page .page-title {
+    text-align: left;
+    margin-bottom: var(--spacing-lg);
+}
+
+.dashboard-grid {
+    display: grid;
+    gap: var(--spacing-lg);
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.dashboard-card {
+    background-color: var(--branco);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-md);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--cinza-claro);
+    transition: all var(--transition-normal);
+}
+
+.dashboard-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-5px);
+}
+
+.dashboard-card h3 {
+    color: var(--verde-escuro);
+    font-size: 1.25rem;
+    margin-bottom: var(--spacing-sm);
+    border-bottom: 2px solid var(--verde-claro);
+    padding-bottom: var(--spacing-xs);
+}
+
+.dashboard-card p,
+.dashboard-card li {
+    color: var(--cinza-escuro);
+    margin-bottom: var(--spacing-xs);
+}
+
+.dashboard-card ul {
+    list-style: none;
+    padding: 0;
+}
+
+/* Fim dos Estilos Específicos para a Página de Dashboard */
+
+/* Estilos Específicos para a Página de Perfil */
+.profile-page {
+    padding: var(--spacing-lg) 0;
+}
+
+.profile-card {
+    background-color: var(--branco);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-md);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--cinza-claro);
+    margin-bottom: var(--spacing-md);
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: var(--verde-claro);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cinza-escuro);
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.profile-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-name {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--verde-escuro);
+    margin: 0;
+}
+
+.profile-role {
+    font-size: 1rem;
+    color: var(--cinza-escuro);
+    margin: 0;
+    opacity: 0.8;
+}
+
+.profile-details {
+    margin-bottom: var(--spacing-lg);
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--spacing-sm) 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.detail-item:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: var(--cinza-escuro);
+}
+
+.detail-value {
+    color: var(--cinza-claro);
+}
+
+.edit-info p {
+    font-style: italic;
+    color: var(--cinza-claro);
+    text-align: center;
+}
+
+/* Fim do Estilos Específicos para a Página de Perfil */
+
+/* Estilos Específicos para a Página de Gerenciamento de Documentos */
+.documents-page {
+    padding: var(--spacing-lg) 0;
+}
+
+.filter-section {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    background-color: var(--branco);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 150px;
+}
+
+.filter-label {
+    font-weight: 600;
+    color: var(--cinza-escuro);
+    margin-bottom: var(--spacing-xs);
+}
+
+.filter-input,
+.filter-select {
+    padding: var(--spacing-sm);
+    border: 1px solid var(--cinza-claro);
+    border-radius: var(--border-radius-sm);
+    font-size: var(--font-size-base);
+}
+
+.btn-filter {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: var(--verde-escuro);
+    color: var(--branco);
+    border: none;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color var(--transition-fast);
+}
+
+.btn-filter:hover {
+    background-color: var(--cinza-escuro);
+}
+
+.documents-table-container {
+    overflow-x: auto;
+    background-color: var(--branco);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.documents-table-container table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.documents-table-container th,
+.documents-table-container td {
+    padding: var(--spacing-sm) var(--spacing-md);
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+    color: var(--cinza-escuro);
+}
+
+.documents-table-container thead {
+    background-color: var(--verde-escuro);
+    color: var(--branco);
+}
+
+.documents-table-container th {
+    font-weight: 600;
+    white-space: nowrap; /* Evita que o texto quebre */
+}
+
+.documents-table-container tbody tr:last-child {
+    border-bottom: none;
+}
+
+.documents-table-container tbody tr:hover {
+    background-color: #f8f8f8;
+}
+
+.documents-table-container a {
+    color: var(--vermelho-coral);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color var(--transition-fast);
+}
+
+.documents-table-container a:hover {
+    color: var(--verde-escuro);
+    text-decoration: underline;
+}
+
+/* Responsividade básica para telas pequenas */
+@media (max-width: 768px) {
+    .filter-section {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .btn-filter {
+        width: 100%;
+    }
+}
+
+/* Fim dos Estilos Específicos para a Página de Gerenciamento de Documentos */

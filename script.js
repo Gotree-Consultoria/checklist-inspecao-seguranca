@@ -44,9 +44,7 @@ async function handleLogin(event) {
             localStorage.setItem('loggedInUserEmail', data.email);
             
             alert('Login realizado com sucesso!');
-            // closeAuthModal(); // This function is not defined in the code you provided, you might need to implement it.
-            // showPage('account'); // This function is not defined in the code you provided, you might need to implement it.
-            // fetchUserProfile(); // This function is not defined in the code you provided, you might need to implement it.
+            
         } else {
             const errorData = await response.json();
             alert(errorData.erro || errorData.message || 'E-mail ou senha inválidos.');
