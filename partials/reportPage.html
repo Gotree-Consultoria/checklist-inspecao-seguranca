@@ -1,0 +1,88 @@
+<section class="report-page">
+  <div class="container">
+    <h1 class="page-title">Relatório de Visita Técnica de Segurança do Trabalho</h1>
+
+    <form id="reportForm">
+      <!-- Empresa / Unidade / Setor -->
+      <div class="form-group">
+        <div>
+          <label for="reportEmpresa" class="form-label">Empresa</label>
+          <select id="reportEmpresa" class="form-select">
+            <option value="">Carregando...</option>
+          </select>
+        </div>
+        <div>
+          <label for="reportUnit" class="form-label">Unidade</label>
+          <select id="reportUnit" class="form-select" disabled>
+            <option value="">Selecione empresa</option>
+          </select>
+        </div>
+        <div>
+          <label for="reportSector" class="form-label">Setor (opcional)</label>
+          <select id="reportSector" class="form-select" disabled>
+            <option value="">Selecione empresa</option>
+          </select>
+        </div>
+        <div>
+          <label for="reportCNPJ" class="form-label">CNPJ</label>
+          <input type="text" id="reportCNPJ" class="form-control" readonly />
+        </div>
+      </div>
+
+      <!-- Mês / Data / Duração -->
+      <div class="form-group">
+        <div>
+          <label for="reportMonth" class="form-label">Mês</label>
+          <input type="month" id="reportMonth" class="form-control" />
+        </div>
+        <div>
+          <label for="reportDate" class="form-label">Data da visita</label>
+          <input type="date" id="reportDate" class="form-control" />
+        </div>
+        <div>
+          <label for="reportDuration" class="form-label">Duração (HH:MM)</label>
+          <input type="text" id="reportDuration" class="form-control" placeholder="Ex: 01:30" />
+        </div>
+      </div>
+
+      <!-- Referências Técnicas (informativo) -->
+      <div class="form-group">
+        <label class="form-label">Referências Técnicas Utilizadas (informativo)</label>
+        <ul id="referencesList">
+          <li>INSPEÇÃO Meio Ambiente</li>
+          <li>INSPEÇÃO NR 01 - Documentações</li>
+          <li>INSPEÇÃO NR 06 - EPI (Equipamento de Proteção Individual)</li>
+          <li>INSPEÇÃO NR 06 - EPC (Equipamento de Proteção Coletiva)</li>
+          <li>INSPEÇÃO NR 07 - Documentações</li>
+          <li>INSPEÇÃO NR 11 - Transporte, movimentação, manuseio e armazenagem de materiais</li>
+          <li>INSPEÇÃO NR 12 - Máquinas e equipamentos</li>
+          <li>INSPEÇÃO NR 23 - Proteção e Combate Contra Incêndios</li>
+          <li>INSPEÇÃO NR 35 - Trabalho em altura</li>
+        </ul>
+      </div>
+
+      <div class="form-group">
+        <label for="reportSummary" class="form-label">Resumo geral da visita</label>
+        <textarea id="reportSummary" class="form-control" rows="4"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Registros Fotográficos</label>
+        <p>Adicione registros com foto (captura ou upload), descrição e metadados. Cada clique em "Novo Registro" cria um novo bloco abaixo.</p>
+        <div class="record-add">
+          <button type="button" id="addRecordBtn" class="btn-add-empresa btn-sm add-record-btn">
+            <span class="icon" aria-hidden="true">➕</span>
+            <span>Novo Registro</span>
+          </button>
+        </div>
+      </div>
+
+  <div id="recordsContainer" class="records-list"></div>
+
+  <div class="form-actions">
+        <button type="button" id="saveReportBtn" class="btn-submit">Salvar Relatório (Local)</button>
+        <button type="button" id="generateReportBtn" class="btn-secondary">Gerar Relatório</button>
+      </div>
+    </form>
+  </div>
+</section>

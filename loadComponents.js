@@ -1,168 +1,218 @@
-// loadComponents.js
-// Importa a função de renderização do script.js
-import { renderChecklistForm } from './script.js';
-// Importa a função do novo script, se ela existir
-// import { addGroupPageListeners } from './groupScript.js';
+import { renderChecklistForm, renderReportForm, setupReportCompanySelectors, getUserRole, initAdminPage, ensureUserRole, renderFullProfilePage, performLogout, fetchUserProfile, initAepPage } from './script.js';
 
-// Função para adicionar listeners para o menu
-function addMenuListeners() {
-    const menuToggleBtn = document.getElementById('menu-toggle');
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('overlay');
-
-    if (menuToggleBtn && sidebar && overlay) {
-        // Evento de clique para o botão do menu
-        menuToggleBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('active');
-            overlay.classList.toggle('active');
+function initTopNav() {
+    const nav = document.querySelector('.top-nav');
+    if (!nav) return;
+    const links = nav.querySelectorAll('.nav-links a');
+    links.forEach(link => {
+        if (link.__bound) return;
+        link.__bound = true;
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const target = link.getAttribute('data-nav');
+            switch(target) {
+                case 'group': loadComponent('mainContent', 'groupPage'); break;
+                case 'dashboard': loadComponent('mainContent', 'dashboardPage'); break;
+                case 'documents': loadComponent('mainContent', 'documentsPage'); break;
+                case 'report': loadComponent('mainContent', 'reportPage'); break; // fallback se chamado via botão interno
+                case 'profile': loadComponent('mainContent', 'profilePage'); break;
+                case 'admin': loadComponent('mainContent', 'adminPage'); break;
+            }
+            setActiveNav(target);
         });
-
-        // Evento de clique para o overlay (fechar o menu)
-        overlay.addEventListener('click', () => {
-            sidebar.classList.remove('active');
-            overlay.classList.remove('active');
+    });
+    // Dropdown usuário
+    const trigger = document.getElementById('userTrigger');
+    const menu = nav.querySelector('.user-menu');
+    if (trigger && !trigger.__bound) {
+        trigger.__bound = true;
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const open = menu.classList.toggle('open');
+            trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+            menu.setAttribute('aria-hidden', open ? 'false' : 'true');
+        });
+        document.addEventListener('click', (ev) => {
+            if (!nav.contains(ev.target)) {
+                menu.classList.remove('open');
+                trigger.setAttribute('aria-expanded','false');
+                menu.setAttribute('aria-hidden','true');
+            }
+        });
+        menu.addEventListener('click', (ev) => {
+            const action = ev.target.getAttribute('data-action');
+            if (!action) return;
+            if (action === 'profile') {
+                loadComponent('mainContent', 'profilePage');
+                setActiveNav('profile');
+            } else if (action === 'logout') {
+                performLogout();
+                const headerContainer = document.getElementById('headerPageContainer');
+                setActiveNav(null);
+                if (headerContainer) {
+                    headerContainer.innerHTML = '';
+                    fetch('partials/headerPage.html')
+                        .then(r=>r.text())
+                        .then(html => { headerContainer.innerHTML = html; });
+                }
+                loadComponent('mainContent', 'loginPage');
+            }
+            menu.classList.remove('open');
+            trigger.setAttribute('aria-expanded','false');
+            menu.setAttribute('aria-hidden','true');
         });
     }
+    fetchUserProfile().then(data => {
+        if (!data) return;
+        const initials = (data.name||'?').split(/\s+/).slice(0,2).map(p=>p[0]?.toUpperCase()||'').join('');
+        const miniInit = document.querySelector('.mini-initials');
+        if (miniInit) miniInit.textContent = initials;
+        const nameEl = document.querySelector('.mini-name');
+        if (nameEl) nameEl.textContent = data.name || '';
+        const roleEl = document.querySelector('.mini-role');
+        if (roleEl) roleEl.textContent = data.especialidade || data.role || '';
+    });
+    (async () => {
+        let role = getUserRole();
+        if (!role) role = await ensureUserRole();
+        const adminLi = nav.querySelector('.admin-only');
+        if (adminLi) {
+            adminLi.classList.remove('admin-visible');
+            if (role && role.toUpperCase().includes('ADMIN')) {
+                adminLi.classList.add('admin-visible');
+            }
+        }
+    })();
 }
 
-// **NOVA FUNÇÃO** para adicionar listeners de navegação da groupPage
-function addGroupPageListeners() {
-    const createChecklistBtn = document.querySelector('.create-checklist .btn-primary');
-    const createReportBtn = document.querySelector('.create-report .btn-primary');
-    const dashboardLink = document.querySelector('.sidebar-menu a[href="#dashboard"]');
-    const profileLink = document.querySelector('.sidebar-menu a[href="#profile"]');
-    const documentsLink = document.querySelector('.sidebar-menu a[href="#documents"]');
-    
-    if (createChecklistBtn) {
-        createChecklistBtn.addEventListener('click', () => {
-            loadComponent('mainContent', 'formsPage');
-        });
-    }
+function setActiveNav(key) {
+    document.querySelectorAll('.top-nav .nav-links a').forEach(a => {
+        if (key && a.getAttribute('data-nav') === key) a.classList.add('active'); else a.classList.remove('active');
+    });
+}
 
-    if (createReportBtn) {
-        createReportBtn.addEventListener('click', () => {
-            console.log('Botão "Criar Novo Relatório" clicado. Funcionalidade a ser implementada.');
-            alert('A funcionalidade de criação de relatórios será adicionada em breve!');
-        });
-    }
-    
-    // Listener para o link do dashboard
-    if (dashboardLink) {
-        dashboardLink.addEventListener('click', (event) => {
-            event.preventDefault(); // Impede o comportamento padrão do link
-            loadComponent('mainContent', 'dashboardPage');
-            
-            // Fecha o menu após a navegação
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('overlay');
-            if (sidebar && overlay) {
-                sidebar.classList.remove('active');
-                overlay.classList.remove('active');
-            }
-        });
-    }
-
-    // Listener para o link do perfil
-    if (profileLink) { // Adicione este novo bloco
-        profileLink.addEventListener('click', (event) => {
-            event.preventDefault();
-            loadComponent('mainContent', 'profilePage');
-            
-            // Fecha o menu após a navegação
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('overlay');
-            if (sidebar && overlay) {
-                sidebar.classList.remove('active');
-                overlay.classList.remove('active');
-            }
-        });
-    }
-
-     // Listener para o link de Gerenciar Documentos
-    if (documentsLink) { // Adicione este novo bloco
-        documentsLink.addEventListener('click', (event) => {
-            event.preventDefault();
-            loadComponent('mainContent', 'documentsPage');
-            
-            // Fecha o menu após a navegação
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('overlay');
-            if (sidebar && overlay) {
-                sidebar.classList.remove('active');
-                overlay.classList.remove('active');
-            }
-        });
-    }
-
-    // Listener para o botão de sair (Logout)
-    const logoutLink = document.querySelector('.sidebar-menu a[href="#logout"]');
-    if (logoutLink) {
-        logoutLink.addEventListener('click', (event) => {
-            event.preventDefault();
-            loadComponent('mainContent', 'loginPage'); // Volta para a página de login
-            
-            // Fecha o menu
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('overlay');
-            if (sidebar && overlay) {
-                sidebar.classList.remove('active');
-                overlay.classList.remove('active');
-            }
-        });
-    }
-}  
-
-
-// Função para carregar um componente em um contêiner
 function loadComponent(containerId, componentName) {
     const container = document.getElementById(containerId);
-    if (!container) {
-        console.error(`O elemento com o ID "${containerId}" não foi encontrado.`);
-        return;
-    }
-
+    if (!container) { console.error(`Elemento ${containerId} não encontrado`); return; }
     fetch(`partials/${componentName}.html`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`Erro ao carregar o componente: ${componentName}.html, status: ${response.status}`);
-            }
-            return response.text();
-        })
+        .then(r => { if(!r.ok) throw new Error('Falha ao carregar '+componentName); return r.text(); })
         .then(html => {
             container.innerHTML = html;
-            // Se a página carregada for o formulário, chame a função de renderização
-            if (componentName === 'formsPage') {
-                renderChecklistForm();
-            } else if (componentName === 'groupPage') {
-                // Se a página for a de grupo, adicione os listeners do menu
-                addMenuListeners();
-                // adicione também a função de listeners do groupPage, se existir
-                // addGroupPageListeners();
+            switch(componentName) {
+                case 'loginPage':
+                    // Envolver dinamicamente o conteúdo de login em um wrapper (login-stack) para layout sem scroll
+                    {
+                        const existingWrapper = document.querySelector('.login-stack');
+                        if (!existingWrapper) {
+                            const main = document.getElementById('mainContent');
+                            if (main && main.firstElementChild) {
+                                const stack = document.createElement('div');
+                                stack.className = 'login-stack';
+                                // move o conteúdo atual para dentro do stack
+                                while (main.firstChild) stack.appendChild(main.firstChild);
+                                main.appendChild(stack);
+                            }
+                        }
+                    }
+                    const loginForm = document.getElementById('loginForm');
+                    if (loginForm) loginForm.addEventListener('submit', handleLogin);
+                    document.body.classList.add('body--login');
+                    break;
+                case 'groupPage':
+                        document.body.classList.remove('body--login');
+                        if (document.querySelector('.top-nav')) initTopNav();
+                    setActiveNav('group');
+                    // binds dos novos botões
+                    document.querySelectorAll('.action-btn').forEach(btn => {
+                        if (btn.__bound) return; btn.__bound = true;
+                        btn.addEventListener('click', () => {
+                            const act = btn.getAttribute('data-action');
+                            if (act === 'new-checklist') {
+                                loadComponent('mainContent', 'formsPage');
+                            } else if (act === 'new-report') {
+                                loadComponent('mainContent', 'reportPage');
+                            } else if (act === 'new-aep') {
+                                loadComponent('mainContent', 'aepPage');
+                            }
+                        });
+                    });
+                    break;
+                case 'formsPage':
+                    renderChecklistForm();
+                    initTopNav();
+                    document.body.classList.remove('body--login');
+                    break;
+                case 'dashboardPage':
+                    if (document.querySelector('.top-nav')) initTopNav();
+                    setActiveNav('dashboard');
+                    document.body.classList.remove('body--login');
+                    break;
+                case 'documentsPage':
+                    if (document.querySelector('.top-nav')) initTopNav();
+                    setActiveNav('documents');
+                    document.body.classList.remove('body--login');
+                    break;
+                case 'reportPage':
+                    if (document.querySelector('.top-nav')) initTopNav();
+                    // não há mais item de menu para relatório, não chama setActiveNav('report')
+                    renderReportForm();
+                    if (typeof setupReportCompanySelectors === 'function') setupReportCompanySelectors();
+                    document.body.classList.remove('body--login');
+                    break;
+                case 'aepPage':
+                    if (document.querySelector('.top-nav')) initTopNav();
+                    initAepPage();
+                    document.body.classList.remove('body--login');
+                    break;
+                case 'profilePage':
+                    if (document.querySelector('.top-nav')) initTopNav();
+                    setActiveNav('profile');
+                    renderFullProfilePage();
+                    document.body.classList.remove('body--login');
+                    break;
+                case 'adminPage':
+                    if (document.querySelector('.top-nav')) initTopNav();
+                    setActiveNav('admin');
+                    initAdminPage();
+                    document.body.classList.remove('body--login');
+                    break;
             }
         })
-        .catch(error => console.error('Erro:', error));
+        .catch(err => console.error(err));
 }
 
-// Inicia a aplicação carregando os componentes iniciais
 document.addEventListener('DOMContentLoaded', () => {
-    loadComponent('headerPageContainer', 'headerPage');
-    loadComponent('footerPageContainer', 'footerPage');
-    loadComponent('mainContent', 'loginPage');
+    const token = localStorage.getItem('jwtToken');
+    const headerContainer = document.getElementById('headerPageContainer');
+    // Container onde a navbar será injetada (reutilizamos o mesmo header ou criar outro?)
+    // Mantemos no mesmo container para evitar alterar index.html.
 
-    // UTILIZAR OS COMPONENTES ABAIXO APENAS PARA TESTES
-    
-    // Altere esta linha para carregar o formsPage para testes
-    // loadComponent('mainContent', 'formsPage');
+    // Footer sempre
+    fetch('partials/footerPage.html').then(r=>r.text()).then(f=>{
+        const footerContainer = document.getElementById('footerPageContainer');
+        if (footerContainer) footerContainer.innerHTML = f;
+    });
 
-    // Altere esta linha para carregar o groupPage para testes
-    // loadComponent('mainContent', 'groupPage');
-
-    // Carrega o dashboardPage por padrão
-    // loadComponent('mainContent', 'dashboardPage');
-
-    // Carrega o profilePage por padrão
-    // loadComponent('mainContent', 'profilePage');
-
-    // Carrega o documentsPage por padrão
-    // loadComponent('mainContent', 'documentsPage');
+    if (!token) {
+        // Estado não autenticado: exibe somente o headerPage (hero) e esconde navbar
+        if (headerContainer) {
+            fetch('partials/headerPage.html')
+                .then(r=>r.text())
+                .then(html => { headerContainer.innerHTML = html; })
+                .finally(() => loadComponent('mainContent', 'loginPage'));
+        } else {
+            loadComponent('mainContent', 'loginPage');
+        }
+    } else {
+        // Estado autenticado: remove headerPage hero e insere navbar
+        if (headerContainer) {
+            headerContainer.innerHTML = '';
+            fetch('partials/navbar.html')
+                .then(r=>r.text())
+                .then(html => { headerContainer.innerHTML = html; initTopNav(); });
+        }
+        loadComponent('mainContent', 'groupPage');
+    }
 });
+
+export { loadComponent, initTopNav };

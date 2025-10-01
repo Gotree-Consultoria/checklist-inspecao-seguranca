@@ -1,6 +1,9 @@
-<div id="formLoginContainer" class="form-login-container">
-  <div>
-    <form onsubmit="handleLogin(event)" class="login-form">
+<div id="formLoginContainer" class="form-login-container" data-login-fragment>
+  <div class="login-inner">
+    <div class="login-brand" aria-label="Logotipo da aplicação">
+      <img src="assets/images/Logo-NF.png" alt="Go-Tree Checklist" class="login-brand__img" />
+    </div>
+    <form id="loginForm" class="login-form" novalidate>
       <div class="login-fields">
         <div>
           <label for="loginEmail">E-mail</label>

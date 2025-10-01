@@ -56,6 +56,9 @@ body {
     flex-direction: column;
 }
 
+/* Espaçamento específico quando exibindo headerPage apenas na tela de login */
+body.body--login main { padding-top: 48px; }
+
 /* Adicione esta regra */
 main {
     flex-grow: 1;
@@ -104,15 +107,102 @@ p {
 
 /* Formulário de Login */
 .form-login-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+        position: relative;
+        min-height: calc(100vh - 48px); /* considera padding-top quando header visível */
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 32px 16px 40px;
+}
+
+/* =====================================================
+     LOGIN LAYOUT (Sem scroll – ajuste adaptativo)
+     ===================================================== */
+/* Layout vertical completo PÁGINA DE LOGIN: header (hero) + form + footer sem scroll */
+body.body--login { display:flex; flex-direction:column; min-height:100vh; }
+@supports (height:100dvh){ body.body--login { min-height:100dvh; } }
+body.body--login main { flex:1 0 auto; display:flex; flex-direction:column; justify-content:flex-start; padding-top:0; }
+/* Wrapper para controlar a soma hero + form */
+body.body--login main .login-stack { flex:1 0 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:8px 0 4px; }
+body.body--login .hero { 
+    padding: 28px 0 12px; 
+}
+body.body--login .hero h1 { 
+    font-size: clamp(1.2rem, 2.6vw, 1.75rem); 
+    line-height: 1.2; 
+    margin: 0 0 8px; 
+}
+body.body--login .hero p { 
+    font-size: .8rem; 
+    line-height: 1.3; 
+    max-width: 680px; 
+    margin: 0 auto; 
+}
+body.body--login .form-login-container { 
+    padding: 8px 16px 24px; 
+    min-height: unset; 
+    justify-content: center; 
+}
+/* Ajuste extra: se hero existir reduz ainda mais margens para caber sem scroll */
+body.body--login .hero + #mainContent .form-login-container,
+body.body--login .hero + main .form-login-container { margin-top:4px; }
+body.body--login .login-form { 
+    background: #fff; 
+    padding: 16px 20px 20px; 
+    border: 1px solid #e3e6e0; 
+    border-radius: 10px; 
+    box-shadow: 0 6px 20px rgba(0,0,0,0.05); 
+    width: 100%; 
+    max-width: 420px; 
+}
+body.body--login .login-fields > div { margin-bottom: 10px; }
+body.body--login .login-buttons { margin-top: 20px; }
+/* Remover scroll vertical na página de login: esconder footer e ajustar alturas */
+body.body--login { min-height:100vh; }
+@supports(height:100dvh){ body.body--login { min-height:100dvh; } }
+/* Footer visível no login, mas com margem mínima */
+body.body--login footer.footer, body.body--login #footerPageContainer .footer { margin-top:auto; padding:10px 8px; }
+body.body--login main { flex:1; min-height:0; }
+/* Reduz padding inferior para evitar overflow mínimo */
+body.body--login .form-login-container { padding-bottom:8px; }
+/* Bloco do logotipo compacto acima do formulário */
+body.body--login .login-inner { display:flex; flex-direction:column; align-items:center; width:100%; }
+body.body--login .login-brand { margin:0 0 14px; display:flex; align-items:center; justify-content:center; }
+body.body--login .login-brand__img { width:120px; height:auto; display:block; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.12)); }
+@media (max-height:700px){
+    body.body--login .login-brand { margin-bottom:10px; }
+    body.body--login .login-brand__img { width:100px; }
+}
+@media (max-height:560px){
+    body.body--login .login-brand { margin-bottom:8px; }
+    body.body--login .login-brand__img { width:90px; }
+}
+@media (max-width:360px){
+    body.body--login .login-brand__img { width:88px; }
+}
+
+/* Compactar ainda mais em telas baixas (paisagem mobile / devices pequenos) */
+@media (max-height: 700px) {
+    body.body--login .hero { padding: 18px 0 8px; }
+    body.body--login .hero p { display:none; }
+    body.body--login .hero h1 { font-size: clamp(1rem, 3.2vw, 1.4rem); margin-bottom:4px; }
+    body.body--login .form-login-container { padding: 4px 12px 16px; }
+    body.body--login .login-form { padding: 14px 16px 16px; }
+    body.body--login .login-buttons { margin-top: 14px; }
+}
+
+@media (max-height: 560px) {
+    body.body--login .hero { display:none; }
+    body.body--login main { justify-content: center; }
+    body.body--login .form-login-container { padding-top: 0; }
+}
+
+/* Ultra narrow width refinements */
+@media (max-width: 360px) {
+    body.body--login .login-form { padding: 12px 14px 16px; }
+    body.body--login .login-form label { font-size:.65rem; }
 }
 
 .hero {
@@ -350,35 +440,19 @@ footer {
     margin-bottom: var(--spacing-xxl);
 }
 
-.button-card {
-    background-color: var(--branco);
-    border-radius: var(--border-radius-md);
-    padding: var(--spacing-lg);
-    box-shadow: var(--shadow-md);
-    text-align: center;
-    flex: 1;
-    max-width: 400px;
-    transition: all var(--transition-normal);
-}
-
-.button-card:hover {
-    box-shadow: var(--shadow-lg);
-    transform: translateY(-5px);
-}
-
-.create-checklist {
-    border: 2px solid var(--verde-claro);
-}
-
-.create-report {
-    border: 2px solid var(--vermelho-coral);
-}
-
-.button-card h2 {
-    color: var(--cinza-escuro);
-    font-size: 1.25rem;
-    margin-bottom: var(--spacing-md);
-}
+/* Novos botões de ação */
+.action-btn { display:flex; align-items:center; gap:14px; background:#fff; padding:18px 28px; border-radius:16px; border:2px solid transparent; box-shadow: var(--shadow-md); cursor:pointer; min-width:260px; position:relative; overflow:hidden; transition: all .25s ease; text-align:left; }
+.action-btn .icon { font-size:2rem; line-height:1; }
+.action-btn .text { display:flex; flex-direction:column; }
+.action-btn strong { font-size:1.05rem; color: var(--cinza-escuro); }
+.action-btn small { font-size:.7rem; color:#666; letter-spacing:.5px; }
+.action-btn:focus-visible { outline:3px solid var(--verde-claro); outline-offset:2px; }
+.action-btn.action-checklist { border-color: var(--verde-claro); }
+.action-btn.action-report { border-color: var(--vermelho-coral); }
+.action-btn.action-aep { border-color: #005a32; background:linear-gradient(135deg,#ffffff 0%, #f3f9f1 100%); }
+.action-btn:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
+.action-btn:active { transform: translateY(-2px); }
+@media (max-width:640px){ .action-btn { width:100%; justify-content:flex-start; } }
 
 .btn-primary {
     padding: var(--spacing-sm) var(--spacing-lg);
@@ -458,105 +532,7 @@ tbody tr:hover {
 /* Fim dos Estilos Específicos para a Página de Grupo (Dashboard) */
 
 /* Estilos do Botão do Menu */
-.menu-toggle-btn {
-    background-color: transparent;
-    border: none;
-    font-size: 2rem;
-    color: var(--verde-escuro);
-    cursor: pointer;
-    z-index: 1001; /* Garante que fique acima de outros elementos */
-    padding: var(--spacing-sm);
-}
-
-/* Estilos do Menu Lateral (Sidebar) */
-.sidebar {
-    position: fixed;
-    top: 0;
-    right: -300px; /* Esconde o menu fora da tela */
-    width: 280px;
-    height: 100%;
-    background-color: var(--branco);
-    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
-    transition: right var(--transition-normal) ease-in-out;
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-}
-
-.sidebar.active {
-    right: 0; /* Move o menu para dentro da tela */
-}
-
-/* Estilos do Perfil do Usuário */
-.user-profile {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: var(--spacing-md);
-    background-color: var(--verde-escuro);
-    color: var(--branco);
-    text-align: center;
-}
-
-.user-avatar {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background-color: var(--verde-claro);
-    color: var(--cinza-escuro);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 1.5rem;
-    margin-bottom: var(--spacing-sm);
-}
-
-.user-name {
-    font-size: 1.2rem;
-    font-weight: 600;
-}
-
-.user-role {
-    font-size: 0.8rem;
-    opacity: 0.8;
-}
-
-/* Estilos da Lista de Menu */
-.sidebar-menu {
-    list-style: none;
-    padding: var(--spacing-sm) 0;
-}
-
-.sidebar-menu li a {
-    display: block;
-    padding: var(--spacing-md);
-    color: var(--cinza-escuro);
-    text-decoration: none;
-    transition: background-color var(--transition-fast), color var(--transition-fast);
-}
-
-.sidebar-menu li a:hover {
-    background-color: var(--cinza-claro);
-    color: var(--branco);
-}
-
-/* Estilo de sobreposição (Overlay) */
-.overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 999;
-    display: none; /* Inicia oculto */
-}
-
-.overlay.active {
-    display: block; /* Mostra a sobreposição */
-}
-/* Fim dos Estilos do botão do menu */
+/* (Sidebar antigo removido: blocos .menu-toggle-btn, .sidebar, .overlay eliminados) */
 
 /* Estilos Específicos para a Página de Dashboard */
 .dashboard-page {
@@ -812,3 +788,460 @@ tbody tr:hover {
 }
 
 /* Fim dos Estilos Específicos para a Página de Gerenciamento de Documentos */
+
+/* Estilos para a página de relatório */
+/* Admin Page */
+.admin-page .card { background:#fff; border:1px solid var(--cinza-claro); padding:16px; border-radius: var(--border-radius-md); }
+.admin-page .form-row { display:flex; flex-direction:column; gap:4px; margin-bottom:12px; }
+.mt-24 { margin-top:24px !important; }
+.admin-page table { width:100%; border-collapse: collapse; margin-top:12px; }
+.admin-page table th, .admin-page table td { border:1px solid #e1e1e1; padding:6px 8px; font-size:0.9rem; }
+.badge-role { display:inline-block; padding:2px 8px; border-radius:12px; background:var(--verde-claro); color:#fff; font-size:0.7rem; letter-spacing:.5px; }
+.badge-role.admin { background: var(--vermelho-coral); }
+.records-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.report-record {
+    background: #fff;
+    border: 2px solid rgba(0,0,0,0.08); /* borda mais grossa e menos escura */
+    border-radius: calc(var(--border-radius-md) + 2px);
+    padding: 14px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+    transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+}
+
+.report-record .record-meta {
+    flex: 1 1 60%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    align-items: start;
+}
+
+.report-record .record-photo {
+    width: 180px;
+    flex: 0 0 180px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    order: -1; /* move photo to the left visually */
+}
+
+/* Lista de registros: um por linha (empilhados) */
+.records-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+/* ajuste para exibir o título do bloco de foto menor */
+.report-record .record-photo label {
+    font-size: 0.9rem;
+}
+
+/* classe para registro em linha */
+.record-line {
+    flex-direction: row;
+}
+
+.report-record + .report-record {
+    margin-top: 10px; /* separação extra entre registros */
+}
+
+.report-record:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+    border-color: rgba(0,0,0,0.12);
+}
+
+/* Estilos dos botões abaixo da foto */
+.record-photo .rec-file,
+.record-photo .btn-capture,
+.record-photo .btn-remove {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--cinza-claro);
+    background: var(--branco);
+    cursor: pointer;
+    text-align: center;
+}
+
+.record-photo .btn-capture {
+    background: var(--verde-claro);
+    color: var(--branco);
+    border: none;
+}
+
+.record-photo .btn-remove {
+    background: var(--vermelho-coral);
+    color: var(--branco);
+    border: none;
+}
+
+.record-photo input[type="file"] {
+    padding: 6px;
+}
+.record-photo .btn-remove-photo,
+.record-photo .btn-remove-record {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: var(--border-radius-sm);
+    border: none;
+    cursor: pointer;
+    color: var(--branco);
+}
+
+.record-photo .btn-remove-photo { background: #666; }
+.record-photo .btn-remove-record { background: var(--vermelho-coral); }
+
+.rec-img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    background: #f0f0f0;
+    border-radius: 4px;
+}
+
+.report-record img {
+    max-width: 100%;
+    border-radius: 4px;
+}
+
+.drag-over {
+    outline: 3px dashed var(--verde-claro);
+}
+
+@media (max-width: 600px) {
+    .report-record { flex-direction: column; }
+    .report-record .record-photo { width: 100%; flex: none; }
+}
+
+/* ================= AEP PAGE ================= */
+.aep-form fieldset { border:1px solid #e2e2e2; padding:16px; border-radius:12px; margin-bottom:20px; background:#fff; }
+.aep-form legend { font-weight:600; padding:0 6px; }
+.aep-grid { display:grid; gap:16px; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); }
+.aep-grid .fg { display:flex; flex-direction:column; gap:4px; }
+.aep-grid label { font-size:.75rem; font-weight:600; letter-spacing:.5px; text-transform:uppercase; color:#444; }
+.aep-grid input, .aep-grid select { padding:8px 10px; border:1px solid #ccc; border-radius:6px; font-size:.85rem; }
+.aep-table { width:100%; border-collapse:collapse; font-size:.8rem; }
+.aep-table thead th { background: var(--verde-claro); color:#1d1d1d; text-align:left; padding:8px 10px; font-size:.7rem; letter-spacing:.5px; }
+.aep-table tbody td { border-bottom:1px solid #e6e6e6; padding:6px 10px; vertical-align:top; }
+.aep-table tbody tr:nth-child(even){ background:#f5f5f5; }
+.aep-table .col-sel { width:40px; }
+.aep-table .col-risk { width:140px; }
+.aep-table td.tipo { font-weight:600; font-size:.65rem; color:#333; }
+.aep-actions { display:flex; gap:12px; }
+.btn-secondary { background:#666; color:#fff; border:none; padding:10px 16px; border-radius:6px; cursor:pointer; font-weight:600; }
+.btn-secondary:hover { background:#444; }
+.aep-page .feedback { margin-top:10px; font-size:.8rem; color: var(--verde-escuro); }
+
+/* ================= NAVBAR SUPERIOR ================= */
+.top-nav { display:flex; justify-content:space-between; align-items:center; padding:8px 20px; background: var(--verde-escuro); color: var(--branco); box-shadow: var(--shadow-md); }
+.top-nav .brand { font-weight:700; letter-spacing:.5px; min-width:0; }
+.top-nav .nav-links { list-style:none; display:flex; gap:16px; margin:0; padding:0; }
+.top-nav .nav-links a { color: var(--branco); text-decoration:none; padding:6px 10px; border-radius:4px; font-size:0.9rem; display:inline-block; }
+.top-nav .nav-links a:hover { background: rgba(255,255,255,0.15); }
+.top-nav .nav-links a.active { background: var(--verde-claro); color:#222; font-weight:600; }
+.top-nav .user-mini { display:flex; flex-direction:column; align-items:flex-end; margin-right:12px; }
+.mini-initials { background: var(--verde-claro); color:#222; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:600; margin-bottom:2px; }
+.mini-name { font-size:0.75rem; font-weight:600; }
+.mini-role { font-size:0.65rem; opacity:.85; }
+.btn-logout { background: var(--vermelho-coral); color:#fff; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:600; }
+.btn-logout:hover { background:#c94d2e; }
+.admin-only { display:none; }
+.admin-visible { display:list-item !important; }
+
+/* Dropdown usuário */
+.user-dropdown { position:relative; }
+.user-trigger { display:flex; align-items:center; gap:8px; background: rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25); color:#fff; padding:4px 10px; border-radius:24px; cursor:pointer; font-size:0.75rem; line-height:1; }
+.user-trigger:hover { background: rgba(255,255,255,0.2); }
+.user-trigger .mini-initials { width:30px; height:30px; margin:0; }
+.user-trigger .mini-info { display:flex; flex-direction:column; align-items:flex-start; }
+.user-trigger .chevron { font-size:0.7rem; opacity:.8; }
+.user-menu { position:absolute; right:0; top:calc(100% + 6px); background:#fff; color:#222; border:1px solid #e2e2e2; min-width:160px; border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,0.12); padding:6px; display:none; z-index:1200; }
+.user-menu.open { display:block; animation:fadeIn .15s ease; }
+.user-menu-item { width:100%; text-align:left; background:none; border:none; padding:8px 10px; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:500; }
+.user-menu-item:hover { background: var(--verde-claro); color:#222; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(-4px);} to { opacity:1; transform:translateY(0);} }
+
+@media (max-width: 780px) {
+    .top-nav { flex-wrap:wrap; }
+    .top-nav .nav-left { width:100%; display:flex; align-items:center; justify-content:space-between; }
+    .top-nav .nav-links { flex-wrap:wrap; }
+    .top-nav .nav-right { width:100%; display:flex; justify-content:flex-end; margin-top:6px; }
+}
+
+/* ==========================================================
+   DESIGN SYSTEM UNIFICADO
+   Objetivo: Padronizar inputs, labels, botões e tabelas em todo o app
+   ========================================================== */
+
+/* Tipografia base refinada */
+body { font-feature-settings: "liga" 1, "kern" 1; }
+
+/* Labels padrão */
+label, .form-label, .filter-label { 
+    font-size: .7rem; 
+    font-weight: 600; 
+    letter-spacing: .5px; 
+    text-transform: uppercase; 
+    color: #444; 
+    display: inline-block; 
+    margin-bottom: 4px; 
+}
+
+/* Campos de formulário genéricos */
+input[type=text],
+input[type=password],
+input[type=email],
+input[type=number],
+input[type=date],
+input[type=time],
+input[type=file],
+select,
+textarea,
+.form-control,
+.form-select,
+.filter-input,
+.filter-select,
+.admin-page .form-row input,
+.admin-page .form-row select {
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: .85rem;
+    font-family: var(--font-family);
+    background: #fff;
+    line-height: 1.3;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+}
+
+input:focus, select:focus, textarea:focus,
+.form-control:focus, .form-select:focus {
+    outline: none;
+    border-color: var(--verde-claro);
+    box-shadow: 0 0 0 2px rgba(191,216,58,0.35);
+    background: #fcfff7;
+}
+
+input[disabled], select[disabled], textarea[disabled] { opacity: .65; cursor: not-allowed; background: #f3f3f3; }
+
+/* Ajuste login para herdar o padrão */
+.login-fields input { 
+    border-color: #ccc; 
+    background:#fff; 
+    font-size:.85rem; 
+}
+
+/* Textareas coerentes */
+textarea, .form-control.textarea { resize: vertical; min-height: 90px; }
+
+/* Agrupadores de formulário */
+.form-group, .aep-grid, .admin-page .form-grid { gap: 14px; }
+
+/* Botões unificados (sanitizado) */
+.btn, .btn-primary, .btn-secondary, .btn-filter, .btn-add-empresa, .btn-submit,
+.record-photo .btn-capture, .record-photo .btn-remove, .record-photo .btn-remove-photo, .record-photo .btn-remove-record {
+    --btn-bg: var(--verde-escuro);
+    --btn-bg-hover: #024a29;
+    --btn-color: #fff;
+    --btn-radius: 6px;
+    --btn-font-size: .75rem;
+    --btn-pad-y: 10px;
+    --btn-pad-x: 18px;
+    font-family: var(--font-family);
+    font-weight: 600;
+    font-size: var(--btn-font-size);
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    padding: var(--btn-pad-y) var(--btn-pad-x);
+    border-radius: var(--btn-radius);
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: var(--btn-bg);
+    color: var(--btn-color);
+    transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.btn:hover, .btn-primary:hover, .btn-secondary:hover, .btn-filter:hover, .btn-add-empresa:hover, .btn-submit:hover, .record-photo .btn-capture:hover, .record-photo .btn-remove:hover, .record-photo .btn-remove-photo:hover, .record-photo .btn-remove-record:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+}
+
+.btn:active, .btn-primary:active, .btn-secondary:active, .btn-filter:active, .btn-add-empresa:active, .btn-submit:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+/* Variações */
+.btn-primary, .btn-submit { --btn-bg: var(--vermelho-coral); --btn-bg-hover:#c94d2e; }
+.btn-secondary { --btn-bg:#666; --btn-bg-hover:#444; }
+.btn-success { --btn-bg: var(--verde-claro); --btn-bg-hover:#9fb92f; }
+.btn-outline { background:#fff; color: var(--verde-escuro); border:1px solid var(--verde-escuro); }
+.btn-outline:hover { background: var(--verde-escuro); color:#fff; }
+.btn-danger, .record-photo .btn-remove-record, .record-photo .btn-remove { --btn-bg: var(--vermelho-coral); --btn-bg-hover:#c94d2e; }
+
+/* Badges (ajuste leve) */
+.badge-role { font-size:.55rem; letter-spacing:.5px; padding:4px 8px; text-transform:uppercase; }
+
+/* Tabelas unificadas */
+table { font-family: var(--font-family); }
+table th { font-size:.65rem; text-transform:uppercase; letter-spacing:.5px; }
+table td { font-size:.72rem; }
+/* Coluna de ações no admin */
+.admin-page table th:last-child, .admin-page table td:last-child { text-align:center; white-space:nowrap; }
+.admin-page table td button.btn-danger { --btn-pad-y:4px; --btn-pad-x:12px; font-size:.55rem; }
+
+/* Ajuste tabelas com cabeçalho escuro para alinhamento cromático */
+thead { background: var(--verde-escuro); }
+thead th { color:#fff; }
+
+/* Histórico / documentos / admin refinamento hover */
+tbody tr:hover { background:#f3f7ef; }
+
+/* Cards / containers suaves */
+.section-container, .history-section, .profile-card, .documents-table-container, .admin-page .card {
+    background:#fff;
+    border:1px solid #e4e7e1;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+}
+
+/* Ajustar bordas repetidas */
+.report-record { border:1px solid #e2e2e2; }
+/* Empresas (Admin) */
+.empresa-bloco { border:1px solid #e4e7e1; border-radius:10px; padding:12px 14px 14px; background:#fff; box-shadow:0 4px 14px rgba(0,0,0,0.04); margin-bottom:14px; }
+.empresa-bloco:last-child { margin-bottom:4px; }
+.empresa-nome { margin:0 0 6px; font-size:1rem; color: var(--verde-escuro); }
+.empresa-detalhes p { margin:4px 0 8px; font-size:.7rem; letter-spacing:.5px; text-transform:uppercase; color:#444; }
+.emp-unidades, .emp-setores { list-style:none; padding-left:14px; margin:0; display:flex; flex-direction:column; gap:6px; }
+.emp-unidade { font-size:.75rem; line-height:1.25; background:#f6f8f3; padding:8px 10px; border-radius:6px; border:1px solid #dbe1d2; }
+.emp-unidade strong { display:block; font-size:.7rem; letter-spacing:.5px; text-transform:uppercase; margin-bottom:4px; color:#333; }
+.emp-setores { margin-top:6px; padding-left:14px; }
+.emp-setores li { font-size:.68rem; background:#fff; border:1px solid #e2e8d9; padding:4px 6px; border-radius:5px; display:inline-block; margin:2px 0; }
+.empty-sub { font-size:.65rem; font-style:italic; color:#666; margin:4px 0 2px; }
+/* Admin Empresas - formulário */
+.admin-company-form .form-row { margin-bottom:10px; }
+.admin-company-form textarea { font-size:.75rem; line-height:1.3; }
+.divider { margin:16px 0; border:0; border-top:1px solid #e2e6df; }
+.sub-title { margin:0 0 8px; font-size:.9rem; letter-spacing:.5px; color: var(--verde-escuro); }
+.btn-save-company { margin-top:4px; }
+.feedback-company { margin-top:6px; font-size:.65rem; }
+/* ===== Admin: Cadastro de Empresas Dinâmico ===== */
+.company-fieldset { border:1px solid #e2e6df; padding:12px 14px 14px; border-radius:10px; background:#fafcf9; margin-bottom:14px; }
+.company-legend { font-size:.65rem; font-weight:600; letter-spacing:.5px; text-transform:uppercase; color:#444; padding:0 4px; }
+.units-container { display:flex; flex-direction:column; gap:10px; margin-bottom:10px; }
+.unit-row { display:grid; grid-template-columns: 1fr 160px auto; gap:8px; align-items:end; background:#fff; padding:10px 12px; border:1px solid #dfe4d8; border-radius:8px; position:relative; }
+@media (max-width:560px){ .unit-row { grid-template-columns: 1fr; } .unit-row .unit-remove { position:absolute; top:6px; right:6px; } }
+.unit-row label { font-size:.55rem; margin-bottom:2px; }
+.unit-row input { font-size:.7rem; }
+.unit-remove { background:#eee; color:#444; border:none; padding:6px 10px; border-radius:6px; cursor:pointer; font-size:.55rem; }
+.unit-remove:hover { background:#e2e2e2; }
+.add-unit-btn { margin-top:4px; }
+.sectors-add-row { display:flex; gap:8px; align-items:center; margin-bottom:10px; }
+.sectors-add-row input { flex:1; }
+.sectors-chips { display:flex; flex-wrap:wrap; gap:6px; }
+.sector-chip { background:#f0f4ec; border:1px solid #d9e2d2; padding:6px 8px; border-radius:20px; font-size:.6rem; display:inline-flex; align-items:center; gap:6px; }
+.sector-chip button { background:none; border:none; cursor:pointer; font-size:.7rem; line-height:1; padding:0 4px; color:#555; }
+.sector-chip button:hover { color:#000; }
+.company-actions { margin-top:8px; display:flex; flex-direction:column; gap:6px; }
+.company-actions .btn-save-company { align-self:flex-start; }
+.hint { font-size:.55rem; color:#666; margin:4px 0 0; }
+
+/* Radio / opções (Checklist) - manter coerência visual */
+.radio-options input[type="radio"] + label {
+    font-size:.65rem;
+    letter-spacing:.4px;
+    text-transform:uppercase;
+    border-radius:6px;
+}
+
+.radio-options input[type="radio"]:checked + label {
+    background: var(--verde-escuro);
+    border-color: var(--verde-escuro);
+    color:#fff;
+}
+
+/* AEP Table refinamento leve para alinhar com resto */
+.aep-table thead th { background: var(--verde-escuro); color:#fff; }
+
+/* Dropdown usuário (redução sutil de contraste nos states) */
+.user-menu-item:hover { background: var(--verde-claro); color:#1e1e1e; }
+
+/* =======================================================
+    MODAL & TOAST UI (Confirmação de Exclusão)
+    ======================================================= */
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity .25s ease; z-index:3000; }
+.modal-overlay.open { opacity:1; pointer-events:auto; }
+.modal-overlay.closing { opacity:0; }
+.modal { width:100%; max-width:420px; background:#fff; border-radius:14px; box-shadow:0 18px 50px -12px rgba(0,0,0,0.25); overflow:hidden; transform:translateY(18px); opacity:0; animation:modalIn .35s ease forwards; border:1px solid #ececec; }
+.modal-danger { border-color: var(--vermelho-coral); }
+.modal-header { padding:16px 20px 8px; }
+.modal-header h3 { margin:0; font-size:1.05rem; letter-spacing:.5px; }
+.modal-body { padding:0 20px 8px; font-size:.8rem; color:#444; }
+.modal-body p { margin:0 0 4px; line-height:1.4; }
+.modal-footer { padding:16px 20px 20px; display:flex; gap:12px; justify-content:flex-end; }
+.modal-footer .btn-danger { --btn-bg: var(--vermelho-coral); --btn-bg-hover:#c94d2e; }
+@keyframes modalIn { from { transform:translateY(28px); opacity:0;} to { transform:translateY(0); opacity:1;} }
+
+/* Toasts */
+#toast-container { position:fixed; top:16px; right:16px; display:flex; flex-direction:column; gap:10px; z-index:3500; }
+.toast { background:#222; color:#fff; padding:10px 16px; border-radius:8px; font-size:.7rem; letter-spacing:.5px; box-shadow:0 6px 18px rgba(0,0,0,0.25); opacity:0; transform:translateY(-8px); transition: all .3s ease; }
+.toast.visible { opacity:1; transform:translateY(0); }
+.toast-error { background: var(--vermelho-coral); }
+.toast-info { background: var(--verde-escuro); }
+.toast-success { background: var(--verde-claro); color:#222; }
+
+/* Responsividade inputs conjunto */
+@media (max-width:640px) {
+    input, select, textarea { font-size:.9rem; }
+    .btn, .btn-primary, .btn-secondary { width:100%; }
+}
+
+/* Fim Design System Unificado */
+/* Botão tamanho pequeno */
+.btn-sm { 
+    --btn-pad-y: 6px; 
+    --btn-pad-x: 12px; 
+    --btn-font-size: .6rem; 
+    padding: var(--btn-pad-y) var(--btn-pad-x) !important; 
+    font-size: var(--btn-font-size) !important; 
+    border-radius: 5px; 
+}
+/* Extra compacto */
+.btn-compact { 
+    --btn-pad-y: 4px; 
+    --btn-pad-x: 10px; 
+    --btn-font-size: .55rem; 
+    padding:4px 10px !important; 
+    font-size:.55rem !important; 
+    border-radius:4px; 
+    line-height:1.05; 
+    width:auto !important; 
+    display:inline-flex !important; 
+}
+/* Evitar que o grid force largura total */
+.form-group > .btn-compact { justify-self:start; align-self:start; }
+
+/* Acessibilidade - apenas leitura de tela */
+.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+.btn-add-record:hover { transform:translateY(-3px); }
+
+/* Container de registros oculto inicialmente */
+#recordsContainer { display:none; }
+
+/* Ações do formulário alinhadas à direita */
+.form-actions { text-align:right; margin-top:16px; }
