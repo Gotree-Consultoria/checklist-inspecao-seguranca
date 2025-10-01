@@ -4,11 +4,23 @@
 
         <div class="form-group">
             <div class="empresa-container">
-            <label for="empresaCliente" class="form-label">Empresa Cliente:</label>
-            <select id="empresaCliente" name="empresaCliente" class="form-select">
-                <option value="">Selecione uma empresa</option>
-            </select>
-            <button type="button" class="btn-add-empresa" onclick="addEmpresa()">Adicionar Empresa</button>
+                <label for="empresaCliente" class="form-label">Empresa Cliente:</label>
+                <select id="empresaCliente" name="empresaCliente" class="form-select">
+                    <option value="">Selecione uma empresa</option>
+                </select>
+                <button type="button" class="btn-add-empresa" onclick="addEmpresa()">Adicionar Empresa</button>
+            </div>
+            <div class="empresa-sub">
+                <label for="empresaUnidade" class="form-label">Unidade (opcional)</label>
+                <select id="empresaUnidade" name="empresaUnidade" class="form-select" disabled>
+                    <option value="">Selecione uma empresa primeiro</option>
+                </select>
+            </div>
+            <div class="empresa-sub">
+                <label for="empresaSetor" class="form-label">Setor (opcional)</label>
+                <select id="empresaSetor" name="empresaSetor" class="form-select" disabled>
+                    <option value="">Selecione uma empresa primeiro</option>
+                </select>
             </div>
             <div>
             <label for="dataInspecao" class="form-label">Data da Inspeção:</label>

@@ -1,0 +1,92 @@
+<section class="aep-page">
+  <div class="container">
+    <h1 class="page-title">Avaliação Ergonômica Preliminar (AEP)</h1>
+    <form id="aepForm" class="aep-form">
+      <fieldset class="aep-header">
+        <legend>Dados da Avaliação</legend>
+        <div class="aep-grid">
+          <div class="fg">
+            <label for="aepCompany">Empresa Avaliada</label>
+            <select id="aepCompany" required><option value="">Carregando...</option></select>
+          </div>
+          <div class="fg">
+            <label for="aepUnit">Unidade (opcional)</label>
+            <select id="aepUnit" disabled><option value="">Selecione empresa</option></select>
+          </div>
+          <div class="fg">
+            <label for="aepSector">Setor (opcional)</label>
+            <select id="aepSector" disabled><option value="">Selecione empresa</option></select>
+          </div>
+          <div class="fg">
+            <label for="aepEvaluator">Avaliador</label>
+            <input type="text" id="aepEvaluator" readonly placeholder="Carregando..." />
+          </div>
+          <div class="fg">
+            <label for="aepDate">Data da Avaliação</label>
+            <input type="date" id="aepDate" required />
+          </div>
+          <div class="fg">
+            <label for="aepFunction">Função Avaliada</label>
+            <input type="text" id="aepFunction" placeholder="Ex: Operador de Produção" required />
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="aep-risks">
+        <legend>Riscos Identificados por Função</legend>
+        <div class="table-wrapper">
+          <table class="aep-table">
+            <thead>
+              <tr>
+                <th class="col-sel">Sel</th>
+                <th class="col-risk">Risco</th>
+                <th>Fator de Risco</th>
+              </tr>
+            </thead>
+            <tbody id="aepRisks">
+              <tr><td colspan="3">Carregando fatores...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </fieldset>
+
+      <div class="aep-actions">
+        <button type="submit" class="btn-primary">Salvar AEP (Local)</button>
+        <button type="button" id="aepClear" class="btn-secondary">Limpar</button>
+      </div>
+      <div id="aepMsg" class="feedback"></div>
+    </form>
+  </div>
+</section>
+<script>
+// Placeholder de submissão simples (apenas front)
+(function(){
+  const form = document.getElementById('aepForm');
+  if(form && !form.__bound){
+    form.__bound = true;
+    form.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const sels = Array.from(form.querySelectorAll('input[name="risks"]:checked')).map(i=>i.value);
+      const payload = {
+        empresa: document.getElementById('aepCompany').value,
+        avaliador: document.getElementById('aepEvaluator').value,
+        data: document.getElementById('aepDate').value,
+        funcao: document.getElementById('aepFunction').value,
+        riscos: sels
+      };
+      localStorage.setItem('aepDraft', JSON.stringify(payload));
+      const msg = document.getElementById('aepMsg');
+      if(msg) msg.textContent = 'AEP salva localmente (draft).';
+    });
+    const clearBtn = document.getElementById('aepClear');
+    if (clearBtn){
+      clearBtn.addEventListener('click', ()=>{
+        localStorage.removeItem('aepDraft');
+        form.reset();
+        const msg = document.getElementById('aepMsg');
+        if(msg) msg.textContent = 'Formulário limpo.';
+      })
+    }
+  }
+})();
+</script>

@@ -1,0 +1,27 @@
+<nav class="top-nav">
+  <div class="nav-left">
+    <div class="brand" aria-label="Aplicação"></div>
+    <ul class="nav-links">
+      <li><a href="#group" data-nav="group">Início</a></li>
+      <li><a href="#dashboard" data-nav="dashboard">Dashboard</a></li>
+      <li><a href="#documents" data-nav="documents">Documentos</a></li>
+  <li class="admin-only"><a href="#admin" data-nav="admin">Administrador</a></li>
+    </ul>
+  </div>
+  <div class="nav-right">
+    <div class="user-dropdown" id="userDropdown">
+      <button class="user-trigger" id="userTrigger" aria-haspopup="true" aria-expanded="false">
+        <span class="mini-initials">--</span>
+        <div class="mini-info">
+          <span class="mini-name" data-prof="name">--</span>
+          <span class="mini-role" data-prof="especialidade">--</span>
+        </div>
+        <span class="chevron">▾</span>
+      </button>
+      <div class="user-menu" role="menu" aria-hidden="true">
+        <button class="user-menu-item" data-action="profile" role="menuitem">Meu Perfil</button>
+        <button class="user-menu-item" data-action="logout" role="menuitem">Sair</button>
+      </div>
+    </div>
+  </div>
+</nav>

@@ -1,48 +1,29 @@
-<header>
-    <button id="menu-toggle" class="menu-toggle-btn">
-        ☰
-    </button>
-</header>
-
-<nav id="sidebar" class="sidebar">
-    <div class="user-profile">
-        <span class="user-avatar">JS</span>
-        <span class="user-name">João da Silva</span>
-        <span class="user-role">TST - Go-Tree</span>
-    </div>
-    
-    <ul class="sidebar-menu">
-        <li>
-            <a href="#profile">Perfil</a>
-        </li>
-        <li>
-            <a href="#dashboard">Dashboard</a>
-        </li>
-        <li>
-            <a href="#documents">Gerenciar Documentos</a>
-        </li>
-        <li>
-            <a href="#">Sair</a>
-        </li>
-    </ul>
-</nav>
-
-<div id="overlay" class="overlay"></div>
-
 <section class="group-page">
     <div class="container">
         <h1 class="page-title">Gerenciamento de Inspeções de Segurança</h1>
 
         <div class="action-buttons">
-            <div class="button-card create-checklist">
-                <h2>Criar Novo Checklist</h2>
-                <button class="btn-primary">Criar Novo Checklist</button>
-            </div>
-
-            <div class="button-card create-report">
-                <h2>Criar Novo Relatório</h2>
-                <button class="btn-primary">Criar Novo Relatório</button>
-            </div>
+            <button class="action-btn action-checklist create-checklist" data-action="new-checklist">
+                <span class="icon">✅</span>
+                <span class="text">
+                    <strong>Novo Checklist</strong>
+                    <small>Inspeção estruturada</small>
+                </span>
+            </button>
+            <button class="action-btn action-report create-report" data-action="new-report">
+                <span class="icon">📝</span>
+                <span class="text">
+                    <strong>Novo Relatório</strong>
+                    <small>Registro fotográfico</small>
+                </span>
+            </button>
+            <button class="action-btn action-aep create-aep" data-action="new-aep">
+                <span class="icon">🛡️</span>
+                <span class="text">
+                    <strong>Novo AEP</strong>
+                    <small>Registro de AEP</small>
+                </span>
+            </button>
         </div>
 
         <div class="history-section">
