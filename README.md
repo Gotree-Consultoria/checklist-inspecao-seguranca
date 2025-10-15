@@ -25,20 +25,6 @@ Este é um aplicativo web 🌐 para a realização de checklists de inspeção d
 
 ## 📂 Estrutura de Arquivos
 
-```
-/
-├── partials/                # Partials (pedaços de HTML)
-│   ├── formsPage.html
-│   ├── headerPage.html
-│   ├── footerPage.html
-│   └── loginPage.html
-├── data.js                  # Dados do checklist 
-├── loadComponents.js        # Carregador de componentes
-├── script.js                # Lógica principal
-├── style.css                # Estilos globais
-└── index.html               # Ponto de entrada
-```
-
 ## ▶️ Como Executar
 
 1.  **Clone o repositório:**
@@ -48,6 +34,9 @@ Este é um aplicativo web 🌐 para a realização de checklists de inspeção d
 2.  **Abra o projeto:**
       * No VS Code, use a extensão **Live Server** para abrir o arquivo `index.html`.
 
+## Acesso ao Projeto Online
+Você pode visualizar o projeto em tempo real através do seguinte link: [Acesse o Projeto](https://checklist-inspecao-seguranca.vercel.app/)
+Todas as atualizaçãos feitas no repositório serão refletidas automaticamente no link acima.
 
 ## 📄 Licença
 

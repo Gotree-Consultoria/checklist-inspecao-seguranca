@@ -54,30 +54,30 @@
     
     <div id="adminUserFormWrapper" class="card mt-24">
       <h2>Novo Usuário</h2>
-      <form id="adminCreateUserForm">
+      <form id="adminCreateUserForm" autocomplete="off">
         <div class="form-row">
           <label for="newUserName">Nome</label>
-          <input type="text" id="newUserName" class="form-control" required placeholder="Nome Completo" title="Nome do usuário" />
+          <input type="text" id="newUserName" name="name" autocomplete="name" class="form-control" required placeholder="Nome Completo" title="Nome do usuário" />
         </div>
         <div class="form-row">
           <label for="newUserEmail">Email</label>
-          <input type="email" id="newUserEmail" class="form-control" required placeholder="email@dominio.com" title="Email de login" />
+          <input type="email" id="newUserEmail" name="email" autocomplete="email" class="form-control" required placeholder="email@dominio.com" title="Email de login" />
         </div>
         <div class="form-row">
           <label for="newUserPassword">Senha</label>
-          <input type="password" id="newUserPassword" class="form-control" required placeholder="Senha" title="Senha inicial" />
+          <input type="password" id="newUserPassword" name="password" autocomplete="new-password" class="form-control" required placeholder="Senha" title="Senha inicial" />
         </div>
         <div class="form-row">
           <label for="newUserBirth">Data de Nascimento</label>
-          <input type="date" id="newUserBirth" class="form-control" title="Data de nascimento" />
+          <input type="date" id="newUserBirth" name="birthDate" autocomplete="bday" class="form-control" title="Data de nascimento" />
         </div>
         <div class="form-row">
           <label for="newUserPhone">Telefone</label>
-          <input type="tel" id="newUserPhone" class="form-control" placeholder="(00) 00000-0000" title="Telefone" />
+          <input type="tel" id="newUserPhone" name="phone" autocomplete="tel" class="form-control" placeholder="(00) 00000-0000" title="Telefone" />
         </div>
         <div class="form-row">
           <label for="newUserCPF">CPF</label>
-          <input type="text" id="newUserCPF" class="form-control" placeholder="000.000.000-00" title="CPF" />
+          <input type="text" id="newUserCPF" name="cpf" autocomplete="off" class="form-control" placeholder="000.000.000-00" title="CPF" />
         </div>
         <div class="form-row">
           <label for="newUserCouncilAcronym">Sigla Conselho de Classe</label>

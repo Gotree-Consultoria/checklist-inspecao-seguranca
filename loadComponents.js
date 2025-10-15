@@ -1,4 +1,8 @@
-import { renderChecklistForm, renderReportForm, setupReportCompanySelectors, getUserRole, initAdminPage, ensureUserRole, renderFullProfilePage, performLogout, fetchUserProfile, initAepPage } from './script.js';
+import { getUserRole, ensureUserRole, renderFullProfilePage, performLogout, fetchUserProfile } from './script.js';
+import { initAepPage } from './pages/aep.js';
+import { renderChecklistForm } from './pages/checklist.js';
+import { renderReportForm, setupReportCompanySelectors } from './pages/report.js';
+import { initAdminPage } from './pages/admin.js';
 
 function initTopNav() {
     const nav = document.querySelector('.top-nav');
@@ -136,21 +140,29 @@ function loadComponent(containerId, componentName) {
                             }
                         });
                     });
+                    // carregar histórico do backend
+                    try { import('./script.js').then(m => { if (m.loadHistoryForGroupPage) m.loadHistoryForGroupPage(); }); } catch(_) {}
                     break;
                 case 'formsPage':
                     renderChecklistForm();
                     initTopNav();
                     document.body.classList.remove('body--login');
+                        // Garantir binding de submit do formulário (fallback se onsubmit inline falhar)
+                        try { import('./script.js').then(m => { const form = document.getElementById('checklistForm'); if (form && m.handleChecklistSubmit) { form.addEventListener('submit', m.handleChecklistSubmit); } }); } catch(_) {}
+                    // O formulário já possui onsubmit="handleChecklistSubmit(event)", não vincular click aqui
                     break;
                 case 'dashboardPage':
                     if (document.querySelector('.top-nav')) initTopNav();
                     setActiveNav('dashboard');
                     document.body.classList.remove('body--login');
+                    try { import('./script.js').then(m => { if (m.populateDashboardHistory) m.populateDashboardHistory(); }); } catch(_) {}
                     break;
                 case 'documentsPage':
                     if (document.querySelector('.top-nav')) initTopNav();
                     setActiveNav('documents');
                     document.body.classList.remove('body--login');
+                    // inicializa lista de documentos e filtros
+                    try { import('./script.js').then(m => { if (m.loadDocumentsList) m.loadDocumentsList(); if (m.bindDocumentsFilters) m.bindDocumentsFilters(); if (m.populateDashboardHistory) m.populateDashboardHistory(); }); } catch(_) {}
                     break;
                 case 'reportPage':
                     if (document.querySelector('.top-nav')) initTopNav();
