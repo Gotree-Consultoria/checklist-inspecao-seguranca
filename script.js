@@ -53,6 +53,10 @@ async function handleLogin(event) {
             const data = await response.json();
             localStorage.setItem('jwtToken', data.token);
             localStorage.setItem('loggedInUserEmail', data.email);
+            // Salvar role explicitamente se o backend forneceu
+            if (data && data.role) {
+                try { localStorage.setItem('userRole', data.role); } catch(_) {}
+            }
             // tenta extrair role do token
             try {
                 const role = extractRoleFromToken(data.token) || data.role || data.roles?.[0];
@@ -74,6 +78,209 @@ async function handleLogin(event) {
                 fetch('partials/navbar.html')
                   .then(r=>r.text())
                   .then(html => { headerContainer.innerHTML = html; if (typeof initTopNav === 'function') initTopNav(); });
+            }
+                        // garantir que initTopNav é executado após inserir o navbar (em caso de race)
+                        try { if (typeof initTopNav === 'function') setTimeout(initTopNav, 100); } catch(_) {}
+            // If backend indicates the account requires password change in the login response or in the JWT payload, redirect to change-password
+            // detect common backend flags in the login response body
+            let needChange = data && (data.needChangePassword || data.mustChangePassword || data.forceChangePassword || data.requirePasswordChange || data.passwordChangeRequired || data.passwordResetRequired);
+            try {
+                const tokenPayload = decodeJwt(data.token) || {};
+                console.debug('[auth] login token payload:', tokenPayload);
+                // token flag names and a regex to match variants
+                const tokenFlagNames = ['requiredPassword','required_password','required_change_password','needChangePassword','mustChangePassword','forceChangePassword','requirePasswordChange','passwordChangeRequired','mustChange','changePasswordRequired','passwordResetRequired','password_reset_required'];
+                const tokenFlagRegex = /password.*reset|reset.*password|change.*pass|must.*change|require.*password/i;
+
+                // recursive search for flag inside token payload
+                function findFlagInObject(obj) {
+                    if (!obj || typeof obj !== 'object') return false;
+                    for (const k of Object.keys(obj)) {
+                        try {
+                            const v = obj[k];
+                            if (tokenFlagNames.includes(k) || tokenFlagRegex.test(k)) {
+                                if (v === true || v === 'true' || v === 1 || v === '1' || (typeof v === 'string' && v.toLowerCase() === 'y')) {
+                                    console.debug('[auth] detected password-change flag in token key:', k, v);
+                                    return true;
+                                }
+                            }
+                            if (typeof v === 'object' && v !== null) {
+                                if (findFlagInObject(v)) return true;
+                            }
+                        } catch (_) {}
+                    }
+                    return false;
+                }
+
+                if (!needChange) {
+                    const tokenFlagFound = findFlagInObject(tokenPayload);
+                    console.debug('[auth] tokenFlagFound=', tokenFlagFound);
+                    if (tokenFlagFound) {
+                        needChange = true;
+                    }
+                }
+            } catch (e) {
+                console.debug('[auth] failed to decode token payload to detect change-password flag', e);
+            }
+            console.debug('[auth] needChange after checks =', needChange);
+            if (!needChange) {
+                try {
+                    // As a fallback, fetch /users/me and inspect common flag names that may indicate a forced password change
+                    const meResp = await fetch(`${API_BASE_URL}/users/me`, { headers: authHeaders() });
+                    if (meResp.ok) {
+                        const meData = await meResp.json().catch(()=>({}));
+                        // check several possible field names
+                        const flags = [
+                            'needChangePassword','mustChangePassword','forceChangePassword','requirePasswordChange','passwordChangeRequired','passwordResetRequired',
+                            'must_change_password','force_change_password','require_password_change','changePasswordRequired','mustChange','password_reset_required'
+                        ];
+                        for (const f of flags) {
+                            if (meData && Object.prototype.hasOwnProperty.call(meData, f) && meData[f]) { needChange = true; break; }
+                        }
+                        // also check nested or alternative shapes (e.g., 'flags' object)
+                        if (!needChange && meData && typeof meData === 'object') {
+                            // look for truthy boolean anywhere in the object with key containing 'change' and 'password'
+                            for (const k of Object.keys(meData)) {
+                                if (/change.*pass|pass.*change|must.*change/i.test(k) && meData[k]) { needChange = true; break; }
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Could not fetch /users/me to detect password-change flag', e);
+                }
+            }
+            if (needChange) {
+                // prefer injecting the modal overlay over the current page (keep background as home)
+                // consider token flags as well for forced mode
+                let forcedFlag = !!(data && (data.passwordResetRequired === true || data.passwordResetRequired === 'true'));
+                try {
+                    const payload = decodeJwt(data.token) || {};
+                    function findForcedInToken(obj) {
+                        if (!obj || typeof obj !== 'object') return false;
+                        for (const k of Object.keys(obj)) {
+                            const v = obj[k];
+                            if (/password.*reset|password_reset_required|passwordResetRequired|require.*password/i.test(k)) {
+                                if (v === true || v === 'true' || v === 1 || v === '1' || (typeof v === 'string' && v.toLowerCase() === 'y')) return true;
+                            }
+                            if (typeof v === 'object' && v !== null) { if (findForcedInToken(v)) return true; }
+                        }
+                        return false;
+                    }
+                    if (!forcedFlag && findForcedInToken(payload)) forcedFlag = true;
+                } catch(_) {}
+                try {
+                    // make sure the app background is the group/home page (not the login) before opening modal
+                    if (typeof loadComponent === 'function') {
+                        try { loadComponent('mainContent', 'groupPage'); } catch(_) {}
+                    }
+                    // short delay to allow groupPage to render
+                    await new Promise(res => setTimeout(res, 140));
+
+                    // if overlay already exists, just set forced flag and open it
+                    const existing = document.getElementById('changePasswordModalOverlay');
+                    if (existing) {
+                        console.debug('[auth] found existing overlay, opening it');
+                        existing.setAttribute('data-forced', forcedFlag ? 'true' : 'false');
+                        existing.__forced = forcedFlag;
+                        existing.classList.add('open');
+                        if (typeof initChangePassword === 'function') initChangePassword();
+                        return;
+                    }
+
+                    // fetch partial and append to body
+                    const partialText = await fetch('partials/changePasswordPage.html').then(r => r.text());
+                    const tmp = document.createElement('div'); tmp.innerHTML = partialText;
+                    const overlayEl = tmp.querySelector('#changePasswordModalOverlay');
+                    if (overlayEl) {
+                        console.debug('[auth] fetched changePassword partial; appending overlay to body');
+                        overlayEl.setAttribute('data-forced', forcedFlag ? 'true' : 'false');
+                        overlayEl.__forced = forcedFlag;
+                        // append overlay
+                        document.body.appendChild(overlayEl);
+                        // Ensure the modal contains a well-formed <form id="changePasswordForm"> with
+                        // actual input children (avoid relying on the `form` attribute only).
+                        try {
+                            (function ensureChangePasswordForm(overlay) {
+                                if (!overlay) return;
+                                const modalBody = overlay.querySelector('.modal-body') || overlay;
+                                // build a deterministic form structure
+                                const buildInputWrapper = (id, labelText, placeholder, autocomplete) => {
+                                    const wrapper = document.createElement('div'); wrapper.className = 'fg';
+                                    const lbl = document.createElement('label'); lbl.setAttribute('for', id); lbl.textContent = labelText;
+                                    const inp = document.createElement('input');
+                                    inp.type = 'password'; inp.id = id; inp.name = id; inp.autocomplete = autocomplete || 'new-password'; inp.required = true; inp.placeholder = placeholder || '';
+                                    wrapper.appendChild(lbl);
+                                    wrapper.appendChild(inp);
+                                    return wrapper;
+                                };
+
+                                const newForm = document.createElement('form');
+                                newForm.id = 'changePasswordForm'; newForm.className = 'form-row'; newForm.noValidate = true;
+                                newForm.appendChild(buildInputWrapper('newPassword', 'Nova Senha', 'Nova senha (mín. 8 caracteres)', 'new-password'));
+                                newForm.appendChild(buildInputWrapper('confirmPassword', 'Confirme a Nova Senha', 'Confirme a nova senha', 'new-password'));
+                                const actions = document.createElement('div'); actions.className = 'form-actions';
+                                const submitBtn = document.createElement('button'); submitBtn.type = 'submit'; submitBtn.className = 'btn btn-primary'; submitBtn.textContent = 'Salvar Nova Senha';
+                                actions.appendChild(submitBtn);
+                                newForm.appendChild(actions);
+                                const msgP = document.createElement('p'); msgP.id = 'changePasswordMsg'; msgP.className = 'form-msg'; msgP.setAttribute('aria-live', 'polite');
+                                newForm.appendChild(msgP);
+
+                                const existingForm = overlay.querySelector('#changePasswordForm');
+                                if (existingForm && existingForm.parentElement) {
+                                    existingForm.parentElement.replaceChild(newForm, existingForm);
+                                    console.debug('[auth] replaced existing changePasswordForm with reconstructed form');
+                                } else {
+                                    // insert into modalBody before any existing actions or at the end
+                                    const beforeRef = modalBody.querySelector('.form-actions');
+                                    if (beforeRef && beforeRef.parentElement) modalBody.insertBefore(newForm, beforeRef.parentElement);
+                                    else modalBody.appendChild(newForm);
+                                    console.debug('[auth] inserted reconstructed changePasswordForm into modal body');
+                                }
+                            })(overlayEl);
+                        } catch (err) {
+                            console.warn('[auth] ensureChangePasswordForm failed', err);
+                        }
+                        // initialize behavior for the modal (after form ensured)
+                        if (typeof initChangePassword === 'function') initChangePassword();
+                        console.debug('[auth] modal appended, form ensured and initChangePassword called');
+                        return;
+                    }
+                                        // If overlay element was not found in the partial, create a minimal modal DOM as a fallback
+                                        console.debug('[auth] overlay not found in partial; creating modal DOM fallback');
+                                        const fallbackOverlay = document.createElement('div');
+                                        fallbackOverlay.id = 'changePasswordModalOverlay';
+                                        fallbackOverlay.className = 'modal-overlay open';
+                                        fallbackOverlay.setAttribute('data-forced', forcedFlag ? 'true' : 'false');
+                                        fallbackOverlay.__forced = forcedFlag;
+                                        fallbackOverlay.innerHTML = `
+                                                <div class="modal" role="document" aria-describedby="changePasswordDesc">
+                                                    <div class="modal-header">
+                                                        <h3 id="changePasswordTitle">Trocar Senha</h3>
+                                                        <button type="button" class="btn btn-icon modal-close" data-action="modal-close" aria-label="Fechar">&times;</button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p id="changePasswordDesc">Por segurança você deve definir uma nova senha pessoal e secreta.</p>
+                                                        <form id="changePasswordForm" class="form-row" novalidate>
+                                                            <div class="fg"><label for="newPassword">Nova Senha</label><input type="password" id="newPassword" form="changePasswordForm" autocomplete="new-password" required placeholder="Nova senha (mín. 8 caracteres)" /></div>
+                                                            <div class="fg"><label for="confirmPassword">Confirme a Nova Senha</label><input type="password" id="confirmPassword" form="changePasswordForm" autocomplete="new-password" required placeholder="Confirme a nova senha" /></div>
+                                                            <div class="form-actions"><button type="submit" class="btn btn-primary">Salvar Nova Senha</button></div>
+                                                            <p id="changePasswordMsg" class="form-msg" aria-live="polite"></p>
+                                                        </form>
+                                                    </div>
+                                                </div>`;
+                                        document.body.appendChild(fallbackOverlay);
+                                        if (typeof initChangePassword === 'function') initChangePassword();
+                                        console.debug('[auth] fallback modal appended and initChangePassword called');
+                                        return;
+                } catch (e) {
+                    console.warn('Não foi possível injetar modal de troca de senha:', e);
+                }
+                // fallback: load as a normal component if injection failed
+                if (typeof loadComponent === 'function') {
+                    loadComponent('mainContent', 'changePasswordPage');
+                } else {
+                    window.location.href = window.location.pathname + '#change-password';
+                }
+                return;
             }
             if (typeof loadComponent === 'function') {
                 loadComponent('mainContent', 'groupPage');
@@ -341,7 +548,18 @@ export function initAdminPage() {
             const respText = await resp.text().catch(() => '');
             console.debug('[adminCreateUser] response status:', resp.status, 'body:', respText);
             if (!resp.ok) {
-                throw new Error(respText || `Erro ao criar usuário (status ${resp.status})`);
+                let serverMsg = respText || `Erro ao criar usuário (status ${resp.status})`;
+                try {
+                    const parsed = JSON.parse(respText);
+                    serverMsg = parsed.message || parsed.error || serverMsg;
+                } catch (e) {
+                    // body not JSON
+                }
+                if (/email\s*já\s*cadastrad/i.test(serverMsg) || /email.*already/i.test(serverMsg)) {
+                    serverMsg = 'Já existe um usuário cadastrado com este e-mail.';
+                }
+                showToast(serverMsg, 'error');
+                throw new Error(serverMsg);
             }
             msg.textContent = 'Usuário criado com sucesso.';
             form.reset();
@@ -659,6 +877,131 @@ export async function renderFullProfilePage() {
     if (avatarInitials) avatarInitials.textContent = (data.name || '?').split(/\s+/).slice(0,2).map(p=>p.charAt(0).toUpperCase()).join('');
 }
 
+// Página: trocar senha forçada/voluntária
+export function initChangePassword() {
+    const form = document.getElementById('changePasswordForm');
+    const msg = document.getElementById('changePasswordMsg');
+    const overlay = document.getElementById('changePasswordModalOverlay');
+    if (!form || !overlay) return;
+
+    // show modal
+    function openModal(forced=false) {
+        overlay.classList.add('open');
+        // when forced, hide the close button
+        const closeBtn = overlay.querySelector('[data-action="modal-close"]');
+        if (closeBtn) closeBtn.style.display = forced ? 'none' : '';
+        // trap focus to first input
+        const first = overlay.querySelector('#newPassword'); if (first) first.focus();
+        // prevent background scroll
+        document.documentElement.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+        overlay.classList.remove('open');
+        document.documentElement.style.overflow = '';
+    }
+
+    // close handlers
+    overlay.addEventListener('click', (e) => {
+        const forced = overlay.__forced === true;
+        if (e.target === overlay && !forced) closeModal();
+    });
+    const closeBtn = overlay.querySelector('[data-action="modal-close"]');
+    if (closeBtn) closeBtn.addEventListener('click', () => { if (!overlay.__forced) closeModal(); });
+    // ESC to close (if not forced)
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && overlay.classList.contains('open') && !overlay.__forced) closeModal(); });
+
+    // read forced flag (set by handleLogin when loading the component)
+    const forcedMode = !!overlay.getAttribute('data-forced');
+    overlay.__forced = forcedMode;
+    // Ensure inputs are real descendants of the form (some dynamic injection paths may leave them outside)
+    function normalizeFormInputs() {
+        try {
+            const formEl = overlay.querySelector('#changePasswordForm');
+            if (!formEl) return false;
+            const ids = ['newPassword','confirmPassword'];
+            let moved = false;
+            ids.forEach(id => {
+                const input = overlay.querySelector('#' + id) || document.getElementById(id);
+                if (!input) return;
+                // if already inside the form, ok
+                if (input.closest('form') === formEl) return;
+                // try to find an existing label text
+                const existingLabel = overlay.querySelector('label[for="' + id + '"]') || document.querySelector('label[for="' + id + '"]');
+                const labelText = existingLabel ? existingLabel.textContent : (id === 'newPassword' ? 'Nova Senha' : 'Confirme a Nova Senha');
+                // remove original label if exists
+                if (existingLabel && existingLabel.parentElement) existingLabel.parentElement.removeChild(existingLabel);
+                // detach input from previous parent
+                if (input.parentElement) input.parentElement.removeChild(input);
+                // ensure the input has the form attribute
+                input.setAttribute('form', 'changePasswordForm');
+                // create wrapper and append label+input into form before actions
+                const wrapper = document.createElement('div'); wrapper.className = 'fg';
+                const lbl = document.createElement('label'); lbl.setAttribute('for', id); lbl.textContent = labelText;
+                wrapper.appendChild(lbl); wrapper.appendChild(input);
+                const actions = formEl.querySelector('.form-actions');
+                if (actions && actions.parentElement) formEl.insertBefore(wrapper, actions);
+                else formEl.appendChild(wrapper);
+                moved = true;
+                console.debug('[auth] moved input into form:', id);
+            });
+            return moved;
+        } catch (err) { console.debug('[auth] normalizeFormInputs error', err); return false; }
+    }
+
+    // run normalization immediately and a couple of times after short delays to cover timing race conditions
+    try { const r1 = normalizeFormInputs(); console.debug('[auth] normalizeFormInputs immediate result=', r1); } catch(_){}
+    setTimeout(() => { try { const r2 = normalizeFormInputs(); console.debug('[auth] normalizeFormInputs @80ms result=', r2); } catch(_){} }, 80);
+    setTimeout(() => { try { const r3 = normalizeFormInputs(); console.debug('[auth] normalizeFormInputs @300ms result=', r3); } catch(_){} }, 300);
+
+    openModal(forcedMode);
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault(); msg.textContent = '';
+        const pw = document.getElementById('newPassword')?.value || '';
+        const confirm = document.getElementById('confirmPassword')?.value || '';
+        if (!pw || pw.length < 8) { msg.textContent = 'A nova senha deve ter no mínimo 8 caracteres.'; return; }
+        if (pw !== confirm) { msg.textContent = 'As senhas não conferem.'; return; }
+        const submitBtn = form.querySelector('button[type="submit"]'); if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Salvando...'; }
+        try {
+            const resp = await submitChangePassword(pw);
+            const txt = await resp.text().catch(()=>'');
+            if (!resp.ok) throw new Error(txt || `Falha ao atualizar senha (status ${resp.status})`);
+            showToast('Senha atualizada com sucesso. Você será redirecionado.', 'success');
+            // close modal and refresh app state
+            closeModal();
+            setTimeout(() => {
+                if (typeof loadComponent === 'function') loadComponent('mainContent', 'groupPage'); else window.location.reload();
+            }, 600);
+        } catch (err) {
+            msg.textContent = err.message || 'Erro ao atualizar senha.';
+        } finally { if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Salvar Nova Senha'; } }
+    });
+}
+
+// Tenta atualizar a senha usando o endpoint padrão e, em fallback, um caminho alternativo.
+async function submitChangePassword(newPassword) {
+    const payload = { newPassword };
+    // primeiro tenta /users/me/change-password
+    const urlsToTry = [
+        `${API_BASE_URL}/users/me/change-password`,
+        `${API_BASE_URL}/me/change-password`
+    ];
+    for (const url of urlsToTry) {
+        try {
+            const resp = await fetch(url, { method: 'PUT', headers: { 'Content-Type':'application/json', ...authHeaders() }, body: JSON.stringify(payload) });
+            // se deu qualquer resposta diferente de 404, retornamos e o chamador decide
+            if (resp.status !== 404) return resp;
+            // se 404, tentar próxima url
+        } catch (e) {
+            // em erro de rede, re-lança
+            throw e;
+        }
+    }
+    // se todas retornaram 404 ou falharam silenciosamente, lançar erro
+    throw new Error('Endpoint de alteração de senha não encontrado no servidor.');
+}
+
 // =======================================================
 // Logout
 // =======================================================
@@ -885,6 +1228,7 @@ export async function loadCompanyHierarchyForAEP() {
         const opt = document.createElement('option');
         opt.value = c.id;
         opt.textContent = c.name;
+        opt.dataset.cnpj = c.cnpj || '';
         opt.dataset.units = JSON.stringify(c.units || []);
         opt.dataset.sectors = JSON.stringify(c.sectors || []);
         empresaSel.appendChild(opt);
@@ -934,17 +1278,7 @@ export function setupReportCompanySelectors() {
     // Recria somente toggle adicional; dados virão de loadCompanyHierarchyForReport()
     const empresaSelect = document.getElementById('reportEmpresa');
     if (!empresaSelect) return;
-    if (!document.getElementById('reportIncludeCompany')) {
-        const wrapper = empresaSelect.parentElement;
-        if (wrapper) {
-            const toggleDiv = document.createElement('div');
-            toggleDiv.style.marginTop = '4px';
-            toggleDiv.innerHTML = `<label style="display:flex;align-items:center;gap:6px;font-size:.7rem;">
-                <input type="checkbox" id="reportIncludeCompany" checked /> Incluir nome da empresa principal ao selecionar unidade
-            </label>`;
-            wrapper.appendChild(toggleDiv);
-        }
-    }
+    // Não inserir o toggle 'reportIncludeCompany' dinamicamente — removido por solicitação.
     loadCompanyHierarchyForReport();
 }
 
@@ -1054,7 +1388,18 @@ async function handleChecklistSubmit(event) {
     // estão desabilitados por "Não se Aplica".
     if (form) form.noValidate = true;
     console.log('[Checklist] handleChecklistSubmit invoked');
-    await openSignatureModal();
+    await openSignatureModal({
+        modalId: '#signatureModal',
+        techCanvasSelector: '#techSignatureCanvas',
+        clientCanvasSelector: '#clientSignatureCanvas',
+        techNameSelector: '#techName',
+        clientNameSelector: '#clientName',
+        clearAllBtnId: '#clearAllSignaturesBtn',
+        clearTechBtnId: '#clearTechSignatureBtn',
+        clearClientBtnId: '#clearClientSignatureBtn',
+        confirmBtnId: '#confirmSignaturesBtn',
+        cancelBtnId: '#cancelSignaturesBtn'
+    });
 }
 
 // Modal de assinatura: gerenciamento
@@ -1063,39 +1408,47 @@ let clientSignaturePad = null;
 
 // A funcionalidade de assinatura foi movida para um módulo em modules/signature.js
 
-async function openSignatureModal() {
-    // garantir modal existe (criar fallback se necessário)
-    ensureSignatureModalExists();
-    // diagnóstico: logar para entender por que modal pode não estar presente
-    let modal = document.getElementById('signatureModal');
-    let techCanvas = document.getElementById('techSignatureCanvas');
-    let clientCanvas = document.getElementById('clientSignatureCanvas');
-    console.log('[Signature] trying to open modal:', { modalExists: !!modal, techCanvasExists: !!techCanvas, clientCanvasExists: !!clientCanvas });
-    // fallback: às vezes os elementos estão dentro de um container injetado; tentar buscar por seletor genérico
-    if (!modal) modal = document.querySelector('.modal-overlay#signatureModal') || document.querySelector('#mainContent #signatureModal') || document.querySelector('.modal-overlay');
-    if (!techCanvas) techCanvas = document.querySelector('canvas#techSignatureCanvas') || document.querySelector('#signatureModal canvas.signature-canvas');
-    if (!clientCanvas) clientCanvas = document.querySelector('canvas#clientSignatureCanvas') || (document.querySelectorAll('canvas.signature-canvas')[1] || null);
+async function openSignatureModal(config) {
+    // config (optional) allows pages to specify their own modal/canvas/button selectors
+    // expected shape: { modalId, techCanvasSelector, clientCanvasSelector, techNameSelector, clientNameSelector, clearAllBtnId, clearTechBtnId, clearClientBtnId, confirmBtnId, cancelBtnId }
+    config = config || {};
+    // garantir modal existe (criar fallback se necessário) - only for default modal
+    if (!config.modalId) ensureSignatureModalExists();
+
+    // diagnóstico and element resolution with fallbacks
+    let modal = config.modalId ? document.querySelector(config.modalId) : document.getElementById('signatureModal');
+    let techCanvas = config.techCanvasSelector ? document.querySelector(config.techCanvasSelector) : document.getElementById('techSignatureCanvas');
+    let clientCanvas = config.clientCanvasSelector ? document.querySelector(config.clientCanvasSelector) : document.getElementById('clientSignatureCanvas');
+    console.log('[Signature] trying to open modal with config:', { config, modalExists: !!modal, techCanvasExists: !!techCanvas, clientCanvasExists: !!clientCanvas });
+
+    // fallback attempts (only for default selectors)
+    if (!modal && !config.modalId) modal = document.querySelector('.modal-overlay#signatureModal') || document.querySelector('#mainContent #signatureModal') || document.querySelector('.modal-overlay');
+    if (!techCanvas && !config.techCanvasSelector) techCanvas = document.querySelector('canvas#techSignatureCanvas') || document.querySelector('#signatureModal canvas.signature-canvas');
+    if (!clientCanvas && !config.clientCanvasSelector) clientCanvas = document.querySelector('canvas#clientSignatureCanvas') || (document.querySelectorAll('canvas.signature-canvas')[1] || null);
+
     if (!modal || !techCanvas || !clientCanvas) {
         console.warn('[Signature] Modal or canvases not found after fallback attempts', { modal, techCanvas, clientCanvas });
-        // mostrar aviso ao usuário para diagnóstico
         showToast('Não foi possível abrir o modal de assinatura. Elementos não encontrados.', 'error');
         return;
     }
-    // forçar exibição do modal (CSS usa display:flex for .modal-overlay.open)
-    try {
-        if (modal.parentElement !== document.body) document.body.appendChild(modal);
-    } catch (_) {}
+
+    // attach modal to body and display
+    try { if (modal.parentElement !== document.body) document.body.appendChild(modal); } catch(_) {}
+    // remove any 'hidden' class that may have display:none !important
+    try { modal.classList.remove('hidden'); } catch(_) {}
     modal.style.display = 'flex';
     modal.style.zIndex = '9999';
     try { modal.classList.add('open'); } catch(_) {}
     try { modal.setAttribute('aria-hidden', 'false'); } catch(_) {}
-    // garantir que canvases possam receber toque/gesto
+    // prevent background scroll
+    try { document.documentElement.style.overflow = 'hidden'; } catch(_) {}
     try { techCanvas.style.touchAction = techCanvas.style.touchAction || 'none'; clientCanvas.style.touchAction = clientCanvas.style.touchAction || 'none'; } catch(_) {}
-    console.log('[Signature] modal displayed and appended to body');
+
     // Preencher dados do técnico automaticamente a partir do usuário logado
     try {
         const me = await fetchUserProfile();
-        const techInput = document.getElementById('techName');
+        const techInput = config.techNameSelector ? document.querySelector(config.techNameSelector) : document.getElementById('techName');
+        const clientNameInput = config.clientNameSelector ? document.querySelector(config.clientNameSelector) : document.getElementById('clientName');
         const siglaInput = document.getElementById('responsavelSigla');
         const regInput = document.getElementById('responsavelRegistro');
         const mainResp = document.getElementById('responsavel');
@@ -1105,7 +1458,6 @@ async function openSignatureModal() {
             if (siglaInput && !siglaInput.value) siglaInput.value = me.siglaConselhoClasse || me.councilAcronym || '';
             if (regInput && !regInput.value) regInput.value = me.conselhoClasse || me.councilNumber || '';
         } else {
-            // tentar derivar do token
             const token = localStorage.getItem('jwtToken');
             if (token) {
                 try {
@@ -1117,12 +1469,9 @@ async function openSignatureModal() {
                 } catch (_) {}
             }
         }
-    } catch (e) {
-        console.warn('Não foi possível preencher dados do técnico automaticamente', e);
-    }
+    } catch (e) { console.warn('Não foi possível preencher dados do técnico automaticamente', e); }
 
-    // Use o módulo de assinatura (modules/signature.js) que tenta carregar a
-    // biblioteca externa e fornece fallback offline.
+    // initialize pads using module
     try {
         const mod = await import('./modules/signature.js');
         const pads = await mod.initSignaturePads(techCanvas, clientCanvas, { backgroundColor: 'rgba(255,255,255,0)', penColor: 'black' });
@@ -1131,30 +1480,37 @@ async function openSignatureModal() {
     } catch (e) {
         console.warn('Signature module init failed', e);
         showToast('Erro ao inicializar assinatura: ' + (e && e.message), 'error', 6000);
-        const confirmBtnErr = document.getElementById('confirmSignaturesBtn');
+        const confirmBtnErr = config.confirmBtnId ? document.querySelector(config.confirmBtnId) : document.getElementById('confirmSignaturesBtn');
         if (confirmBtnErr) confirmBtnErr.disabled = true;
     }
-    // bind
-    const clearAll = document.getElementById('clearAllSignaturesBtn');
-    const clearTechBtn = document.getElementById('clearTechSignatureBtn');
-    const clearClientBtn = document.getElementById('clearClientSignatureBtn');
-    const confirmBtn = document.getElementById('confirmSignaturesBtn');
-    const cancelBtn = document.getElementById('cancelSignaturesBtn');
-    // limpar apenas a assinatura técnica
+
+    // bind buttons (selectors fallback to defaults)
+    const clearAll = config.clearAllBtnId ? document.querySelector(config.clearAllBtnId) : document.getElementById('clearAllSignaturesBtn');
+    const clearTechBtn = config.clearTechBtnId ? document.querySelector(config.clearTechBtnId) : document.getElementById('clearTechSignatureBtn');
+    const clearClientBtn = config.clearClientBtnId ? document.querySelector(config.clearClientBtnId) : document.getElementById('clearClientSignatureBtn');
+    const confirmBtn = config.confirmBtnId ? document.querySelector(config.confirmBtnId) : document.getElementById('confirmSignaturesBtn');
+    const cancelBtn = config.cancelBtnId ? document.querySelector(config.cancelBtnId) : document.getElementById('cancelSignaturesBtn');
+    // actions
     clearTechBtn && (clearTechBtn.onclick = () => { techSignaturePad && techSignaturePad.clear(); });
-    // limpar apenas a assinatura do cliente
     clearClientBtn && (clearClientBtn.onclick = () => { clientSignaturePad && clientSignaturePad.clear(); });
-    // botão original limpa todas
     clearAll && (clearAll.onclick = () => { techSignaturePad && techSignaturePad.clear(); clientSignaturePad && clientSignaturePad.clear(); });
-    // usar o encerramento que também restaura a validação do formulário
     cancelBtn && (cancelBtn.onclick = closeSignatureModalAndRestore);
-    confirmBtn && (confirmBtn.onclick = confirmSignaturesAndSave);
+    // bind confirm button to default handler unless caller requested otherwise
+    if (confirmBtn && config.bindConfirm !== false) confirmBtn.onclick = confirmSignaturesAndSave;
+
+    // return pad instances so callers (pages) can use them locally if needed
+    return { tech: techSignaturePad, client: clientSignaturePad };
 }
 
 function closeSignatureModal() {
     const modal = document.getElementById('signatureModal');
-    if (modal) modal.style.display = 'none';
-    // restaurar campos de responsavel que foram tornados readonly
+    if (modal) {
+        try { modal.classList.remove('open'); } catch(_) {}
+        try { modal.classList.add('hidden'); } catch(_) {}
+        try { modal.style.display = 'none'; } catch(_) {}
+    }
+    // restaurar rolagem e campos de responsavel que foram tornados readonly
+    try { document.documentElement.style.overflow = ''; } catch(_) {}
     try { const r = document.getElementById('responsavel'); if (r) r.readOnly = false; const t = document.getElementById('techName'); if (t) t.readOnly = false; } catch(_) {}
 }
 
@@ -1335,7 +1691,7 @@ async function confirmSignaturesAndSave() {
         if (resp.ok) {
             const body = await resp.json().catch(()=>({}));
             const reportId = body.reportId || body.id || null;
-            showToast('Relatório salvo com sucesso. Você pode visualizá-lo em Documentos.', 'success');
+            showToast('salvo com sucesso. Você pode visualizá-lo em Documentos.', 'success');
             // opcional: armazenar no localStorage para histórico local
             const all = JSON.parse(localStorage.getItem('savedInspectionReports') || '[]');
             all.push({ id: reportId, title: payload.title, type: payload.type, companyId: payload.companyId, createdAt: new Date().toISOString() });
@@ -1355,19 +1711,24 @@ async function confirmSignaturesAndSave() {
     }
 }
 
-async function handleDownloadPdf(reportId) {
+async function handleDownloadPdf(typeSlug, reportId) {
     if (!reportId) return showToast('ReportId inválido', 'error');
     try {
-        const resp = await fetch(`${API_BASE_URL}/reports/download/${encodeURIComponent(reportId)}`, {
-            method: 'GET',
-            headers: { ...authHeaders() }
-        });
-        if (!resp.ok) throw new Error('Falha ao baixar PDF');
+        const mod = await import('./lib/api.js');
+        const tryTypes = typeSlug ? [typeSlug] : ['visit','report','checklist','aep'];
+        const resp = await mod.fetchReportPdf(tryTypes, reportId);
+        if (!resp || !resp.ok) throw new Error('Falha ao baixar PDF');
+        const ct = (resp.headers.get('content-type') || '').toLowerCase();
+        if (!ct.includes('pdf')) {
+            const txt = await resp.text().catch(()=>null);
+            console.warn('Esperava PDF no download, recebeu:', ct, txt);
+            throw new Error('Servidor não retornou PDF');
+        }
         const blob = await resp.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `checklist-${reportId}.pdf`;
+        a.download = `document-${reportId}.pdf`;
         document.body.appendChild(a);
         a.click();
         a.remove();
@@ -1380,7 +1741,8 @@ async function handleDownloadPdf(reportId) {
 
 // Expor globalmente para o onsubmit do formulário
 window.handleChecklistSubmit = handleChecklistSubmit;
-window.handleDownloadPdf = handleDownloadPdf;
+// Expor handleDownloadPdf como uma versão legacy que aceita só id (mantemos compatibilidade) e uma nova com type
+window.handleDownloadPdf = (reportId) => handleDownloadPdf('', reportId);
 // Exportar referências para módulos que importam estas funções
 export { loadCompanyHierarchyForChecklist, openSignatureModal, handleChecklistSubmit, handleDownloadPdf };
 
@@ -1401,7 +1763,7 @@ export async function loadDocumentsList() {
     if (q) params.set('title', q);
         if (type && type !== 'all') params.set('type', type);
         if (date) params.set('date', date);
-        const url = `${API_BASE_URL}/inspection-reports${params.toString()?('?'+params.toString()):''}`;
+    const url = `${API_BASE_URL}/documents${params.toString()?('?'+params.toString()):''}`;
         const resp = await fetch(url, { headers: authHeaders() });
         if (resp.ok) {
             const list = await resp.json();
@@ -1451,7 +1813,7 @@ export async function loadHistoryForGroupPage(limit = 10) {
     if (!tbody) return;
     tbody.innerHTML = '<tr><td colspan="5">Carregando...</td></tr>';
     try {
-        const resp = await fetch(`${API_BASE_URL}/inspection-reports/latest`, { headers: authHeaders() });
+    const resp = await fetch(`${API_BASE_URL}/documents/latest`, { headers: authHeaders() });
         if (!resp.ok) throw new Error('Nenhum histórico disponível');
         const data = await resp.json();
         // aceitar tanto array quanto objeto único
@@ -1463,30 +1825,60 @@ export async function loadHistoryForGroupPage(limit = 10) {
         tbody.innerHTML = items.slice(0, limit).map(item => {
             const typeRaw = item.type || item.documentType || '';
             const type = escapeHtml(formatDocumentType(typeRaw));
+            const typeSlug = documentTypeToSlug(typeRaw);
             const title = escapeHtml(item.title || item.type || 'Documento');
             const company = escapeHtml(item.companyName || item.company || '');
             const date = escapeHtml(formatDateToBrazil(item.inspectionDate || item.createdAt || '')) || '';
             const idRaw = item.id || item.reportId || '';
             const id = encodeURIComponent(idRaw);
-            const viewBtn = id ? `<button type="button" data-id="${idRaw}" class="btn-visual-pdf btn-view-doc">Visualizar</button>` : '<em>Sem link</em>';
-            const downloadBtn = id ? `<button type="button" data-id="${idRaw}" class="btn-primary btn-download-doc">Baixar</button>` : '';
-            return `<tr data-doc-id="${idRaw}"><td>${type}</td><td>${title}</td><td>${company}</td><td>${date}</td><td>${downloadBtn} ${viewBtn}</td></tr>`;
+            const popup = `<div class="doc-actions-popup" data-doc-id="${idRaw}" data-doc-type="${typeSlug}">
+                    <button type="button" class="btn-download-doc" data-id="${idRaw}" data-type="${typeSlug}">Baixar</button>
+                    <button type="button" class="btn-visual-pdf btn-view-doc" data-id="${idRaw}" data-type="${typeSlug}">Visualizar</button>
+                    <button type="button" class="btn-danger btn-delete-doc" data-id="${idRaw}" data-type="${typeSlug}">Excluir</button>
+                </div>`;
+            // toggle icon (vertical ellipsis) + popup buttons with simple SVG icons
+            const toggleHtml = (() => {
+                const id = 'actionsToggle_' + String(Math.random()).slice(2,8);
+                return `<button id="${id}" type="button" class="actions-toggle" aria-label="Abrir opções" aria-haspopup="true" aria-expanded="false">` +
+                `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 6a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM12 13.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM12 21a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z" fill="currentColor"/></svg>` +
+                `</button>`;
+            })();
+            const enhancedPopup = `<div class="doc-actions-popup" role="menu" aria-hidden="true" data-doc-id="${idRaw}" data-doc-type="${typeSlug}">` +
+                `<button type="button" role="menuitem" class="btn-download-doc" data-id="${idRaw}" data-type="${typeSlug}" title="Baixar">` +
+                    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 3v10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg> Baixar</button>` +
+                `<button type="button" role="menuitem" class="btn-visual-pdf btn-view-doc" data-id="${idRaw}" data-type="${typeSlug}" title="Visualizar">` +
+                    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Visualizar</button>` +
+                `<button type="button" role="menuitem" class="btn-danger btn-delete-doc" data-id="${idRaw}" data-type="${typeSlug}" title="Excluir">` +
+                    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M3 6h18" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 6v14a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg> Excluir</button>` +
+                `</div>`;
+            return `<tr data-doc-id="${idRaw}" data-doc-type="${typeSlug}"><td>${type}</td><td>${title}</td><td>${company}</td><td>${date}</td><td class="actions-cell">${toggleHtml}${enhancedPopup}</td></tr>`;
         }).join('');
         // bind download/view handlers for group history table
         tbody.querySelectorAll('.btn-download-doc').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 e.preventDefault();
                 const id = btn.dataset.id;
+                const typeSlug = btn.dataset.type || btn.closest('tr')?.dataset?.docType || '';
                 if (!id) return showToast('ID do documento ausente', 'error');
                 try {
-                    const resp = await fetch(`${API_BASE_URL}/reports/download/${encodeURIComponent(id)}`, { headers: authHeaders() });
-                    if (resp.ok) {
-                        const blob = await resp.blob();
-                        const url = window.URL.createObjectURL(blob);
-                        const link = document.createElement('a'); link.href = url; link.download = `document-${id}.pdf`; document.body.appendChild(link); link.click(); link.remove(); window.URL.revokeObjectURL(url);
-                        return;
+                    const mod = await import('./lib/api.js');
+                    const tryTypes = typeSlug ? [typeSlug] : ['visit','report','checklist','aep'];
+                    const resp = await mod.fetchReportPdf(tryTypes, id);
+                    if (resp && resp.ok) {
+                        const ct = (resp.headers.get('content-type') || '').toLowerCase();
+                        if (!ct.includes('pdf')) {
+                            const txt = await resp.text().catch(()=>null);
+                            console.warn('Esperava PDF no download (documents list), recebeu:', ct, txt);
+                        } else {
+                            const blob = await resp.blob();
+                            const url = window.URL.createObjectURL(blob);
+                            const link = document.createElement('a'); link.href = url; link.download = `document-${id}.pdf`; document.body.appendChild(link); link.click(); link.remove(); window.URL.revokeObjectURL(url);
+                            return;
+                        }
                     }
-                } catch (_) {}
+                } catch (err) {
+                    console.warn('download (group history) failed', err);
+                }
                 showToast('Não foi possível obter PDF do documento.', 'error');
             });
         });
@@ -1494,10 +1886,19 @@ export async function loadHistoryForGroupPage(limit = 10) {
             btn.addEventListener('click', async (e) => {
                 e.preventDefault();
                 const id = btn.dataset.id;
+                const typeSlug = btn.dataset.type || btn.closest('tr')?.dataset?.docType || '';
                 if (!id) return showToast('ID do documento ausente', 'error');
                 try {
-                    const resp = await fetch(`${API_BASE_URL}/reports/download/${encodeURIComponent(id)}`, { headers: authHeaders() });
-                    if (!resp.ok) throw new Error('Erro ao obter PDF');
+                    const mod = await import('./lib/api.js');
+                    const tryTypes = typeSlug ? [typeSlug] : ['visit','report','checklist','aep'];
+                    const resp = await mod.fetchReportPdf(tryTypes, id);
+                    if (!resp || !resp.ok) throw new Error('Erro ao obter PDF');
+                    const ct = (resp.headers.get('content-type') || '').toLowerCase();
+                    if (!ct.includes('pdf')) {
+                        const txt = await resp.text().catch(()=>null);
+                        console.warn('Esperava PDF para visualização, recebeu:', ct, txt);
+                        throw new Error('Servidor não retornou PDF para visualização');
+                    }
                     const blob = await resp.blob();
                     showPdfModal(blob);
                 } catch (err) {
@@ -1522,6 +1923,36 @@ export function formatDocumentType(type) {
         case 'AEP': return 'Avaliação Ergônomica Preliminar (AEP)';
         default: return (type && String(type)) || 'Documento';
     }
+}
+
+// Converte documentType (enum/backend) em slug usado nas URLs do backend
+export function documentTypeToSlug(type) {
+    if (!type) return 'document';
+    // normalize to string
+    const raw = String(type || '');
+    // remove diacritics and normalize spacing
+    const normalized = raw.normalize ? raw.normalize('NFD').replace(/\p{Diacritic}/gu, '') : raw;
+    const up = normalized.toUpperCase();
+
+    // heuristics: accept either backend enum values OR human-readable labels
+    if (up.includes('CHECKLIST') || up.includes('INSPECAO') || up.includes('INSPEÇÃO') || up.includes('INSPECC')) return 'checklist';
+    if (up.includes('RELATORIO') || up.includes('RELAT') || (up.includes('VISITA') && up.includes('RELAT'))) return 'visit';
+    if (up.includes('VISITA') && !up.includes('CHECK')) {
+        // if label mentions 'visita' assume visit report
+        return 'visit';
+    }
+    if (up.includes('AEP')) return 'aep';
+
+    // also accept backend enum exact matches
+    switch (up) {
+        case 'CHECKLIST_INSPECAO': return 'checklist';
+        case 'RELATORIO_VISITA': return 'visit';
+        case 'AEP': return 'aep';
+    }
+
+    // fallback: build safe slug from provided value (lowercase, remove non-alnum)
+    const slug = String(type).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    return slug || 'document';
 }
 
 // Formata string de data ISO (YYYY-MM-DD ou ISO full) para DD/MM/YYYY
@@ -1555,7 +1986,13 @@ export function bindDocumentsFilters() {
 }
 
 function renderDocumentsListRows(list, container) {
-    if (!Array.isArray(list) || !list.length) {
+    // accept object or array (some APIs may return a single object)
+    if (!list) {
+        container.innerHTML = '<tr><td colspan="5">Nenhum documento encontrado.</td></tr>';
+        return;
+    }
+    if (!Array.isArray(list)) list = Array.isArray(list) ? list : [list];
+    if (!list.length) {
         container.innerHTML = '<tr><td colspan="5">Nenhum documento encontrado.</td></tr>';
         return;
     }
@@ -1566,8 +2003,9 @@ function renderDocumentsListRows(list, container) {
     for (const item of list) {
         const idVal = item.id || item.reportId || '';
         const titleVal = item.title || item.name || 'Sem título';
-        const companyVal = item.companyName || '';
-    const dateVal = formatDateToBrazil(item.inspectionDate || item.createdAt || item.date || '');
+        // support different API field names: clientName, companyName, company
+        const companyVal = item.clientName || item.companyName || item.company || '';
+    const dateVal = formatDateToBrazil(item.creationDate || item.inspectionDate || item.createdAt || item.date || '');
         if (idVal) {
             if (seenIds.has(String(idVal))) continue;
             seenIds.add(String(idVal));
@@ -1581,21 +2019,34 @@ function renderDocumentsListRows(list, container) {
     }
 
     container.innerHTML = normalized.map(item => {
-        const type = escapeHtml(formatDocumentType(item.type || item.documentType || ''));
+        const typeRaw = item.type || item.documentType || '';
+        const type = escapeHtml(formatDocumentType(typeRaw));
+        const typeSlug = documentTypeToSlug(typeRaw);
         const title = escapeHtml(item.title || item.name || 'Sem título');
-        const company = escapeHtml(item.companyName || '');
-    const dateRaw = item.inspectionDate || item.createdAt || item.date || '';
+        const company = escapeHtml(item.clientName || item.companyName || item.company || '');
+    const dateRaw = item.creationDate || item.inspectionDate || item.createdAt || item.date || '';
     const date = escapeHtml(formatDateToBrazil(dateRaw));
         const id = item.id || item.reportId || '';
-        return `<tr data-doc-id="${id}">
+        const toggleHtml = (() => {
+            const id = 'actionsToggle_' + String(Math.random()).slice(2,8);
+            return `<button id="${id}" type="button" class="actions-toggle" aria-label="Abrir opções" aria-haspopup="true" aria-expanded="false">` +
+                `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 6a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM12 13.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM12 21a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z" fill="currentColor"/></svg>` +
+                `</button>`;
+        })();
+        const enhancedPopup = `<div class="doc-actions-popup" role="menu" aria-hidden="true" data-doc-id="${id}" data-doc-type="${typeSlug}">` +
+            `<button type="button" role="menuitem" class="btn-download-doc" data-id="${id}" data-type="${typeSlug}" title="Baixar">` +
+                `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 3v10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg> Baixar</button>` +
+            `<button type="button" role="menuitem" class="btn-visual-pdf btn-view-doc" data-id="${id}" data-type="${typeSlug}" title="Visualizar">` +
+                `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Visualizar</button>` +
+            `<button type="button" role="menuitem" class="btn-danger btn-delete-doc" data-id="${id}" data-type="${typeSlug}" title="Excluir">` +
+                `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M3 6h18" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 6v14a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg> Excluir</button>` +
+            `</div>`;
+        return `<tr data-doc-id="${id}" data-doc-type="${typeSlug}">
             <td>${type}</td>
             <td>${title}</td>
             <td>${company}</td>
             <td>${date}</td>
-            <td>
-                <button type="button" data-id="${id}" class="btn-primary btn-download-doc">Baixar</button>
-                <button type="button" data-id="${id}" class="btn-visual-pdf btn-view-doc" style="margin-left:8px;">Visualizar</button>
-            </td>
+            <td class="actions-cell">${toggleHtml}${enhancedPopup}</td>
         </tr>`;
     }).join('');
     // bind download buttons (baixar PDF)
@@ -1603,16 +2054,27 @@ function renderDocumentsListRows(list, container) {
         btn.addEventListener('click', async (e) => {
             e.preventDefault();
             const id = btn.dataset.id;
+            const type = btn.dataset.type || btn.getAttribute('data-type') || '';
             if (!id) return showToast('ID do documento ausente', 'error');
+            if (!type) return showToast('Tipo do documento ausente', 'error');
             try {
-                const resp = await fetch(`${API_BASE_URL}/reports/download/${encodeURIComponent(id)}`, { headers: authHeaders() });
-                if (resp.ok) {
-                    const blob = await resp.blob();
-                    const url = window.URL.createObjectURL(blob);
-                    const link = document.createElement('a'); link.href = url; link.download = `document-${id}.pdf`; document.body.appendChild(link); link.click(); link.remove(); window.URL.revokeObjectURL(url);
-                    return;
+                const mod = await import('./lib/api.js');
+                const resp = await mod.fetchReportPdf([type], id);
+                if (resp && resp.ok) {
+                    const ct = (resp.headers.get('content-type') || '').toLowerCase();
+                    if (!ct.includes('pdf')) {
+                        const txt = await resp.text().catch(()=>null);
+                        console.warn('Esperava PDF no download (documents table), recebeu:', ct, txt);
+                    } else {
+                        const blob = await resp.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const link = document.createElement('a'); link.href = url; link.download = `document-${id}.pdf`; document.body.appendChild(link); link.click(); link.remove(); window.URL.revokeObjectURL(url);
+                        return;
+                    }
                 }
-            } catch (_) {}
+            } catch (err) {
+                console.warn('download (documents table) failed', err);
+            }
             showToast('Não foi possível obter PDF do documento.', 'error');
         });
     });
@@ -1621,10 +2083,19 @@ function renderDocumentsListRows(list, container) {
         btn.addEventListener('click', async (e) => {
             e.preventDefault();
             const id = btn.dataset.id;
+            const type = btn.dataset.type || btn.getAttribute('data-type') || '';
             if (!id) return showToast('ID do documento ausente', 'error');
+            if (!type) return showToast('Tipo do documento ausente', 'error');
             try {
-                const resp = await fetch(`${API_BASE_URL}/reports/download/${encodeURIComponent(id)}`, { headers: authHeaders() });
-                if (!resp.ok) throw new Error('Erro ao obter PDF');
+                const mod = await import('./lib/api.js');
+                const resp = await mod.fetchReportPdf([type], id);
+                if (!resp || !resp.ok) throw new Error('Erro ao obter PDF');
+                const ct = (resp.headers.get('content-type') || '').toLowerCase();
+                if (!ct.includes('pdf')) {
+                    const txt = await resp.text().catch(()=>null);
+                    console.warn('Esperava PDF para visualização (documents table), recebeu:', ct, txt);
+                    throw new Error('Servidor não retornou PDF para visualização');
+                }
                 const blob = await resp.blob();
                 showPdfModal(blob);
             } catch (err) {
@@ -1633,31 +2104,34 @@ function renderDocumentsListRows(list, container) {
             }
         });
     });
-    // bind delete buttons
+    // bind delete buttons (agora exige data-type além de data-id)
     container.querySelectorAll('.btn-delete-doc').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             e.preventDefault();
-            const id = btn.dataset.id;
+            const id = btn.dataset.id || btn.getAttribute('data-id');
+            const type = btn.dataset.type || btn.getAttribute('data-type') || btn.closest('tr')?.dataset?.docType || '';
             if (!id) return showToast('ID do documento ausente', 'error');
+            if (!type) return showToast('Tipo do documento ausente', 'error');
             if (!confirm('Confirma exclusão deste documento?')) return;
             try {
                 const mod = await import('./lib/api.js');
-                const resp = await mod.deleteInspectionReport(id);
-                if (resp.ok) {
+                // preferir rota DELETE /documents/{type}/{id}
+                const resp = await (mod.deleteDocument ? mod.deleteDocument(type, id) : mod.deleteInspectionReport(id));
+                if (resp && resp.ok) {
                     showToast('Documento excluído com sucesso', 'success');
                     // remover do localStorage se presente
                     const all = JSON.parse(localStorage.getItem('savedInspectionReports') || '[]');
-                    const filtered = all.filter(x => (x.id||x.reportId||'') !== id);
+                    const filtered = all.filter(x => String(x.id||x.reportId||'') !== String(id));
                     localStorage.setItem('savedInspectionReports', JSON.stringify(filtered));
                     // remover linha da tabela
                     const tr = btn.closest('tr[data-doc-id]');
                     if (tr && tr.parentNode) tr.parentNode.removeChild(tr);
                     return;
                 } else {
-                    const txt = await resp.text().catch(()=>null) || '';
+                    const txt = await (resp && resp.text ? resp.text().catch(()=>null) : null) || '';
                     // tentar extrair ID do corpo e remover localmente
                     if (tryRemoveReportedIdFromErrorBody(txt)) return;
-                    if (resp.status === 404 || resp.status === 410) {
+                    if (resp && (resp.status === 404 || resp.status === 410)) {
                         // status sem corpo legível: remover local e informar
                         removeLocalReportById(id);
                         showToast('Documento não encontrado no servidor — removendo cópia local.', 'info');
@@ -1685,14 +2159,16 @@ export function populateDashboardHistory() {
     // Se não há histórico local, tentar buscar do backend
     (async () => {
         try {
-            const resp = await fetch(`${API_BASE_URL}/inspection-reports?limit=5`, { headers: authHeaders() });
+            // agora existe endpoint unificado que retorna os últimos documentos: /documents/latest
+            const resp = await fetch(`${API_BASE_URL}/documents/latest`, { headers: authHeaders() });
             if (!resp.ok) throw new Error('no-backend-history');
             const data = await resp.json();
-            if (!Array.isArray(data) || !data.length) {
+            const items = Array.isArray(data) ? data : (data ? [data] : []);
+            if (!items.length) {
                 container.innerHTML = '<li>Nenhum histórico disponível.</li>';
                 return;
             }
-            container.innerHTML = data.slice(0,5).map(i => {
+            container.innerHTML = items.slice(0,5).map(i => {
                 const title = i.title || i.type || 'Documento';
                 const date = formatDateToBrazil(i.inspectionDate || i.createdAt || '') || '';
                 return `<li>${escapeHtml(title)} - ${escapeHtml(date)}</li>`;
@@ -1709,7 +2185,7 @@ export async function loadLatestInspectionOnDashboard() {
     if (!container) return;
     container.innerHTML = '<p>Carregando última inspeção...</p>';
     try {
-        const resp = await fetch(`${API_BASE_URL}/inspection-reports/latest`, { headers: authHeaders() });
+    const resp = await fetch(`${API_BASE_URL}/documents/latest`, { headers: authHeaders() });
         if (!resp.ok) {
             container.innerHTML = `<p>Nenhuma inspeção encontrada (status ${resp.status}).</p>`;
             return;
@@ -1834,6 +2310,68 @@ export function confirmDialog({ title = 'Confirmação', message = 'Tem certeza?
         document.addEventListener('keydown', escHandler);
         requestAnimationFrame(() => overlay.classList.add('open'));
     });
+}
+
+// --- Document actions popup controller (delegation) ---------------------
+// Simpler approach: deixar o CSS cuidar do posicionamento e apenas alternar a classe `.open`.
+if (!window.__docActionsPopupInitialized) {
+    window.__docActionsPopupInitialized = true;
+
+    document.addEventListener('click', (event) => {
+        const clickedToggle = event.target.closest('.actions-toggle');
+        const openPopups = document.querySelectorAll('.doc-actions-popup.open');
+
+        // Se clicou em um botão de menu (os 3 pontinhos)
+        if (clickedToggle) {
+            event.stopPropagation();
+            const cell = clickedToggle.closest('.actions-cell');
+            const popup = cell ? cell.querySelector('.doc-actions-popup') : null;
+
+            if (popup) {
+                // Verifica se o popup clicado já estava aberto
+                const wasOpen = popup.classList.contains('open');
+
+                // Fecha todos os popups abertos
+                openPopups.forEach(p => {
+                    p.classList.remove('open');
+                    try { p.setAttribute('aria-hidden', 'true'); } catch(_) {}
+                    const anc = p.closest('.actions-cell')?.querySelector('.actions-toggle');
+                    if (anc) try { anc.setAttribute('aria-expanded', 'false'); } catch(_) {}
+                });
+
+                // Se o popup clicado não estava aberto, abre ele
+                if (!wasOpen) {
+                    popup.classList.add('open');
+                    try { popup.setAttribute('aria-hidden', 'false'); } catch(_) {}
+                    try { clickedToggle.setAttribute('aria-expanded', 'true'); } catch(_) {}
+                }
+            }
+            return;
+        }
+
+        // Se clicou em qualquer outro lugar fora de um popup aberto, fecha todos
+        if (openPopups.length > 0 && !event.target.closest('.doc-actions-popup')) {
+            openPopups.forEach(p => {
+                p.classList.remove('open');
+                try { p.setAttribute('aria-hidden', 'true'); } catch(_) {}
+                const anc = p.closest('.actions-cell')?.querySelector('.actions-toggle');
+                if (anc) try { anc.setAttribute('aria-expanded', 'false'); } catch(_) {}
+            });
+        }
+    });
+
+    // Adiciona um listener para a tecla 'Escape' para fechar os popups
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            document.querySelectorAll('.doc-actions-popup.open').forEach(p => {
+                p.classList.remove('open');
+                try { p.setAttribute('aria-hidden', 'true'); } catch(_) {}
+                const anc = p.closest('.actions-cell')?.querySelector('.actions-toggle');
+                if (anc) try { anc.setAttribute('aria-expanded', 'false'); } catch(_) {}
+            });
+        }
+    });
+
 }
 
 // Mostra modal com PDF a partir de um Blob. Cria iframe usando URL do blob e cuida da limpeza

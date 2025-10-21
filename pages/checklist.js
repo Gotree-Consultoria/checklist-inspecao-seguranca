@@ -94,7 +94,18 @@ export async function handleChecklistSubmit(event) {
     // abrimos modal de assinaturas via script.js (central) para reutilizar código existente
     try {
         const mod = await import('../script.js');
-        if (mod.openSignatureModal) return mod.openSignatureModal();
+        if (mod.openSignatureModal) return mod.openSignatureModal({
+            modalId: '#signatureModal',
+            techCanvasSelector: '#techSignatureCanvas',
+            clientCanvasSelector: '#clientSignatureCanvas',
+            techNameSelector: '#techName',
+            clientNameSelector: '#clientName',
+            clearAllBtnId: '#clearAllSignaturesBtn',
+            clearTechBtnId: '#clearTechSignatureBtn',
+            clearClientBtnId: '#clearClientSignatureBtn',
+            confirmBtnId: '#confirmSignaturesBtn',
+            cancelBtnId: '#cancelSignaturesBtn'
+        });
     } catch (e) {
         console.warn('Não foi possível abrir modal de assinatura via script.js', e);
     }

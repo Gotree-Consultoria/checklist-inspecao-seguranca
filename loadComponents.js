@@ -79,11 +79,18 @@ function initTopNav() {
     (async () => {
         let role = getUserRole();
         if (!role) role = await ensureUserRole();
+        // diagnostic logs removed
         const adminLi = nav.querySelector('.admin-only');
         if (adminLi) {
+            // remove classe e controle explícito de display como fallback
             adminLi.classList.remove('admin-visible');
-            if (role && role.toUpperCase().includes('ADMIN')) {
+            const isAdmin = role && String(role).toUpperCase().includes('ADMIN');
+            if (isAdmin) {
                 adminLi.classList.add('admin-visible');
+                adminLi.style.display = '';
+            } else {
+                // garantir que não fique visível por engano
+                adminLi.style.display = 'none';
             }
         }
     })();
@@ -134,8 +141,10 @@ function loadComponent(containerId, componentName) {
                             if (act === 'new-checklist') {
                                 loadComponent('mainContent', 'formsPage');
                             } else if (act === 'new-report') {
-                                loadComponent('mainContent', 'reportPage');
-                            } else if (act === 'new-aep') {
+                                        // garantir que ao abrir um novo relatório não venham dados do rascunho anterior
+                                        try { localStorage.removeItem('draftReport'); } catch(_) {}
+                                        loadComponent('mainContent', 'reportPage');
+                                    } else if (act === 'new-aep') {
                                 loadComponent('mainContent', 'aepPage');
                             }
                         });
@@ -182,6 +191,12 @@ function loadComponent(containerId, componentName) {
                     renderFullProfilePage();
                     document.body.classList.remove('body--login');
                     break;
+                    case 'changePasswordPage':
+                        if (document.querySelector('.top-nav')) initTopNav();
+                        // don't set active nav — this is a modal/forced page
+                        document.body.classList.remove('body--login');
+                        try { import('./script.js').then(m => { if (m.initChangePassword) m.initChangePassword(); }); } catch(_) {}
+                        break;
                 case 'adminPage':
                     if (document.querySelector('.top-nav')) initTopNav();
                     setActiveNav('admin');

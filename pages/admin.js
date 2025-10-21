@@ -29,6 +29,8 @@ export function initAdminPage() {
             users.forEach(u => {
                 const canDelete = (u.role || '').toUpperCase() !== 'ADMIN';
                 const deleteBtn = canDelete && u.id ? `<button type="button" class="btn btn-compact btn-danger" data-action="del-user" data-id="${escapeHtml(u.id.toString())}">Excluir</button>` : '';
+                const canReset = u.id && (u.role || '').toUpperCase() !== 'ADMIN'; //Caso o admin queira resetar a propria senha remova a role
+                const resetBtn = canReset ? `<button type="button" class="btn btn-compact btn-warning" data-action="reset-password" data-id="${escapeHtml(u.id.toString())}">Resetar Senha</button>` : '';
                 html.push(`<tr>
                     <td>${escapeHtml(u.name || '')}</td>
                     <td>${escapeHtml(u.email || '')}</td>
@@ -36,34 +38,79 @@ export function initAdminPage() {
                     <td>${escapeHtml(u.siglaConselhoClasse || u.councilAcronym || '')}</td>
                     <td>${escapeHtml(u.conselhoClasse || u.councilNumber || '')}</td>
                     <td>${escapeHtml(u.especialidade || u.specialty || '')}</td>
-                    <td>${deleteBtn}</td>
+                    <td>${resetBtn} ${deleteBtn}</td>
                 </tr>`);
             });
             html.push('</tbody></table>');
             listContainer.innerHTML = html.join('');
+            console.debug('[adminPage] rendered', { usersCount: users.length });
             const table = listContainer.querySelector('table');
-            if (table && !table.__deleteBound) {
-                table.__deleteBound = true;
+            // use a dedicated flag to avoid clashing with other bindings
+            if (table && !table.__adminActionsBound) {
+                table.__adminActionsBound = true;
+                console.debug('[adminPage] binding admin actions to users table');
                 table.addEventListener('click', async (ev) => {
-                    const btn = ev.target.closest('button[data-action="del-user"]');
-                    if (!btn) return;
-                    const userId = btn.getAttribute('data-id');
-                    if (!userId) return;
-                    const me = window.__cachedUserMe;
-                    if (me && me.id && String(me.id) === String(userId)) {
-                        alert('Você não pode excluir seu próprio usuário.');
+                    console.debug('[adminPage] table click', ev.target && ev.target.getAttribute ? ev.target.getAttribute('data-action') : ev.target, ev);
+                    // Deletion
+                    const delBtn = ev.target.closest('button[data-action="del-user"]');
+                    if (delBtn) {
+                        console.debug('[adminPage] del-user clicked', delBtn.getAttribute('data-id'));
+                        const userId = delBtn.getAttribute('data-id');
+                        if (!userId) return;
+                        const me = window.__cachedUserMe;
+                        if (me && me.id && String(me.id) === String(userId)) {
+                            alert('Você não pode excluir seu próprio usuário.');
+                            return;
+                        }
+                        const proceed = await confirmDialog({ message: 'Deseja realmente excluir este usuário? Esta ação não pode ser desfeita.', title: 'Confirmar Exclusão', confirmText: 'Excluir', cancelText: 'Cancelar', variant: 'danger' });
+                        if (!proceed) return;
+                        delBtn.disabled = true; delBtn.textContent = 'Excluindo...';
+                        try {
+                            const delResp = await fetch(`${window.location.hostname.includes('localhost') ? 'http://localhost:8081' : ''}/users/${encodeURIComponent(userId)}`, { method: 'DELETE', headers: authHeaders() });
+                            if (!delResp.ok) { const t = await delResp.text(); throw new Error(t || 'Falha ao excluir usuário'); }
+                            loadUsers();
+                        } catch(err) {
+                            showToast(err.message || 'Erro ao excluir', 'error');
+                            delBtn.disabled = false; delBtn.textContent = 'Excluir';
+                        }
                         return;
                     }
-                    const proceed = await confirmDialog({ message: 'Deseja realmente excluir este usuário? Esta ação não pode ser desfeita.', title: 'Confirmar Exclusão', confirmText: 'Excluir', cancelText: 'Cancelar', variant: 'danger' });
-                    if (!proceed) return;
-                    btn.disabled = true; btn.textContent = 'Excluindo...';
-                    try {
-                        const delResp = await fetch(`${window.location.hostname.includes('localhost') ? 'http://localhost:8081' : ''}/users/${encodeURIComponent(userId)}`, { method: 'DELETE', headers: authHeaders() });
-                        if (!delResp.ok) { const t = await delResp.text(); throw new Error(t || 'Falha ao excluir usuário'); }
-                        loadUsers();
-                    } catch(err) {
-                        showToast(err.message || 'Erro ao excluir', 'error');
-                        btn.disabled = false; btn.textContent = 'Excluir';
+
+                    // Reset password
+                    const resetBtn = ev.target.closest('button[data-action="reset-password"]');
+                    if (resetBtn) {
+                        const userId = resetBtn.getAttribute('data-id');
+                        console.debug('[adminPage] reset-password clicked', userId);
+                        if (!userId) {
+                            console.debug('[adminPage] reset-password: missing userId');
+                            return;
+                        }
+                        console.debug('[adminPage] asking for confirmation to reset password for', userId);
+                        const proceed = await confirmDialog({ message: 'Deseja resetar a senha deste usuário? A nova senha será o e-mail do usuário e ele será obrigado a trocá-la no próximo login.', title: 'Resetar Senha', confirmText: 'Resetar', cancelText: 'Cancelar', variant: 'warning' });
+                        console.debug('[adminPage] confirmation result for reset-password', { userId, proceed });
+                        if (!proceed) {
+                            console.debug('[adminPage] reset-password cancelled by user', userId);
+                            return;
+                        }
+                        resetBtn.disabled = true; resetBtn.textContent = 'Resetando...';
+                        const url = `${window.location.hostname.includes('localhost') ? 'http://localhost:8081' : ''}/users/admin/reset-password/${encodeURIComponent(userId)}`;
+                        console.debug('[adminPage] performing PUT', url);
+                        try {
+                            const putResp = await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json', ...authHeaders() } });
+                            console.debug('[adminPage] putResp status', putResp.status);
+                            const txt = await putResp.text().catch(()=>'');
+                            console.debug('[adminPage] putResp body text', txt.slice(0,200));
+                            if (!putResp.ok) { throw new Error(txt || `Falha ao resetar senha (status ${putResp.status})`); }
+                            console.debug('[adminPage] reset-password success for', userId);
+                            showToast('Senha resetada com sucesso. Informe ao usuário que ele deve usar o e-mail como senha no próximo login.', 'success');
+                            // reload users after short delay to let backend finalize
+                            setTimeout(() => loadUsers(), 200);
+                        } catch (err) {
+                            console.error('[adminPage] reset-password error', err);
+                            showToast(err.message || 'Falha ao resetar senha', 'error');
+                            resetBtn.disabled = false; resetBtn.textContent = 'Resetar Senha';
+                        }
+                        return;
                     }
                 });
             }
@@ -125,7 +172,22 @@ export function initAdminPage() {
             const resp = await fetch(`${window.location.hostname.includes('localhost') ? 'http://localhost:8081' : ''}/users/insert`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify(payload) });
             const respText = await resp.text().catch(()=>'');
             console.debug('[adminPage] create user response:', resp.status, respText);
-            if (!resp.ok) { throw new Error(respText || `Erro ao criar usuário (status ${resp.status})`); }
+            if (!resp.ok) {
+                // try to parse JSON error body for a friendlier message
+                let serverMsg = respText || `Erro ao criar usuário (status ${resp.status})`;
+                try {
+                    const parsed = JSON.parse(respText);
+                    serverMsg = parsed.message || parsed.error || serverMsg;
+                } catch (e) {
+                    // not JSON, keep respText
+                }
+                // map common backend integrity violation to a user-friendly message
+                if (/email\s*já\s*cadastrad/i.test(serverMsg) || /email.*already/i.test(serverMsg)) {
+                    serverMsg = 'Já existe um usuário cadastrado com este e-mail.';
+                }
+                showToast(serverMsg, 'error');
+                throw new Error(serverMsg);
+            }
             msg.textContent = 'Usuário criado com sucesso.'; form.reset(); loadUsers();
         } catch (err) { console.error('[adminPage] create user error', err); msg.textContent = err.message || String(err); }
         finally { if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Salvar Usuário'; } }

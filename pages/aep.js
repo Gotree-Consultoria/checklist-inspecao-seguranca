@@ -27,7 +27,13 @@ export async function initAepPage() {
         const core = await import('../script.js');
         if (core && core.fetchUserProfile) {
             const me = await core.fetchUserProfile();
-            if (me && evaluatorInput) evaluatorInput.value = me.name || '';
+            if (me) {
+                if (evaluatorInput) evaluatorInput.value = me.name || '';
+                const sigEl = root.querySelector('#aepSigla');
+                const regEl = root.querySelector('#aepRegistro');
+                if (sigEl) sigEl.value = me.siglaConselhoClasse || me.siglaConselho || me.sigla || '';
+                if (regEl) regEl.value = me.conselhoClasse || me.registroConselho || me.registro || '';
+            }
         }
     } catch (_) {}
 
@@ -38,6 +44,18 @@ export async function initAepPage() {
     } catch (e) {
         console.warn('Erro ao carregar hierarquia para AEP', e);
     }
+
+    // Preencher automaticamente o CNPJ quando a empresa for alterada (consistência com outras páginas)
+    try {
+        const companySel = document.getElementById('aepCompany');
+        const cnpjInput = document.getElementById('aepCnpj');
+        if (companySel && cnpjInput) {
+            companySel.addEventListener('change', () => {
+                const sel = companySel.options[companySel.selectedIndex];
+                cnpjInput.value = sel ? (sel.dataset.cnpj || '') : '';
+            });
+        }
+    } catch (_) {}
 
     // Lista de fatores de risco (ergonômicos)
     const riskFactors = [

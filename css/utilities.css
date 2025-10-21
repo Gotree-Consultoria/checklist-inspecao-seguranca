@@ -1,0 +1,38 @@
+/* Utilities, badges, small helpers and responsive tweaks */
+
+/* Tipografia base refinada */
+body { font-feature-settings: "liga" 1, "kern" 1; }
+
+label, .form-label, .filter-label { font-size: .7rem; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; color: #444; display: inline-block; margin-bottom: 4px; }
+
+input[type=text], input[type=password], input[type=email], input[type=number], input[type=date], input[type=time], input[type=file], select, textarea, .form-control, .form-select, .filter-input, .filter-select, .admin-page .form-row input, .admin-page .form-row select { padding: 8px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: .85rem; font-family: var(--font-family); background: #fff; line-height: 1.3; transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast); }
+
+input:focus, select:focus, textarea:focus, .form-control:focus, .form-select:focus { outline: none; border-color: var(--verde-claro); box-shadow: 0 0 0 2px rgba(191,216,58,0.35); background: #fcfff7; }
+
+input[disabled], select[disabled], textarea[disabled] { opacity: .65; cursor: not-allowed; background: #f3f3f3; }
+
+textarea, .form-control.textarea { resize: vertical; min-height: 90px; }
+
+.btn, .btn-primary, .btn-secondary, .btn-filter, .btn-add-empresa, .btn-submit, .record-photo .btn-capture, .record-photo .btn-remove, .record-photo .btn-remove-photo, .record-photo .btn-remove-record { --btn-bg: var(--verde-escuro); --btn-bg-hover: #024a29; --btn-color: #fff; --btn-radius: 6px; --btn-font-size: .75rem; --btn-pad-y: 10px; --btn-pad-x: 18px; font-family: var(--font-family); font-weight: 600; font-size: var(--btn-font-size); letter-spacing: .5px; text-transform: uppercase; padding: var(--btn-pad-y) var(--btn-pad-x); border-radius: var(--btn-radius); border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: var(--btn-bg); color: var(--btn-color); transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast); }
+.btn:hover, .btn-primary:hover, .btn-secondary:hover, .btn-filter:hover, .btn-add-empresa:hover, .btn-submit:hover, .record-photo .btn-capture:hover, .record-photo .btn-remove:hover, .record-photo .btn-remove-photo:hover, .record-photo .btn-remove-record:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.15); }
+.btn:active, .btn-primary:active, .btn-secondary:active, .btn-filter:active, .btn-add-empresa:active, .btn-submit:active { transform: translateY(0); box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+
+.btn-primary, .btn-submit { --btn-bg: var(--vermelho-coral); --btn-bg-hover:#c94d2e; }
+.btn-secondary { --btn-bg:#666; --btn-bg-hover:#444; }
+.btn-success { --btn-bg: var(--verde-claro); --btn-bg-hover:#9fb92f; }
+.btn-outline { background:#fff; color: var(--verde-escuro); border:1px solid var(--verde-escuro); }
+.btn-outline:hover { background: var(--verde-escuro); color:#fff; }
+.btn-danger, .record-photo .btn-remove-record, .record-photo .btn-remove { --btn-bg: var(--vermelho-coral); --btn-bg-hover:#c94d2e; }
+
+.badge-role { font-size:.55rem; letter-spacing:.5px; padding:4px 8px; text-transform:uppercase; }
+
+.record-photo .rec-file, .record-photo .btn-capture, .record-photo .btn-remove { width: 100%; padding: 8px 10px; border-radius: var(--border-radius-sm); border: 1px solid var(--cinza-claro); background: var(--branco); cursor: pointer; text-align: center; }
+.record-photo .btn-capture { background: var(--verde-claro); color: var(--branco); border: none; }
+.record-photo .btn-remove { background: var(--vermelho-coral); color: var(--branco); border: none; }
+
+@media (max-width:640px) { input, select, textarea { font-size:.9rem; } .btn, .btn-primary, .btn-secondary { width:100%; } }
+
+.btn-sm { --btn-pad-y: 6px; --btn-pad-x: 12px; --btn-font-size: .6rem; padding: var(--btn-pad-y) var(--btn-pad-x) !important; font-size: var(--btn-font-size) !important; border-radius: 5px; }
+.btn-compact { --btn-pad-y: 4px; --btn-pad-x: 10px; --btn-font-size: .55rem; padding:4px 10px !important; font-size:.55rem !important; border-radius:4px; line-height:1.05; width:auto !important; display:inline-flex !important; }
+
+.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }

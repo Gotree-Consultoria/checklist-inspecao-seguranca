@@ -1,0 +1,372 @@
+/* Garante que popups flutuantes não sejam cortados pelo container da tabela de documentos */
+.documents-table-container {
+    overflow: visible !important;
+}
+/* Garante que popups flutuantes não sejam cortados pelo container da tabela */
+.table-container {
+    overflow: visible !important;
+}
+/* Components: buttons, modals, toasts, cards and small reusable UI pieces */
+
+/* Modal de assinatura */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); align-items: center; justify-content: center; z-index: 1200; }
+.modal-overlay .modal { background: #fff; padding: 16px; border-radius: 8px; width: calc(100% - 40px); max-width: 760px; box-shadow: var(--shadow-lg); }
+.modal-overlay.open, .modal-overlay[style*="display:block"] { display: flex; }
+.modal .modal-header h3 { margin-bottom: 8px; }
+.modal .modal-body { max-height: 60vh; overflow: auto; padding-bottom: 8px; }
+.signature-canvas { width: 100%; height: 150px; touch-action: none; }
+.sign-block { margin-bottom: 12px; }
+.modal-footer { display:flex; gap:8px; justify-content: flex-end; margin-top: 12px; }
+
+.signature-clear-btn { margin-top:8px; }
+.signature-canvas { border: 1px solid #eee; border-radius: 6px; display:block; }
+
+/* Reusable small buttons */
+.btn-icon { background: transparent; border: none; padding: 0; height: auto; display: inline-flex; align-items:center; justify-content:center; }
+
+/* Visualizar button style (green) */
+.btn-visual-pdf {
+    --btn-bg: var(--verde-escuro);
+    --btn-color: #fff;
+    --btn-pad-y: 8px;
+    --btn-pad-x: 14px;
+    font-size: .85rem;
+    padding: var(--btn-pad-y) var(--btn-pad-x);
+    border-radius: 8px;
+    color: var(--btn-color);
+    background: var(--btn-bg);
+    border: none;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.btn-visual-pdf:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.16); }
+
+/* Section / card components */
+.section-container {
+    background-color: #f9f9f9;
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-sm);
+    padding-bottom: var(--spacing-xs);
+    border-bottom: 1px solid var(--cinza-claro);
+}
+
+.section-number {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--vermelho-coral);
+    margin-right: var(--spacing-xs);
+}
+
+.section-title { flex-grow: 1; color: var(--verde-escuro); }
+
+.checklist-item { display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-sm) 0; border-bottom: 1px solid #eee; }
+.checklist-item:last-child { border-bottom: none; }
+.question-text { flex-grow: 1; color: var(--cinza-escuro); margin: 0; }
+
+.radio-options { display: flex; gap: var(--spacing-md); }
+.radio-options label { cursor: pointer; color: var(--cinza-escuro); font-weight: normal; }
+.radio-options input[type="radio"] { display: none; }
+.radio-options input[type="radio"] + label { padding: var(--spacing-xs) var(--spacing-sm); border: 1px solid var(--cinza-claro); border-radius: var(--border-radius-sm); transition: background-color var(--transition-fast), border-color var(--transition-fast); }
+.radio-options input[type="radio"]:checked + label { background-color: var(--verde-claro); border-color: var(--verde-claro); color: var(--branco); font-weight: 600; }
+
+/* PDF modal component */
+.pdf-modal-overlay { z-index: 99999 !important; }
+.pdf-modal { width: 90%; max-width: 900px; padding: 0; border-radius: 8px; overflow: visible; position: relative; z-index: 100000; }
+.pdf-modal { position: relative; }
+.pdf-modal .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #fff; border-bottom: 1px solid #eee; width: 100%; }
+.pdf-modal .modal-header h3 { font-size: 1rem; margin: 0; font-weight: 600; color: var(--verde-escuro); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pdf-modal .btn-close-svg { position: static; width: auto; height: auto; border-radius: 0; background: transparent; border: none; box-shadow: none; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.pdf-modal .pdf-body { height: 60vh; }
+
+/* Modal & Toast (confirmation, notifications) */
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity .25s ease; z-index:3000; }
+.modal-overlay.open { opacity:1; pointer-events:auto; }
+.modal-overlay.closing { opacity:0; }
+.modal { width:100%; max-width:420px; background:#fff; border-radius:14px; box-shadow:0 18px 50px -12px rgba(0,0,0,0.25); overflow:hidden; transform:translateY(18px); opacity:0; animation:modalIn .35s ease forwards; border:1px solid #ececec; }
+.modal-danger { border-color: var(--vermelho-coral); }
+.modal-header { padding:16px 20px 8px; }
+.modal-header h3 { margin:0; font-size:1.05rem; letter-spacing:.5px; }
+.modal-body { padding:0 20px 8px; font-size:0.8rem; color:#444; }
+.modal-body p { margin:0 0 4px; line-height:1.4; }
+.modal-footer { padding:16px 20px 20px; display:flex; gap:12px; justify-content:flex-end; }
+.modal-footer .btn-danger { --btn-bg: var(--vermelho-coral); --btn-bg-hover:#c94d2e; }
+@keyframes modalIn { from { transform:translateY(28px); opacity:0;} to { transform:translateY(0); opacity:1;} }
+
+#toast-container { position:fixed; top:16px; right:16px; display:flex; flex-direction:column; gap:10px; z-index:3500; }
+.toast { background:#222; color:#fff; padding:10px 16px; border-radius:8px; font-size:.7rem; letter-spacing:.5px; box-shadow:0 6px 18px rgba(0,0,0,0.25); opacity:0; transform:translateY(-8px); transition: all .3s ease; }
+.toast.visible { opacity:1; transform:translateY(0); }
+.toast-error { background: var(--vermelho-coral); }
+.toast-info { background: var(--verde-escuro); }
+.toast-success { background: var(--verde-claro); color:#222; }
+
+/* Specific styling for change-password modal to improve layout and input alignment */
+#changePasswordModalOverlay .modal {
+    max-width: 480px;
+    width: calc(100% - 40px);
+    border-radius: 12px;
+    padding: 0;
+    overflow: hidden;
+}
+#changePasswordModalOverlay .modal-header {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 18px;
+    background: linear-gradient(180deg, #fff, #fbfbfb);
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+#changePasswordModalOverlay .modal-header h3 { margin:0; font-size:1.05rem; color:var(--verde-escuro); }
+#changePasswordModalOverlay .modal-close {
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    color: #666;
+    padding:6px;
+    border-radius:8px;
+}
+#changePasswordModalOverlay .modal-close:hover { background: rgba(0,0,0,0.04); color:#222; }
+#changePasswordModalOverlay .modal-body { padding: 16px 18px 20px; }
+
+/* Form layout inside modal: labels above inputs but aligned nicely */
+#changePasswordModalOverlay .form-row { display:flex; flex-direction:column; gap:12px; }
+#changePasswordModalOverlay .fg { display:flex; flex-direction:column; gap:6px; }
+#changePasswordModalOverlay .fg label { font-size: .9rem; font-weight:600; color: #333; }
+#changePasswordModalOverlay .fg input[type="password"] { width:100%; box-sizing:border-box; padding:10px 12px; border-radius:8px; border:1px solid #d9d9d9; font-size:.95rem; }
+#changePasswordModalOverlay .fg input[type="password"]:focus { outline:none; box-shadow: 0 6px 18px rgba(0,0,0,0.06); border-color: var(--verde-escuro); }
+#changePasswordModalOverlay .form-actions { display:flex; justify-content:flex-end; margin-top:6px; }
+#changePasswordModalOverlay .form-msg { margin-top:6px; color: var(--vermelho-coral); font-size:.9rem; }
+
+@media (max-width:420px) {
+    #changePasswordModalOverlay .modal { width: calc(100% - 24px); }
+    #changePasswordModalOverlay .modal-body { padding: 12px; }
+}
+
+/* Utility helpers */
+.hidden { display: none !important; }
+
+/* Time input sizing: compact but shows HH:MM:SS when step=1 */
+.time-input { width: 9.4rem; /* ~150px - enough for HH:MM:SS */
+    max-width: 100%; box-sizing: border-box; }
+.time-input::-webkit-datetime-edit { padding: 6px 8px; }
+.time-input::-webkit-datetime-edit-fields-wrapper { gap: 6px; }
+/* reduce internal padding for a more compact look */
+.time-input { padding: 4px 6px !important; }
+.time-input::-webkit-datetime-edit { padding: 4px 6px !important; }
+.time-input::-webkit-datetime-edit-fields-wrapper { gap: 4px !important; }
+
+/* Specific override for report page time inputs to avoid .form-control width:100% */
+#reportStartTime.time-input,
+#reportEndTime.time-input {
+    width: 7rem !important; /* narrower width (approx 112px) */
+    display: inline-block !important;
+    box-sizing: border-box !important;
+    max-width: 100% !important;
+}
+
+/* Center time value inside the input */
+#reportStartTime.time-input,
+#reportEndTime.time-input,
+#reportStartTime.time-input input,
+#reportEndTime.time-input input {
+    text-align: center !important;
+}
+
+/* WebKit specific datetime editing parts centering */
+#reportStartTime.time-input::-webkit-datetime-edit,
+#reportEndTime.time-input::-webkit-datetime-edit,
+#reportStartTime.time-input::-webkit-datetime-edit-fields-wrapper,
+#reportEndTime.time-input::-webkit-datetime-edit-fields-wrapper,
+#reportStartTime.time-input::-webkit-datetime-edit-text,
+#reportEndTime.time-input::-webkit-datetime-edit-text {
+    text-align: center !important;
+}
+
+/* Additional alignment helpers for broader browser support */
+#reportStartTime.time-input,
+#reportEndTime.time-input {
+    text-align: center !important;
+    -webkit-text-align-last: center !important;
+    -moz-text-align-last: center !important;
+    text-align-last: center !important;
+}
+
+/* Try to vertically center WebKit datetime edit fields */
+#reportStartTime.time-input::-webkit-datetime-edit,
+#reportEndTime.time-input::-webkit-datetime-edit {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* Reduce spacing between inputs specifically on report pages */
+.report-page .form-group { 
+    gap: var(--spacing-sm) !important; /* smaller grid gap */
+    margin-bottom: calc(var(--spacing-sm) / 1) !important;
+}
+.report-page .form-group > div { 
+    gap: 8px !important; /* tighten vertical spacing inside group columns */
+}
+.report-page .field-row { 
+    gap: 8px !important; /* tighten label->input spacing */
+    margin-bottom: 8px !important;
+}
+.report-page .field-label, .report-page .form-label { margin-bottom: 4px !important; }
+
+/* Reduce spacing on forms/checklist page (checklist-page) */
+.checklist-page .form-group { 
+    gap: var(--spacing-sm) !important;
+    margin-bottom: calc(var(--spacing-sm) / 1) !important;
+}
+.checklist-page .form-group > div { gap: 8px !important; }
+.checklist-page .field-row { gap: 8px !important; margin-bottom: 8px !important; }
+.checklist-page .field-label, .checklist-page .form-label { margin-bottom: 4px !important; }
+
+/* Fieldset style used by aep and for report/forms 'Dados do Relatório' */
+.dados-relatorio {
+    /* match AEP fieldset border color */
+    border: 1px solid #e2e2e2;
+    border-radius: 8px;
+    padding: 12px 14px 14px;
+    margin-bottom: var(--spacing-md);
+    background: #fff;
+}
+.dados-relatorio legend {
+    padding: 0 10px;
+    font-weight: 700;
+    color: var(--verde-escuro);
+    margin-left: 8px;
+}
+
+/* Record photo slots: first slot large preview, second slot compact add icon when empty */
+.record-photo { display:flex; gap:12px; align-items:flex-start; }
+.record-photo .photo-slot { width:160px; height:120px; border:1px dashed var(--cinza-claro); border-radius:8px; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; background:#fafafa; }
+.record-photo .photo-slot.small { width:56px; height:56px; }
+.record-photo .photo-slot .rec-img { width:100%; height:100%; object-fit:cover; display:block; }
+.record-photo .photo-slot input.rec-file { position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; }
+.record-photo .photo-slot.empty { border-style:dashed; background:transparent; }
+.record-photo .photo-slot.empty::before { content: '\2795'; font-size:1.6rem; color:var(--cinza-claro); display:flex; align-items:center; justify-content:center; }
+.record-photo .photo-slot.small.empty::before { font-size:1.1rem; }
+.record-photo .photo-actions { display:flex; flex-direction:column; gap:8px; }
+
+/* Subtle hint under the small empty second slot */
+.record-photo .photo-slot.small.empty::after {
+    content: "Adicionar uma segunda foto nesse registro";
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    transform: translateX(-6px);
+    font-size: 0.72rem;
+    color: rgba(0,0,0,0.55);
+    background: transparent;
+    padding: 2px 4px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0; /* hidden by default */
+    transition: opacity .16s ease, transform .16s ease;
+}
+
+.record-photo .photo-slot.small.empty:hover::after { opacity: 1; transform: translateX(0); }
+
+@media (max-width: 420px) {
+    .record-photo .photo-slot.small.empty::after { font-size: 0.66rem; top: calc(100% + 4px); }
+}
+
+    /* Actions box for document row: small floating panel containing action buttons */
+    .doc-actions-box {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: linear-gradient(180deg, #fff, #fbfbfb);
+        border: 1px solid #e9e9e9;
+        padding: 6px;
+        border-radius: 10px;
+        box-shadow: 0 8px 22px rgba(0,0,0,0.06);
+    }
+    .doc-actions-box .btn-primary, .doc-actions-box .btn-visual-pdf, .doc-actions-box .btn-secondary, .doc-actions-box .btn-danger {
+        margin: 0;
+        padding: 6px 10px;
+        font-size: .82rem;
+        border-radius: 8px;
+    }
+    .doc-actions-box .btn-danger {
+        --btn-bg: var(--vermelho-coral);
+        color: #fff;
+        background: var(--vermelho-coral);
+        border: none;
+    }
+    .doc-actions-box .btn-primary { background: var(--azul-primario); color: #fff; border: none; }
+    .doc-actions-box .btn-download-doc { background: var(--azul-primario); color: #fff; border: none; }
+    .doc-actions-box .btn-download-doc:hover, .doc-actions-box .btn-visual-pdf:hover, .doc-actions-box .btn-danger:hover { transform: translateY(-2px); }
+
+    /* Actions popup (single toggle button in actions column) */
+    .actions-cell { position: relative; }
+    .actions-toggle {
+        background: transparent;
+        border: none;
+        font-size: 1.25rem;
+        padding: 6px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        color: var(--cinza-escuro);
+    }
+    .actions-toggle:focus { outline: 2px solid rgba(0,0,0,0.08); }
+    .actions-toggle svg { display: inline-block; vertical-align: middle; color: var(--cinza-escuro); }
+    .actions-toggle:hover { background: rgba(0,0,0,0.04); }
+    /* default inline popup (kept for cases where JS is disabled) */
+    /* Popup aparece acima da célula, sobrepondo a tabela */
+    .doc-actions-popup {
+        display: none;
+        position: absolute;
+        right: 0;
+        bottom: calc(100% + 8px);
+        top: auto;
+        background: #fff;
+        border: 1px solid #e9e9e9;
+        box-shadow: 0 18px 48px rgba(0,0,0,0.12);
+        padding: 8px;
+        border-radius: 10px;
+        z-index: 9999;
+        min-width: 160px;
+        flex-direction: column;
+        gap: 8px;
+        will-change: transform, opacity;
+    }
+    .doc-actions-popup.open { display: flex; }
+    /* When popup is moved to body and positioned fixed */
+    .doc-actions-popup.fixed-popup {
+        position: absolute !important; /* absolute relative to body */
+        right: auto !important;
+        top: auto !important;
+        left: auto !important;
+        transform: none !important;
+        margin: 0 !important;
+        display: flex !important;
+        pointer-events: auto;
+        background: #fff;
+        box-shadow: 0 18px 48px rgba(0,0,0,0.12);
+        border: 1px solid rgba(0,0,0,0.06);
+    }
+    .doc-actions-popup button { display:flex; align-items:center; gap:8px; padding:8px 10px; background: transparent; border: none; border-radius:8px; cursor: pointer; font-size: .88rem; color: var(--cinza-escuro); }
+    .doc-actions-popup button svg { flex:0 0 18px; color: var(--cinza-escuro); }
+    .doc-actions-popup button:hover { background: rgba(0,0,0,0.04); }
+    .doc-actions-popup .btn-danger { color: #fff; background: var(--vermelho-coral); display:flex; align-items:center; }
+    .doc-actions-popup .btn-danger svg { color: #fff; }
+
+    /* Mobile: use full width popup anchored to bottom of viewport */
+    @media (max-width: 520px) {
+        .doc-actions-popup.fixed-popup { left: 8px !important; right: 8px !important; top: auto !important; bottom: 8px !important; width: auto !important; min-width: 0 !important; flex-direction: column; }
+        .actions-toggle { padding: 8px; }
+    }
+    /* When popup open, underlying table should not capture pointer events unexpectedly */
+    .doc-actions-popup.open + table, .doc-actions-popup.open ~ table, .doc-actions-popup.open ~ tbody { pointer-events: none; }
+    .doc-actions-popup button { text-align: left; width: 100%; }

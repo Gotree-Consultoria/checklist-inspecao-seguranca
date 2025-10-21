@@ -4,30 +4,76 @@
     <form id="aepForm" class="aep-form">
       <fieldset class="aep-header">
         <legend>Dados da Avaliação</legend>
-        <div class="aep-grid">
-          <div class="fg">
-            <label for="aepCompany">Empresa Avaliada</label>
-            <select id="aepCompany" required><option value="">Carregando...</option></select>
+        <div class="fields">
+          <div class="field-row">
+            <label for="aepCompany" class="field-label">Empresa Cliente:</label>
+            <div class="field-input">
+              <select id="aepCompany" name="aepCompany" class="form-select" required>
+                <option value="">Carregando...</option>
+              </select>
+            </div>
           </div>
-          <div class="fg">
-            <label for="aepUnit">Unidade (opcional)</label>
-            <select id="aepUnit" disabled><option value="">Selecione empresa</option></select>
+
+          <div class="field-row">
+            <label for="aepCnpj" class="field-label">CNPJ:</label>
+            <div class="field-input">
+              <input type="text" id="aepCnpj" name="aepCnpj" class="form-control" readonly />
+            </div>
           </div>
-          <div class="fg">
-            <label for="aepSector">Setor (opcional)</label>
-            <select id="aepSector" disabled><option value="">Selecione empresa</option></select>
+
+          <div class="field-row">
+            <label for="aepUnit" class="field-label">Unidade (opcional)</label>
+            <div class="field-input">
+              <select id="aepUnit" name="aepUnit" class="form-select" disabled>
+                <option value="">Selecione empresa</option>
+              </select>
+            </div>
           </div>
-          <div class="fg">
-            <label for="aepEvaluator">Avaliador</label>
-            <input type="text" id="aepEvaluator" readonly placeholder="Carregando..." />
+
+          <div class="field-row">
+            <label for="aepSector" class="field-label">Setor (opcional)</label>
+            <div class="field-input">
+              <select id="aepSector" name="aepSector" class="form-select" disabled>
+                <option value="">Selecione empresa</option>
+              </select>
+            </div>
           </div>
-          <div class="fg">
-            <label for="aepDate">Data da Avaliação</label>
-            <input type="date" id="aepDate" required />
+
+          <div class="section-separator" aria-hidden="true"></div>
+
+          <div class="field-row">
+            <label for="aepEvaluator" class="field-label">Responsável pela Avaliação</label>
+            <div class="field-input">
+              <input type="text" id="aepEvaluator" name="aepEvaluator" class="form-control" readonly placeholder="Carregando..." />
+            </div>
           </div>
-          <div class="fg">
-            <label for="aepFunction">Função Avaliada</label>
-            <input type="text" id="aepFunction" placeholder="Ex: Operador de Produção" required />
+
+          <div class="field-row">
+            <label for="aepSigla" class="field-label">Sigla do Conselho</label>
+            <div class="field-input">
+              <input type="text" id="aepSigla" name="aepSigla" class="form-control" readonly placeholder="—" />
+            </div>
+          </div>
+
+          <div class="field-row">
+            <label for="aepRegistro" class="field-label">Registro do Conselho</label>
+            <div class="field-input">
+              <input type="text" id="aepRegistro" name="aepRegistro" class="form-control" readonly placeholder="—" />
+            </div>
+          </div>
+
+          <div class="field-row">
+            <label for="aepDate" class="field-label">Data da Avaliação</label>
+            <div class="field-input">
+              <input type="date" id="aepDate" name="aepDate" class="form-control" required />
+            </div>
+          </div>
+
+          <div class="field-row">
+            <label for="aepFunction" class="field-label">Função Avaliada</label>
+            <div class="field-input">
+              <input type="text" id="aepFunction" name="aepFunction" class="form-control" placeholder="Ex: Operador de Produção" required />
+            </div>
           </div>
         </div>
       </fieldset>
