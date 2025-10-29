@@ -1,0 +1,186 @@
+/* Estilos do checklist - moderno, legível e altamente responsivo */
+
+:root{
+	--bg: #f7f9fb; /* leve e neutro */
+	--card: #ffffff;
+	--muted: #6b7280;
+	--primary: #1f6feb; /* azul mais suave */
+	--accent: #06b6d4;
+	--success: #16a34a;
+	--danger: #dc2626;
+	--radius: 12px;
+	--gap: 16px;
+	--max-width: 1100px;
+	--shadow: 0 6px 20px rgba(16,24,40,0.06);
+	--card-border: 1px solid rgba(16,24,40,0.06);
+}
+
+*{box-sizing: border-box}
+:host, body{background:var(--bg);font-family: Inter, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;color:#0f172a;margin:0}
+
+.checklist-page{padding:2px 12px;display:flex;justify-content:center}
+.checklist-page .container{width:100%;max-width:var(--max-width);} 
+
+.page-title{font-size:1.375rem;margin:0 0 14px;color:var(--verde-escuro);font-weight:700}
+
+/* Dados do relatório */
+fieldset.dados-relatorio{background:var(--card);border-radius:10px;padding:14px;margin-bottom:18px;border:var(--card-border)}
+fieldset.dados-relatorio legend{padding:0 8px;color:var(--muted);font-weight:700;font-size:.95rem}
+.dados-relatorio .form-group{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--gap);margin-bottom:var(--gap)}
+.field-row{display:grid;grid-template-columns:200px 1fr;gap:12px;align-items:center;margin-bottom:12px}
+.field-label{width:200px;font-size:.95rem;color:#0b1220}
+.field-input{flex:1}
+.form-control,.form-select{width:100%;padding:10px 12px;border-radius:8px;border:1px solid rgba(15,23,42,0.06);background:#fff;font-size:.95rem}
+
+.section-separator{height:1px;background:linear-gradient(90deg,transparent,#e6edf7,transparent);margin:14px 0}
+
+/* Checklist form */
+.checklist-form{background:transparent}
+#checklistContainer{display:flex;flex-direction:column;gap:14px;margin-bottom:18px}
+
+.section-container{background-color:var(--card);border-radius:var(--radius);padding:14px;margin-bottom:14px;box-shadow:var(--shadow);border:var(--card-border);overflow:hidden}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid rgba(15,23,42,0.04);gap:12px}
+.section-number{font-size:1rem;font-weight:800;color:var(--primary);margin-right:8px;min-width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;background:linear-gradient(180deg, rgba(31,111,235,0.08), rgba(31,111,235,0.03));color:var(--primary);border:none}
+.section-title{flex-grow:1;color:#091426;margin:0;font-size:1rem;font-weight:700}
+.na-option{margin-left:12px}
+
+.section-items{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding-top:6px}
+.section-items.collapsible{opacity:1;transition:all .2s ease}
+
+.checklist-item{display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:8px;background:linear-gradient(180deg, rgba(247,249,250,0.8), rgba(255,255,255,0.6));gap:12px}
+.checklist-item + .checklist-item{margin-top:6px}
+.question-text{margin:0;color:#0b1220;font-weight:600;font-size:.95rem;flex:1}
+
+.radio-options{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-left:12px}
+.radio-options input[type='radio']{position:absolute;left:-9999px}
+.radio-options label{padding:10px 14px;border-radius:999px;border:1px solid rgba(15,23,42,0.06);cursor:pointer;background:transparent;display:inline-block;min-width:86px;text-align:center;transition:all .12s ease;font-size:.8rem;letter-spacing:.6px;text-transform:uppercase;font-weight:700}
+.radio-options label:hover{transform:translateY(-2px)}
+.radio-options input[type='radio']:checked + label{background:var(--primary);border-color:var(--primary);color:#fff}
+
+.radio-pill{position:relative}
+.radio-pill label::after{content:'';position:absolute;right:10px;top:50%;transform:translateY(-50%);opacity:0;transition:opacity .12s linear;font-weight:700}
+.radio-pill input[type='radio']:checked + label::after{content:'✓';opacity:1;color:#fff}
+.radio-pill label[aria-disabled="true"]{opacity:0.5;cursor:not-allowed}
+
+
+.form-group{margin-bottom:12px}
+.form-label{display:block;margin-bottom:6px;font-weight:700}
+.btn-submit{max-width:360px;display:block;padding:14px 18px;margin-top:18px;background-color:var(--primary);color:#fff;border:none;border-radius:10px;cursor:pointer;font-weight:800;margin-left:auto;margin-right:auto;box-shadow:0 6px 18px rgba(31,111,235,0.12)}
+.btn-submit:focus,.btn-submit:hover{filter:brightness(.98);outline:none}
+.btn-secondary{background:#667085;color:#fff;border:none;padding:10px 14px;border-radius:8px;cursor:pointer;margin-left:8px}
+
+/* ocultar botão de download por padrão, legado exibe após salvar */
+#downloadChecklistPdfBtn{display:none;margin-left:8px}
+
+/* Accessibility focus states */
+label:focus{outline:2px dashed rgba(31,111,235,0.18);outline-offset:3px}
+
+/* Responsive - mobile optimizations */
+@media (max-width:1000px){
+	.section-items{grid-template-columns:1fr}
+	.field-label{width:160px}
+	.radio-options label{min-width:78px;padding:10px 12px}
+}
+
+@media (max-width:640px){
+	.checklist-page{padding:12px}
+	.page-title{font-size:1.125rem}
+	.field-row{flex-direction:column;align-items:flex-start}
+	.field-label{width:100%;margin-bottom:6px}
+	.section-number{width:40px;height:40px}
+	.section-header{flex-direction:column;align-items:flex-start;gap:8px}
+	.section-title{font-size:0.98rem}
+	.checklist-item{flex-direction:column;align-items:flex-start;padding:12px}
+	.radio-options{margin-left:0;width:100%;justify-content:flex-start;flex-direction:row;flex-wrap:wrap}
+	.radio-options .radio-pill{flex:1 1 auto}
+	.radio-options .radio-pill label{display:block;width:100%;min-width:0;padding:10px 12px;text-align:center}
+	.item-na{margin-left:0;margin-top:8px}
+	.btn-submit{width:100%;max-width:100%;padding:14px}
+}
+
+/* Extra small devices: stack vertical e aumentar targets */
+@media (max-width:420px){
+	.radio-options{flex-direction:column;gap:8px}
+	.radio-options .radio-pill{width:100%;}
+	.radio-options .radio-pill label{width:100%;padding:12px 14px;font-size:.95rem}
+	.question-text{font-size:.95rem}
+	.section-container{padding:12px}
+	.section-header{padding-bottom:6px}
+}
+
+@media (max-width:360px){
+	.radio-options .radio-pill label{padding:10px 12px;font-size:.92rem}
+	.item-na{padding:6px 8px;font-size:.88rem}
+}
+
+.hidden-modal{display:none !important}
+
+/* ===== Checklist styles moved from global styles.css ===== */
+.checklist-page { padding: 4px 0; }
+.checklist-page .container { max-width: 1100px; margin: 0 auto; }
+.page-title { color: var(--verde-escuro); text-align: center; margin-bottom: 18px; }
+
+.section-container { background-color: #f9f9f9; border-radius: 10px; padding: 16px; margin-bottom: 16px; box-shadow: 0 4px 14px rgba(0,0,0,0.04); border: 1px solid #e4e7e1; }
+.section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; padding-bottom:6px; border-bottom:1px solid rgba(0,0,0,0.06); }
+.section-number { font-size:1.1rem; font-weight:700; color:var(--coral); margin-right:8px; }
+.section-title { flex:1; color:var(--verde-escuro); margin:0; font-weight:600 }
+
+.section-items { display:block; }
+.section-items.collapsible { transition: all .18s ease; }
+
+.checklist-item { display:flex; gap:12px; align-items:center; padding:10px 0; border-bottom:1px solid #eee; background:transparent; width:100%; }
+.question-text { margin:0; color:#444; font-weight:500; flex:1 1 auto; min-width:0; margin-right:12px }
+
+.radio-options { display:flex; gap:12px; align-items:center; flex:0 0 auto; white-space:nowrap }
+.radio-options input[type='radio']{ display:none }
+.radio-options label { padding:6px 10px; border-radius:6px; border:1px solid #e0e4e0; cursor:pointer; background:transparent; display:inline-block; min-width:70px; text-align:center; font-size:.75rem; text-transform:uppercase; letter-spacing:.4px }
+.radio-options input[type='radio']:checked + label { background: var(--verde-claro); border-color: var(--verde-claro); color:#111; font-weight:600 }
+
+.radio-pill { position:relative; }
+.radio-pill input[type='radio'] { position:absolute; left:-9999px }
+.radio-pill label::after { content:'✓'; position:absolute; right:8px; top:50%; transform:translateY(-50%); opacity:0; transition:opacity .12s linear; color:#fff }
+.radio-pill input[type='radio']:checked + label::after { opacity:1 }
+
+/* Color coding for Sim / Não pills (local to component now) */
+.radio-pill input[value="sim"] + label{ border-color: rgba(22,163,74,0.18); color: var(--verde-claro); }
+.radio-pill input[value="sim"] + label:hover{ box-shadow: 0 4px 12px rgba(16,185,129,0.06); }
+.radio-pill input[value="sim"]:checked + label{ background: var(--verde-claro); border-color: var(--verde-claro); color: #111 }
+
+.radio-pill input[value="nao"] + label{ border-color: rgba(230,95,60,0.12); color: var(--coral); }
+.radio-pill input[value="nao"] + label:hover{ box-shadow: 0 4px 12px rgba(229,95,60,0.06); }
+.radio-pill input[value="nao"]:checked + label{ background: var(--coral); border-color: var(--coral); color: #fff }
+
+/* Não se Aplica styled as pill - centralizado e sem duplicidade */
+.item-na{
+	display:inline-flex;
+	align-items:center;
+	gap:6px;
+	color:#666;
+	font-size:.9rem;
+	margin-left:8px;
+	padding:6px 10px;
+	border-radius:999px;
+	border:1px solid rgba(15,23,42,0.06);
+	background:transparent;
+	cursor:pointer;
+}
+.item-na input{
+	width:14px;
+	height:14px;
+	flex:0 0 auto;
+	margin-right:6px; /* alinha o checkbox com o texto */
+	vertical-align:middle;
+	accent-color: var(--verde-claro); /* navegadores que suportam */
+}
+.checklist-item.na-checked .item-na{
+	background:rgba(99,102,241,0.12);
+	border-color:rgba(99,102,241,0.18);
+	color:var(--verde-escuro);
+}
+
+/* Focus for keyboard users */
+.radio-pill input:focus + label, .item-na input:focus, .item-na:focus{ outline: 3px solid rgba(31,111,235,0.12); outline-offset: 2px }
+
+.checklist-item.na-checked { opacity:0.6; background:linear-gradient(180deg, rgba(249,250,251,0.9), rgba(243,244,246,0.9)); border-style:dashed }
+
+/* End checklist styles moved from global styles.css */

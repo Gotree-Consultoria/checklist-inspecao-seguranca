@@ -1,0 +1,49 @@
+<section class="group-page">
+    <div class="container">
+        <h1 class="page-title">Gerenciamento de Inspeções de Segurança</h1>
+
+        <div class="action-buttons">
+            <button class="action-btn action-checklist create-checklist" data-action="new-checklist">
+                <span class="icon">✅</span>
+                <span class="text">
+                    <strong>Novo Checklist</strong>
+                    <small>Inspeção estruturada</small>
+                </span>
+            </button>
+            <button class="action-btn action-report create-report" data-action="new-report">
+                <span class="icon">📝</span>
+                <span class="text">
+                    <strong>Novo Relatório</strong>
+                    <small>Registro fotográfico</small>
+                </span>
+            </button>
+            <button class="action-btn action-aep create-aep" data-action="new-aep">
+                <span class="icon">🛡️</span>
+                <span class="text">
+                    <strong>Novo AEP</strong>
+                    <small>Registro de AEP</small>
+                </span>
+            </button>
+        </div>
+
+        <div class="history-section">
+            <h2>Histórico</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Título</th>
+                            <th>Empresa</th>
+                            <th>Data</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="groupHistoryTbody">
+                        <!-- preenchido via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>

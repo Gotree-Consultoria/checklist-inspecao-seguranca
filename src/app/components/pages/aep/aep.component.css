@@ -1,0 +1,21 @@
+/* estilos simplificados para AEP, adaptados do legacy */
+.container { max-width: 980px; margin: 0 auto; padding: 16px; }
+.aep-form fieldset { border:1px solid #e2e2e2; padding:16px; border-radius:12px; margin-bottom:20px; background:#fff; }
+.aep-form legend { font-weight:600; padding:0 6px; }
+.aep-grid { display:grid; gap:16px; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); }
+.aep-grid .fg { display:flex; flex-direction:column; gap:4px; }
+.aep-grid label { font-size:.75rem; font-weight:600; letter-spacing:.5px; text-transform:uppercase; color:#444; }
+.aep-grid input, .aep-grid select { padding:8px 10px; border:1px solid #ccc; border-radius:6px; font-size:.85rem; }
+.field-row { display:flex; gap:10px; align-items:center; margin-bottom:10px; }
+.field-label { width:200px; font-size:0.85rem; font-weight:600; }
+.field-input { flex:1; }
+.form-control { width:100%; padding:8px 10px; border:1px solid #ccc; border-radius:6px; }
+.form-select { width:100%; padding:8px 10px; border:1px solid #ccc; border-radius:6px; }
+.aep-table { width:100%; border-collapse:collapse; font-size:.9rem; }
+.aep-table thead th { background: #e6f3ea; color:#1d1d1d; text-align:left; padding:8px 10px; font-size:.75rem; letter-spacing:.5px; }
+.aep-table tbody td { border-bottom:1px solid #e6e6e6; padding:6px 10px; vertical-align:top; }
+.aep-table tbody tr:nth-child(even){ background:#f9f9f9; }
+.aep-actions { display:flex; gap:8px; margin-top:12px; }
+.btn-primary { background:#007a3a; color:#fff; padding:8px 12px; border-radius:6px; border:none; }
+.btn-secondary { background:#f1f1f1; color:#222; padding:8px 12px; border-radius:6px; border:none; }
+.feedback { margin-top:8px; color:#333; }

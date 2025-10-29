@@ -1,0 +1,33 @@
+<div class="page login-page">
+  <div class="login-fixed-wrapper">
+    <div class="login-hero">
+      <img src="/assets/GO-TREE - Versao principal - 01.png" alt="Go-Tree Checklist" class="login-hero__img" />
+    </div>
+    <div class="login-box">
+        <form (submit)="onSubmit($event)" class="login-form" novalidate>
+          <div class="login-fields">
+            <div>
+              <label for="loginEmail">E-mail</label>
+              <input type="email" id="loginEmail" name="username" autocomplete="username" required [(ngModel)]="email" />
+            </div>
+            <div>
+              <label for="loginPassword">Senha</label>
+              <input type="password" id="loginPassword" name="current-password" autocomplete="current-password" required [(ngModel)]="password" />
+            </div>
+          </div>
+          <div class="remember-and-password">
+            <div class="remember-me-container">
+              <input type="checkbox" id="rememberMe" />
+              <label for="rememberMe">Lembrar-me</label>
+            </div>
+            <div class="forgot-password">
+              <a href="#" (click)="$event.preventDefault()">Esqueci minha senha</a>
+            </div>
+          </div>
+          <div class="login-buttons">
+            <button type="submit" class="btn btn-primary" [disabled]="loading">Entrar</button>
+          </div>
+        </form>
+    </div>
+  </div>
+</div>

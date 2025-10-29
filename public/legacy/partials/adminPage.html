@@ -1,0 +1,109 @@
+<div id="overlay" class="overlay"></div>
+<section class="admin-page">
+  <div class="container">
+    <div class="page-title">
+    <h1>Painel Administrativo</h1>
+    <p>Gerencie usuários do sistema.</p>
+    </div>
+    <!-- Lista de usuários existente movida para o topo -->
+    <div class="card">
+      <h2>Usuários Existentes</h2>
+      <div id="adminUsersList">Carregando...</div>
+    </div>
+
+    <div class="card mt-24">
+      <h2>Empresas Cadastradas</h2>
+      <div id="adminCompaniesList">Carregando...</div>
+  <hr class="divider" />
+  <h3 class="sub-title">Nova Empresa</h3>
+      <form id="adminCreateCompanyForm" class="admin-company-form" autocomplete="off">
+        <fieldset class="company-fieldset">
+          <legend class="company-legend">Dados da Empresa</legend>
+          <div class="form-row">
+            <label for="newCompanyName">Nome da Empresa *</label>
+            <input type="text" id="newCompanyName" class="form-control" required placeholder="Razão social ou nome fantasia" />
+          </div>
+          <div class="form-row">
+            <label for="newCompanyCnpj">CNPJ *</label>
+            <input type="text" id="newCompanyCnpj" class="form-control" placeholder="00.000.000/0000-00" required />
+          </div>
+        </fieldset>
+
+        <fieldset class="company-fieldset">
+          <legend class="company-legend">Unidades (Filiais) <small>(opcional)</small></legend>
+          <div id="companyUnitsContainer" class="units-container"></div>
+          <button type="button" id="addCompanyUnitBtn" class="btn btn-secondary btn-sm add-unit-btn">+ Unidade</button>
+        </fieldset>
+
+        <fieldset class="company-fieldset">
+          <legend class="company-legend">Setores *</legend>
+          <div class="sectors-add-row">
+            <input type="text" id="sectorNameInput" class="form-control" placeholder="Nome do setor" />
+            <button type="button" id="addSectorBtn" class="btn btn-primary btn-sm">Adicionar</button>
+          </div>
+          <div id="companySectorsContainer" class="sectors-chips" aria-live="polite"></div>
+          <p class="hint">Informe pelo menos um setor.</p>
+        </fieldset>
+
+        <div class="company-actions">
+          <button type="submit" class="btn btn-primary btn-save-company">Salvar Empresa</button>
+          <div id="adminCreateCompanyMsg" class="feedback feedback-company" aria-live="polite"></div>
+        </div>
+      </form>
+    </div>
+    
+    <div id="adminUserFormWrapper" class="card mt-24">
+      <h2>Novo Usuário</h2>
+      <form id="adminCreateUserForm" autocomplete="off">
+        <div class="form-row">
+          <label for="newUserName">Nome</label>
+          <input type="text" id="newUserName" name="name" autocomplete="name" class="form-control" required placeholder="Nome Completo" title="Nome do usuário" />
+        </div>
+        <div class="form-row">
+          <label for="newUserEmail">Email</label>
+          <input type="email" id="newUserEmail" name="email" autocomplete="email" class="form-control" required placeholder="email@dominio.com" title="Email de login" />
+        </div>
+        <div class="form-row">
+          <label for="newUserPassword">Senha</label>
+          <input type="password" id="newUserPassword" name="password" autocomplete="new-password" class="form-control" required placeholder="Senha" title="Senha inicial" />
+        </div>
+        <div class="form-row">
+          <label for="newUserBirth">Data de Nascimento</label>
+          <input type="date" id="newUserBirth" name="birthDate" autocomplete="bday" class="form-control" title="Data de nascimento" />
+        </div>
+        <div class="form-row">
+          <label for="newUserPhone">Telefone</label>
+          <input type="tel" id="newUserPhone" name="phone" autocomplete="tel" class="form-control" placeholder="(00) 00000-0000" title="Telefone" />
+        </div>
+        <div class="form-row">
+          <label for="newUserCPF">CPF</label>
+          <input type="text" id="newUserCPF" name="cpf" autocomplete="off" class="form-control" placeholder="000.000.000-00" title="CPF" />
+        </div>
+        <div class="form-row">
+          <label for="newUserCouncilAcronym">Sigla Conselho de Classe</label>
+          <input type="text" id="newUserCouncilAcronym" class="form-control" placeholder="Ex: MTE" title="Sigla do conselho de classe" />
+        </div>
+        <div class="form-row">
+          <label for="newUserCouncilNumber">Conselho de Classe</label>
+          <input type="text" id="newUserCouncilNumber" class="form-control" placeholder="Ex: 12703/PE" title="Número de registro no conselho" />
+        </div>
+        <div class="form-row">
+          <label for="newUserSpecialty">Especialidade</label>
+          <input type="text" id="newUserSpecialty" class="form-control" placeholder="Ex: Técnico de Segurança do Trabalho" title="Especialidade" />
+        </div>
+        <div class="form-row">
+          <label for="newUserRole">Role</label>
+          <select id="newUserRole" class="form-select" required title="Perfil de acesso">
+            <option value="USER">Usuário</option>
+            <option value="ADMIN">Administrador</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-submit">Criar Usuário</button>
+      </form>
+      <div id="adminCreateUserMsg" class="feedback"></div>
+    </div>
+  </div>
+</section>
+<script>
+// Inicialização básica do painel admin (listeners serão adicionados via loadComponents se necessário)
+</script>

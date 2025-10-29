@@ -1,0 +1,100 @@
+<div class="page admin-page">
+  <div *ngIf="accessDenied" class="container">
+    <h1>Acesso Negado</h1>
+    <p>Você não possui permissão para acessar este painel.</p>
+  </div>
+
+  <div *ngIf="!accessDenied" class="container">
+    <h2>Administração</h2>
+
+    <section class="card users-card">
+      <h3>Usuários</h3>
+      <div *ngIf="loadingUsers">Carregando...</div>
+      <div *ngIf="!loadingUsers && (!users || users.length===0)">Nenhum usuário.</div>
+      <table *ngIf="users && users.length" class="users-table">
+        <thead>
+          <tr><th>Nome</th><th>Email</th><th>Role</th><th>Sigla</th><th>Conselho</th><th>Especialidade</th><th>Ações</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let u of users">
+            <td>{{u.name}}</td>
+            <td>{{u.email}}</td>
+            <td><span class="badge-role" [class.admin]="u.role==='ADMIN'">{{u.role}}</span></td>
+            <td>{{u.siglaConselhoClasse || u.councilAcronym}}</td>
+            <td>{{u.conselhoClasse || u.councilNumber}}</td>
+            <td>{{u.especialidade || u.specialty}}</td>
+            <td>
+              <button class="btn btn-compact btn-danger" *ngIf="(u.role||'').toUpperCase()!=='ADMIN'" (click)="deleteUser(u.id)">Excluir</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="card form-card">
+        <h4>Criar usuário</h4>
+        <form (ngSubmit)="submitCreateUser()" [formGroup]="userForm">
+          <div class="row"><label>Nome *</label><input title="Nome" placeholder="Nome completo" formControlName="name" /></div>
+          <div class="row"><label>Email *</label><input title="Email" placeholder="email@exemplo.com" formControlName="email" type="email" /></div>
+          <div class="row"><label>Senha *</label><input title="Senha" placeholder="Senha" formControlName="password" type="password" /></div>
+          <div class="row"><label>Data Nasc *</label><input title="Data de Nascimento" placeholder="dd/mm/aaaa" formControlName="birthDate" type="date" /></div>
+          <div class="row"><label>Telefone *</label><input title="Telefone" placeholder="(00) 00000-0000" formControlName="phone" /></div>
+          <div class="row"><label>CPF *</label><input title="CPF" placeholder="000.000.000-00" formControlName="cpf" /></div>
+          <div class="row"><label>Role</label>
+            <select title="Role" formControlName="role"><option value="USER">USER</option><option value="ADMIN">ADMIN</option></select>
+          </div>
+          <div class="row"><label>Sigla Conselho</label><input title="Sigla do Conselho" placeholder="CRMV, OAB..." formControlName="councilAcronym" /></div>
+          <div class="row"><label>Conselho Nº</label><input title="Número do Conselho" placeholder="Número do conselho" formControlName="councilNumber" /></div>
+          <div class="row"><label>Especialidade</label><input title="Especialidade" placeholder="Ex: cardiologia" formControlName="specialty" /></div>
+          <div class="row actions"><button type="submit">Salvar Usuário</button></div>
+          <div class="msg" *ngIf="userFormMsg">{{userFormMsg}}</div>
+        </form>
+      </div>
+    </section>
+
+    <section class="card companies-card">
+      <h3>Empresas</h3>
+      <div *ngIf="loadingCompanies">Carregando...</div>
+      <div *ngIf="!loadingCompanies && (!companies || companies.length===0)">Nenhuma empresa.</div>
+      <ul *ngIf="companies && companies.length" class="company-list">
+        <li *ngFor="let c of companies">{{c.name}} - {{c.cnpj}}</li>
+      </ul>
+
+      <div class="card form-card">
+        <h4>Criar empresa</h4>
+        <form (ngSubmit)="submitCreateCompany()" [formGroup]="companyForm">
+          <div class="row"><label>Nome *</label><input title="Nome da Empresa" placeholder="Razão social" formControlName="companyName" /></div>
+          <div class="row"><label>CNPJ *</label><input title="CNPJ" placeholder="00.000.000/0000-00" formControlName="companyCnpj" /></div>
+
+          <div class="row dynamic">
+            <label>Unidades</label>
+            <div *ngFor="let u of dynamicUnits; let i = index" class="unit-row">
+              <span>{{u.name}} ({{u.cnpj}})</span>
+              <button type="button" (click)="removeUnit(i)">Remover</button>
+            </div>
+            <div class="add-unit">
+              <input #unitName placeholder="Nome da unidade" />
+              <input #unitCnpj placeholder="CNPJ" />
+              <button type="button" (click)="addUnit(unitName, unitCnpj)">Adicionar Unidade</button>
+            </div>
+          </div>
+
+          <div class="row dynamic">
+            <label>Setores</label>
+            <div *ngFor="let s of dynamicSectors; let i=index" class="sector-row">
+              <span>{{s.name}}</span>
+              <button type="button" (click)="removeSector(i)">Remover</button>
+            </div>
+            <div class="add-sector">
+              <input #sectorName placeholder="Nome do setor" />
+              <button type="button" (click)="addSector(sectorName)">Adicionar Setor</button>
+            </div>
+          </div>
+
+          <div class="row actions"><button type="submit">Salvar Empresa</button></div>
+          <div class="msg" *ngIf="companyFormMsg">{{companyFormMsg}}</div>
+        </form>
+      </div>
+    </section>
+
+  </div>
+</div>

@@ -1,0 +1,39 @@
+/*Aplicações:
+Botões de cancelamento: Coral
+Botões de Entrar/Salvar: Verde Claro
+Linhas de Input: Coral Claro
+Títulos: Verde Escuro
+Fundo de todas as páginas: Branco Neve
+*/
+
+:root {
+	--coral:#E65F3C;
+	--coral-claro:#EFA935;
+	--verde-escuro:#005A32;
+	--verde-claro:#BFD83A;
+	--branco-neve:#FAFAFA;
+
+    /* Paleta para navbar (ajuste aqui para alterar aparência globalmente) */
+    --nav-item-color: rgba(255,255,255,0.95); /* cor dos links */
+    --nav-item-hover-bg: rgba(255,255,255,0.08); /* fundo ao passar o mouse */
+    --nav-item-active-underline: var(--verde-claro); /* destaque ativo (underline) */
+}
+
+
+
+/* You can add global styles to this file, and also import other style files */
+html, body {
+	height: 100%;
+	margin: 0;
+}
+
+body {
+	font-family: "Montserrat", sans-serif;
+	background: #f8fafc;
+	color: #111827;
+}
+
+/* helper for visually hidden content */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+
+/* Checklist styles moved to component */

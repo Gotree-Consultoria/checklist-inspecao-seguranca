@@ -1,0 +1,210 @@
+:host {
+  --sombra-card: 0 5px 25px rgba(0, 0, 0, 0.05);
+  --raio-borda: 12px;
+
+  --coral:#E65F3C; /* Coral para botões de cancelamento */
+  --coral-claro:#EFA935; /* Coral claro para linhas de input */
+  --coral-translucido: rgba(229, 159, 53, 0.5); /* Coral claro translúcido para linhas de input */
+  --verde-escuro:#005A32; /* Verde escuro para títulos */
+  --verde-claro:#BFD83A; /* Verde claro para botões de entrar/salvar */
+  --branco-neve:#FAFAFA; /* Fundo branco neve para todas as páginas */
+}
+
+/* --- Layout Principal da Página --- */
+.page.login-page {
+  display: block;
+  background-color: var(--branco-neve);
+  padding: 0; /* o wrapper fixo gerencia o padding */
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+  position: relative; /* Necessário para o posicionamento do wallpaper */
+}
+
+/* --- Wallpaper Sutil (Adicionado conforme solicitado) --- */
+.page.login-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image: url('/assets/GO-TREE-Wallpaper.png');
+  background-size: cover;
+  background-position: center center;
+  opacity: 0.06;
+  pointer-events: none;
+}
+
+/* --- Garante que o conteúdo fique acima do wallpaper --- */
+.login-hero, .login-box {
+  position: relative;
+  z-index: 1;
+  pointer-events: auto; /* ativar cliques nos elementos internos */
+}
+
+/* --- Wrapper fixo centralizado para a página de login --- */
+.login-fixed-wrapper {
+  position: fixed;
+  top: 84px; /* considerar --header-height */
+  bottom: 40px; /* deixar espaço para o footer */
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column; /* empilha imagem acima do card */
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  gap: 0.6rem; /* reduzir distância entre imagem e card */
+  padding: 1rem; /* padding interno para pequenos offsets */
+  z-index: 1000; /* abaixo do header e footer */
+  overflow: hidden; /* evitar overflow do conteúdo */
+  pointer-events: none; /* deixar clicável apenas os elementos internos */
+}
+
+/* --- Logo Acima do Card --- */
+.login-hero {
+  margin-bottom: 0.25rem; /* aproximar logo do card */
+}
+
+.login-hero__img {
+  max-width: 180px;
+  height: auto;
+}
+
+/* --- Card Principal do Formulário --- */
+.login-box {
+  background-color: white;
+  padding: 1.5rem 1.75rem; /* padding ajustado para menos altura total */
+  border-radius: var(--raio-borda);
+  box-shadow: var(--sombra-card);
+  border: 1px solid #fff;
+  width: 100%;
+  max-width: 420px; /* Largura máxima levemente aumentada */
+  max-height: calc(86vh - 56px); /* aumentar a altura disponível do card */
+  min-height: 320px; /* garantir altura mínima para elementos */
+  overflow: auto; /* rolagem interna no card se necessário */
+  margin: 0.5rem; /* margem extra ao redor do card */
+}
+
+/* --- Estilos dos Inputs e Labels --- */
+.login-form .login-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem; /* Espaço entre campos reduzido */
+  margin-bottom: 1.2rem; /* Margem inferior reduzida */
+}
+
+.login-form label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--verde-escuro);
+}
+
+.login-form input[type="email"],
+.login-form input[type="password"] {
+  width: 100%;
+  padding: 8px 2px; /* Padding vertical reduzido */
+  font-size: 1rem; /* Tamanho da fonte mantido para legibilidade */
+  color: inherit;
+  border: none;
+  border-bottom: 2px solid var(--coral-translucido); /* linha de input: coral claro translúcido */
+  background-color: transparent;
+  transition: border-color 0.3s ease;
+}
+
+.login-form input[type="email"]:focus,
+.login-form input[type="password"]:focus {
+  outline: none;
+  border-bottom-color: var(--coral);
+}
+
+/* --- Seção "Lembrar-me" e "Esqueci a senha" --- */
+.remember-and-password {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+  color: var(--cor-texto-secundario);
+  margin-bottom: 1rem; /* Margem inferior reduzida */
+}
+
+.remember-me-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.remember-me-container input[type="checkbox"] {
+  accent-color: var(--cor-primaria);
+  width: 16px;
+  height: 16px;
+}
+
+.forgot-password a {
+  color: var(--coral);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.forgot-password a:hover {
+  text-decoration: underline;
+}
+
+/* --- Botão Principal --- */
+.btn.btn-primary {
+  display: inline-block;
+  width: auto; /* não ocupar 100% */
+  max-width: 260px; /* limitar largura máxima do botão */
+  padding: 10px 18px;
+  background-color: var(--verde-claro);
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  border: none;
+  border-radius: var(--raio-borda);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn.btn-primary:hover {
+  background-color: var(--verde-escuro);
+  box-shadow: 0 4px 18px rgba(0, 90, 50, 0.12);
+}
+
+.btn.btn-primary[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* --- Ajustes para Telas Pequenas --- */
+@media (max-width: 480px) {
+  .login-box {
+    padding: 1rem;
+    max-width: 360px;
+  }
+  .login-fixed-wrapper { padding: 0.75rem }
+}
+
+/* Melhor espaçamento lateral em dispositivos móveis para evitar card colado nas bordas */
+@media (max-width: 420px) {
+  .login-fixed-wrapper { padding-left: 18px; padding-right: 18px; gap: 0.5rem }
+  .login-box { margin: 0.75rem; max-width: calc(100% - 36px); padding: 1.2rem }
+  .login-hero__img { max-width: 140px }
+}
+
+/* Ajustes para telas com pouca altura (ex: mobile com teclado) */
+@media (max-height: 650px) {
+  .login-fixed-wrapper { top: 64px; bottom: 56px }
+  .login-box { max-height: calc(92vh - 40px); padding: 1rem; min-height: 280px }
+}
+
+/* Centralizar o botão dentro do card e dar mais espaço acima (empurrar para baixo) */
+.login-buttons {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.6rem; /* mais espaço acima do botão */
+}
+
+@media (max-width: 480px) {
+  .login-buttons { margin-top: 1rem }
+}

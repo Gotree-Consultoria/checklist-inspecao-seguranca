@@ -1,0 +1,59 @@
+<div id="overlay" class="overlay"></div>
+<section class="documents-page">
+    <div class="container">
+        <h1 class="page-title">Gerenciar Documentos</h1>
+        
+        <div class="filter-section">
+            <div class="filter-group">
+                <label for="search-input" class="filter-label">Buscar:</label>
+                <input type="text" id="search-input" class="filter-input" placeholder="Título, empresa...">
+            </div>
+            
+            <div class="filter-group">
+                <label for="type-filter" class="filter-label">Tipo:</label>
+                <select id="type-filter" class="filter-select">
+                    <option value="all">Todos</option>
+                    <option value="checklist">Checklist</option>
+                    <option value="report">Relatório</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="date-filter" class="filter-label">Data:</label>
+                <input type="date" id="date-filter" class="filter-input">
+            </div>
+
+            <button id="documentsFilterBtn" class="btn-filter">Pesquisar</button>
+        </div>
+
+        <div class="documents-table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tipo</th>
+                        <th>Título do Documento</th>
+                        <th>Empresa</th>
+                        <th>Data</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Checklist</td>
+                        <td>Inspeção de Rotina - Setor A</td>
+                        <td>Construtora Alfa</td>
+                        <td>2023-10-25</td>
+                        <td><a href="#">Visualizar</a></td>
+                    </tr>
+                    <tr>
+                        <td>Relatório</td>
+                        <td>Relatório Anual de EPIs</td>
+                        <td>Indústria Beta</td>
+                        <td>2023-10-20</td>
+                        <td><a href="#">Visualizar</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,186 @@
+<section class="report-page">
+  <div class="container">
+    <h1 class="page-title">Relatório de Visita Técnica de Segurança do Trabalho</h1>
+
+    <form id="reportForm">
+    <fieldset class="dados-relatorio">
+        <legend>Dados do Relatório</legend>
+        <div class="form-group">
+            <div class="fields">
+                <div class="field-row">
+                    <label for="reportEmpresa" class="field-label">Empresa Cliente:</label>
+                    <div class="field-input">
+                        <select id="reportEmpresa" name="reportEmpresa" class="form-select">
+                            <option value="">Selecione uma empresa</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="field-row">
+                    <label for="reportCNPJ" class="field-label">CNPJ:</label>
+                    <div class="field-input">
+                        <input type="text" id="reportCNPJ" name="reportCNPJ" class="form-control" placeholder="00.000.000/0000-00" />
+                    </div>
+                </div>
+
+                <div class="field-row">
+                    <label for="reportUnit" class="field-label">Unidade:</label>
+                    <div class="field-input">
+                        <select id="reportUnit" name="reportUnit" class="form-select" disabled>
+                            <option value="">Selecione uma empresa primeiro</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="field-row">
+                    <label for="reportSector" class="field-label">Setor:</label>
+                    <div class="field-input">
+                        <select id="reportSector" name="reportSector" class="form-select" disabled>
+                            <option value="">Selecione uma empresa primeiro</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="section-separator" aria-hidden="true"></div>
+
+                <div class="field-row">
+                    <label for="reportTitle" class="field-label">Título do Documento:</label>
+                    <div class="field-input">
+                        <input type="text" id="reportTitle" class="form-control" placeholder="Ex: Inspeção Rotina - Setor A" />
+                    </div>
+                </div>
+
+                <div class="field-row">
+                    <label for="dataInspecao" class="field-label">Data da Visita</label>
+                    <div class="field-input">
+                        <input type="date" id="dataInspecao" name="dataInspecao" class="form-control" required />
+                    </div>
+                </div>
+
+                <div class="field-row">
+                    <label for="responsavel" class="field-label">Responsável pela Inspeção:</label>
+                    <div class="field-input">
+                        <input type="text" id="responsavel" name="responsavel" class="form-control" required />
+                    </div>
+                </div>
+
+                <div class="field-row">
+                    <label for="responsavelSigla" class="field-label">Sigla do Conselho:</label>
+                    <div class="field-input">
+                        <input type="text" id="responsavelSigla" name="responsavelSigla" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="field-row">
+                    <label for="responsavelRegistro" class="field-label">Registro do Conselho:</label>
+                    <div class="field-input">
+                        <input type="text" id="responsavelRegistro" name="responsavelRegistro" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="field-row">
+                    <label for="localInspecao" class="field-label">Local da Visita</label>
+                    <div class="field-input">
+                        <input type="text" id="localInspecao" name="localInspecao" class="form-control" placeholder="ex.: fabrica/escritório/banheiro" required />
+                    </div>
+                </div>
+                </div>
+            </div>
+        </fieldset>
+
+            <!-- Hora inicial / Hora final (hora final oculto até geração) -->
+            <div class="form-group">
+                <div>
+                    <label for="reportStartTime" class="form-label">Hora inicial</label>
+                    <input type="time" id="reportStartTime" class="form-control time-input" step="1" />
+                </div>
+                <div id="reportEndContainer" class="hidden">
+                    <label for="reportEndTime" class="form-label">Hora final</label>
+                    <input type="time" id="reportEndTime" class="form-control time-input" step="1" readonly />
+                </div>
+            </div>
+
+      <!-- Referências Técnicas (informativo) -->
+      <div class="form-group">
+        <label class="form-label">Referências Técnicas Utilizadas (informativo)</label>
+        <ul id="referencesList">
+          <li>INSPEÇÃO Meio Ambiente</li>
+          <li>INSPEÇÃO NR 01 - Documentações</li>
+          <li>INSPEÇÃO NR 06 - EPI (Equipamento de Proteção Individual)</li>
+          <li>INSPEÇÃO NR 06 - EPC (Equipamento de Proteção Coletiva)</li>
+          <li>INSPEÇÃO NR 07 - Documentações</li>
+          <li>INSPEÇÃO NR 11 - Transporte, movimentação, manuseio e armazenagem de materiais</li>
+          <li>INSPEÇÃO NR 12 - Máquinas e equipamentos</li>
+          <li>INSPEÇÃO NR 23 - Proteção e Combate Contra Incêndios</li>
+          <li>INSPEÇÃO NR 35 - Trabalho em altura</li>
+        </ul>
+      </div>
+
+      <div class="form-group">
+        <label for="reportSummary" class="form-label">Resumo geral da visita</label>
+        <textarea id="reportSummary" class="form-control" rows="4"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Registros Fotográficos</label>
+        <p>Adicione registros com foto (captura ou upload), descrição e metadados. Cada clique em "Novo Registro" cria um novo bloco abaixo.</p>
+        <div class="record-add">
+          <button type="button" id="addRecordBtn" class="btn-add-empresa btn-sm add-record-btn">
+            <span class="icon" aria-hidden="true">➕</span>
+            <span>Novo Registro</span>
+          </button>
+        </div>
+      </div>
+
+  <div id="recordsContainer" class="records-list"></div>
+
+    <div class="form-actions">
+                <button type="button" id="saveReportBtn" class="btn-submit">Prosseguir para Assinatura</button>
+            </div>
+    </form>
+  </div>
+</section>
+<!-- Modal de assinaturas para Relatório (modelo igual ao formsPage) -->
+<div id="reportSignatureModal" class="modal-overlay hidden">
+    <div class="modal">
+        <div class="modal-header"><h3>Assinaturas</h3></div>
+        <div class="modal-body">
+            <p>Por favor, colete a assinatura do Técnico e do Cliente.</p>
+            <div class="sign-block">
+                <h4>Técnico</h4>
+                <div class="fg">
+                    <label for="techNameReport">Nome do Técnico</label>
+                    <input type="text" id="techNameReport" class="form-control" readonly />
+                </div>
+                <div class="fg">
+                    <label>Assinatura do Técnico</label>
+                    <canvas id="techSignatureCanvasReport" width="600" height="150" class="signature-canvas"></canvas>
+                    <div class="signature-clear-btn"><button type="button" id="clearTechSigReport" class="btn-secondary">Limpar Assinatura (Técnico)</button></div>
+                </div>
+            </div>
+
+            <hr />
+
+            <div class="sign-block">
+                <h4>Cliente</h4>
+                <div class="fg">
+                    <label for="clientSignerName">Nome do Cliente</label>
+                    <input type="text" id="clientSignerName" class="form-control" placeholder="Nome do cliente" />
+                </div>
+                <div class="fg">
+                    <label>Assinatura do Cliente</label>
+                    <canvas id="clientSignatureCanvasReport" width="600" height="150" class="signature-canvas"></canvas>
+                    <div class="signature-clear-btn"><button type="button" id="clearClientSigReport" class="btn-secondary">Limpar Assinatura (Cliente)</button></div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" id="clearAllSignaturesBtn" class="btn-secondary">Limpar</button>
+            <button type="button" id="confirmSendReportBtn" class="btn-submit">Confirmar e Enviar</button>
+            <button type="button" id="cancelSendReportBtn" class="btn-secondary">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- signature_pad library (CDN) for report signatures -->
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>

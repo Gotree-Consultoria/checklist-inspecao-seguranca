@@ -1,0 +1,61 @@
+<section class="documents-page page">
+	<div class="container">
+		<h1 class="page-title">Gerenciar Documentos</h1>
+
+		<div class="filter-section">
+			<div class="filter-group">
+				<label for="search-input" class="filter-label">Buscar:</label>
+				<input type="text" id="search-input" class="filter-input" [(ngModel)]="filters.q" placeholder="Título, empresa...">
+			</div>
+
+			<div class="filter-group">
+				<label for="type-filter" class="filter-label">Tipo:</label>
+				<select id="type-filter" class="filter-select" [(ngModel)]="filters.type">
+					<option value="all">Todos</option>
+					<option value="checklist">Checklist</option>
+					<option value="report">Relatório</option>
+				</select>
+			</div>
+
+			<div class="filter-group">
+				<label for="date-filter" class="filter-label">Data:</label>
+				<input type="date" id="date-filter" class="filter-input" [(ngModel)]="filters.date">
+			</div>
+
+			<button id="documentsFilterBtn" class="btn-filter" (click)="loadDocumentsList()">Pesquisar</button>
+		</div>
+
+		<div class="documents-table-container">
+			<table>
+				<thead>
+					<tr>
+						<th>Tipo</th>
+						<th>Título do Documento</th>
+						<th>Empresa</th>
+						<th>Data</th>
+						<th>Ações</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr *ngFor="let d of documents; let i = index" class="doc-row" [attr.data-index]="i">
+						<td>{{ formatDocumentType(d.type) }}</td>
+						<td>{{ d.title || d.name || '-' }}</td>
+						<td>{{ d.companyName || d.company || d.clientName || '-' }}</td>
+						<td>{{ formatDate(d.inspectionDate || d.createdAt || d.date) }}</td>
+						<td class="actions-cell">
+							<div class="actions-inline">
+								<button class="actions-toggle" (click)="toggleActions(i, $event)" aria-haspopup="true" [attr.aria-expanded]="openActionsIndex===i">⋯</button>
+								<div class="actions-popup" *ngIf="openActionsIndex===i" (click)="$event.stopPropagation()">
+									<button (click)="viewDocument(d)">Visualizar</button>
+									<button (click)="downloadDocument(d)">Baixar</button>
+									<button (click)="deleteDocument(d)" class="btn-danger">Excluir</button>
+								</div>
+							</div>
+						</td>
+					</tr>
+					<tr *ngIf="!documents || documents.length === 0"><td colspan="5">Nenhum documento encontrado.</td></tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</section>

@@ -1,0 +1,113 @@
+<section class="aep-page page">
+  <div class="container">
+    <h1 class="page-title">Avaliação Ergonômica Preliminar (AEP)</h1>
+    <form [formGroup]="form" class="aep-form" (ngSubmit)="submit()">
+      <fieldset class="aep-header">
+        <legend>Dados da Avaliação</legend>
+        <div class="fields">
+          <div class="field-row">
+            <label for="aepCompany" class="field-label">Empresa Cliente:</label>
+            <div class="field-input">
+              <select id="aepCompany" formControlName="company" class="form-select" title="Empresa">
+                <option value="">{{ loadingCompanies ? 'Carregando...' : 'Selecione...' }}</option>
+                <option *ngFor="let c of companies" [value]="c.id || c.name" [attr.data-cnpj]="c.cnpj">{{c.name}}</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <label for="aepCnpj" class="field-label">CNPJ:</label>
+            <div class="field-input">
+              <input id="aepCnpj" formControlName="cnpj" class="form-control" readonly title="CNPJ" />
+            </div>
+          </div>
+
+          <div class="field-row">
+            <label for="aepUnit" class="field-label">Unidade (opcional)</label>
+            <div class="field-input">
+              <select id="aepUnit" formControlName="unit" class="form-select" [disabled]="units.length===0">
+                <option value="">Selecione empresa</option>
+                <option *ngFor="let u of units" [value]="u.id || u.name">{{u.name}}</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <label for="aepSector" class="field-label">Setor (opcional)</label>
+            <div class="field-input">
+              <select id="aepSector" formControlName="sector" class="form-select" [disabled]="sectors.length===0">
+                <option value="">Selecione empresa</option>
+                <option *ngFor="let s of sectors" [value]="s.id || s.name">{{s.name}}</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="section-separator" aria-hidden="true"></div>
+
+          <div class="field-row">
+            <label for="aepEvaluator" class="field-label">Responsável pela Avaliação</label>
+            <div class="field-input">
+              <input id="aepEvaluator" formControlName="evaluator" class="form-control" readonly title="Avaliador" placeholder="Carregando..." />
+            </div>
+          </div>
+
+          <div class="field-row">
+            <label for="aepSigla" class="field-label">Sigla do Conselho</label>
+            <div class="field-input">
+              <input id="aepSigla" formControlName="sigla" class="form-control" readonly title="Sigla do Conselho" placeholder="—" />
+            </div>
+          </div>
+
+          <div class="field-row">
+            <label for="aepRegistro" class="field-label">Registro do Conselho</label>
+            <div class="field-input">
+              <input id="aepRegistro" formControlName="registro" class="form-control" readonly title="Registro" placeholder="—" />
+            </div>
+          </div>
+
+          <div class="field-row">
+            <label for="aepDate" class="field-label">Data da Avaliação</label>
+            <div class="field-input">
+              <input id="aepDate" formControlName="date" class="form-control" type="date" title="Data" />
+            </div>
+          </div>
+
+          <div class="field-row">
+            <label for="aepFunction" class="field-label">Função Avaliada</label>
+            <div class="field-input">
+              <input id="aepFunction" formControlName="funcao" class="form-control" placeholder="Ex: Operador de Produção" title="Função" />
+            </div>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="aep-risks">
+        <legend>Riscos Identificados por Função</legend>
+        <div class="table-wrapper">
+          <table class="aep-table">
+            <thead>
+              <tr>
+                <th class="col-sel">Sel</th>
+                <th class="col-risk">Risco</th>
+                <th>Fator de Risco</th>
+              </tr>
+            </thead>
+            <tbody id="aepRisks">
+              <tr *ngFor="let rf of riskFactors; let i = index">
+                <td class="chk"><input title="Selecionar risco" type="checkbox" [id]="'risk_'+i" (change)="toggleRisk(rf,$event)" name="risks" [value]="rf"></td>
+                <td class="tipo">ERGONÔMICO</td>
+                <td class="fator"><label [for]="'risk_'+i">{{rf}}</label></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </fieldset>
+
+      <div class="aep-actions">
+        <button type="submit" class="btn-primary">Salvar AEP (Local)</button>
+        <button type="button" id="aepClear" class="btn-secondary" (click)="clear()">Limpar</button>
+      </div>
+      <div id="aepMsg" class="feedback">{{msg}}</div>
+    </form>
+  </div>
+</section>

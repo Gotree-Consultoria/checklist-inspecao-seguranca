@@ -1,0 +1,136 @@
+<section class="checklist-page page">
+  <div class="container">
+    <h1 class="page-title">Check List de Inspeção de Segurança do Trabalho</h1>
+
+    <fieldset class="dados-relatorio">
+      <legend>Dados do Checklist</legend>
+      <div class="form-group">
+        <div class="fields">
+          <div class="field-row">
+            <label for="empresaCliente" class="field-label">Empresa Cliente:</label>
+            <div class="field-input">
+              <select id="empresaCliente" name="empresaCliente" class="form-select"></select>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <label for="empresaCnpj" class="field-label">CNPJ:</label>
+            <div class="field-input">
+              <input type="text" id="empresaCnpj" name="empresaCnpj" class="form-control" placeholder="00.000.000/0000-00" />
+            </div>
+          </div>
+
+          <div class="field-row">
+            <label for="empresaUnidade" class="field-label">Unidade:</label>
+            <div class="field-input">
+              <select id="empresaUnidade" name="empresaUnidade" class="form-select" disabled></select>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <label for="empresaSetor" class="field-label">Setor:</label>
+            <div class="field-input">
+              <select id="empresaSetor" name="empresaSetor" class="form-select" disabled></select>
+            </div>
+          </div>
+
+          <div class="section-separator" aria-hidden="true"></div>
+
+          <div class="field-row">
+            <label for="reportTitle" class="field-label">Título do Documento:</label>
+            <div class="field-input"><input type="text" id="reportTitle" class="form-control" placeholder="Ex: Inspeção Rotina - Setor A"/></div>
+          </div>
+
+          <div class="field-row">
+            <label for="dataInspecao" class="field-label">Data da Inspeção:</label>
+            <div class="field-input"><input type="date" id="dataInspecao" name="dataInspecao" class="form-control" required/></div>
+          </div>
+
+          <div class="field-row">
+            <label for="responsavel" class="field-label">Responsável pela Inspeção:</label>
+            <div class="field-input"><input type="text" id="responsavel" name="responsavel" class="form-control" required/></div>
+          </div>
+
+          <div class="field-row">
+            <label for="responsavelSigla" class="field-label">Sigla do Conselho:</label>
+            <div class="field-input"><input type="text" id="responsavelSigla" name="responsavelSigla" class="form-control"/></div>
+          </div>
+
+          <div class="field-row">
+            <label for="responsavelRegistro" class="field-label">Registro do Conselho:</label>
+            <div class="field-input"><input type="text" id="responsavelRegistro" name="responsavelRegistro" class="form-control"/></div>
+          </div>
+
+          <div class="field-row">
+            <label for="localInspecao" class="field-label">Local da Inspeção:</label>
+            <div class="field-input"><input type="text" id="localInspecao" name="localInspecao" class="form-control" placeholder="ex.: fabrica/escritório/banheiro" required/></div>
+          </div>
+
+        </div>
+      </div>
+    </fieldset>
+
+    <form id="checklistForm" class="checklist-form" (submit)="handleChecklistSubmit($event)">
+      <div id="checklistContainer"></div>
+
+      <div class="form-group">
+        <label for="anotacoes" class="form-label">Anotações:</label>
+        <textarea id="anotacoes" name="anotacoes" class="form-control" rows="5"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="observacoes" class="form-label">Observações:</label>
+        <textarea id="observacoes" name="observacoes" class="form-control" rows="5"></textarea>
+      </div>
+
+      <button type="submit" id="submitChecklistBtn" class="btn-submit">Prosseguir para Assinatura</button>
+      <button type="button" id="downloadChecklistPdfBtn" class="btn-secondary">Baixar PDF</button>
+    </form>
+
+    <!-- Modal de Assinaturas (Cliente + Técnico) -->
+    <div id="signatureModal" class="modal-overlay hidden-modal">
+      <div class="modal">
+        <div class="modal-header"><h3>Assinaturas</h3></div>
+        <div class="modal-body">
+          <p>Por favor, colete a assinatura do Técnico e do Cliente.</p>
+          <div class="sign-block">
+            <h4>Técnico</h4>
+            <div class="fg">
+              <label for="techName">Nome do Técnico</label>
+              <input type="text" id="techName" class="form-control" />
+            </div>
+            <div class="fg">
+              <label>Assinatura do Técnico</label>
+              <canvas id="techSignatureCanvas" width="600" height="150" class="signature-canvas"></canvas>
+              <div class="signature-clear-btn"><button type="button" id="clearTechSignatureBtn" class="btn-secondary">Limpar Assinatura (Técnico)</button></div>
+            </div>
+          </div>
+
+          <hr />
+
+          <div class="sign-block">
+            <h4>Cliente</h4>
+            <div class="fg">
+              <label for="clientName">Nome do Cliente</label>
+              <input type="text" id="clientName" class="form-control" />
+            </div>
+            <div class="fg">
+              <label>Assinatura do Cliente</label>
+              <canvas id="clientSignatureCanvas" width="600" height="150" class="signature-canvas"></canvas>
+              <div class="signature-clear-btn"><button type="button" id="clearClientSignatureBtn" class="btn-secondary">Limpar Assinatura (Cliente)</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="clearAllSignaturesBtn" class="btn-secondary">Limpar</button>
+          <button type="button" id="confirmSignaturesBtn" class="btn-submit">Confirmar e Salvar</button>
+          <button type="button" id="cancelSignaturesBtn" class="btn-secondary">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Componente Angular do Modal de Assinatura -->
+<app-signature-modal (confirmSignatures)="onSignaturesConfirmed($event)"></app-signature-modal>

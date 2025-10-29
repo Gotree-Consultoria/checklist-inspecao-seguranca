@@ -1,0 +1,17 @@
+/* estilos básicos para admin portado do legacy (simplificado) */
+.container { max-width: 980px; margin: 0 auto; padding: 16px; }
+.card { background: #fff; border-radius: 6px; padding: 12px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+.users-table { width: 100%; border-collapse: collapse; }
+.users-table th, .users-table td { text-align: left; padding: 8px; border-bottom: 1px solid #eee; }
+.badge-role { padding: 4px 8px; border-radius: 4px; background: #ddd; font-weight: 600; }
+.badge-role.admin { background: #cfe8d8; color: #0a5f34; }
+.form-card .row { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+.form-card .row label { width: 160px; font-size: 14px; }
+.form-card .row input, .form-card .row select { flex:1; padding:6px 8px; border:1px solid #ccc; border-radius:4px; }
+.btn { padding:6px 10px; border-radius:4px; border:none; cursor:pointer; }
+.btn-danger { background:#d9534f; color:#fff; }
+.btn-compact { padding:4px 8px; font-size:13px; }
+.actions { text-align: right; }
+.msg { margin-top:8px; color: #444; }
+.dynamic .unit-row, .dynamic .sector-row { display:flex; gap:8px; align-items:center; margin-bottom:6px; }
+.add-unit input, .add-sector input { padding:6px 8px; border:1px solid #ccc; border-radius:4px; }
