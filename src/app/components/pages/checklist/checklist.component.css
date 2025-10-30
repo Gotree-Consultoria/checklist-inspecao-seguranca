@@ -16,7 +16,7 @@
 }
 
 *{box-sizing: border-box}
-:host, body{background:var(--bg);font-family: Inter, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;color:#0f172a;margin:0}
+:host, body{background:var(--bg);font-family: "Montserrat", sans-serif;color:#0f172a;margin:0}
 
 .checklist-page{padding:2px 12px;display:flex;justify-content:center}
 .checklist-page .container{width:100%;max-width:var(--max-width);} 
@@ -24,13 +24,13 @@
 .page-title{font-size:1.375rem;margin:0 0 14px;color:var(--verde-escuro);font-weight:700}
 
 /* Dados do relatório */
-fieldset.dados-relatorio{background:var(--card);border-radius:10px;padding:14px;margin-bottom:18px;border:var(--card-border)}
-fieldset.dados-relatorio legend{padding:0 8px;color:var(--muted);font-weight:700;font-size:.95rem}
+.fieldset-top-only, fieldset.dados-relatorio{background:transparent;border-radius:0;padding:14px;margin-bottom:18px;border:none;border-top:1px solid #ddd}
+fieldset.dados-relatorio legend{padding:0 8px;color:var(--muted);font-weight:700;font-size:.95rem;margin-left:-8px}
 .dados-relatorio .form-group{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--gap);margin-bottom:var(--gap)}
 .field-row{display:grid;grid-template-columns:200px 1fr;gap:12px;align-items:center;margin-bottom:12px}
 .field-label{width:200px;font-size:.95rem;color:#0b1220}
 .field-input{flex:1}
-.form-control,.form-select{width:100%;padding:10px 12px;border-radius:8px;border:1px solid rgba(15,23,42,0.06);background:#fff;font-size:.95rem}
+.form-control,.form-select{width:100%;padding:10px 12px;border-radius:8px;border:1px solid rgba(15,23,42,0.06);background:#fff;font-size:.95rem;font-family:inherit}
 
 .section-separator{height:1px;background:linear-gradient(90deg,transparent,#e6edf7,transparent);margin:14px 0}
 

@@ -1,41 +1,38 @@
 <div class="profile-page">
   <div class="profile-card">
-    <div class="profile-header">
-      <div class="avatar">{{ initials() }}</div>
+    <div class="profile-header no-avatar">
       <div class="profile-meta">
-        <h2 class="profile-name">{{ profile?.name || '-' }}</h2>
-        <div class="profile-role">{{ profile?.role || profile?.funcao || '-' }}</div>
-        <div class="profile-actions">
-          <button class="btn btn-primary">Editar perfil</button>
-          <button class="btn">Alterar senha</button>
+        <div class="meta-top">
+          <div>
+            <h2 class="profile-name">{{ profile?.name || '-' }}</h2>
+            <div class="profile-role">{{ profile?.role || profile?.funcao || '-' }}</div>
+          </div>
         </div>
+        <p class="profile-bio" *ngIf="profile?.bio">{{ profile?.bio }}</p>
       </div>
     </div>
 
     <div class="profile-details">
-      <div class="row">
-        <div class="col">
-          <label>Conselho/Registro</label>
-          <div>{{ profile?.conselhoClasse || profile?.registro || '-' }}</div>
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="info-label">Conselho / Registro</div>
+          <div class="info-value">{{ profile?.conselhoClasse || profile?.registro || '-' }}</div>
         </div>
-        <div class="col">
-          <label>Email</label>
-          <div>{{ profile?.email || '-' }}</div>
+        <div class="info-card">
+          <div class="info-label">Email</div>
+          <div class="info-value">{{ profile?.email || '-' }}</div>
         </div>
-        <div class="col">
-          <label>Telefone</label>
-          <div>{{ profile?.phone || profile?.telefone || '-' }}</div>
+        <div class="info-card">
+          <div class="info-label">Telefone</div>
+          <div class="info-value">{{ profile?.phone || profile?.telefone || '-' }}</div>
         </div>
-      </div>
-
-      <div class="row">
-        <div class="col">
-          <label>CPF</label>
-          <div>{{ profile?.cpf || '-' }}</div>
+        <div class="info-card">
+          <div class="info-label">CPF</div>
+          <div class="info-value">{{ profile?.cpf || '-' }}</div>
         </div>
-        <div class="col">
-          <label>Data de Nascimento</label>
-          <div>{{ formatDate(profile?.birthDate || profile?.dataNascimento) }}</div>
+        <div class="info-card">
+          <div class="info-label">Data de Nascimento</div>
+          <div class="info-value">{{ formatDate(profile?.birthDate || profile?.dataNascimento) }}</div>
         </div>
       </div>
     </div>

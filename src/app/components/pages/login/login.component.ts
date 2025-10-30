@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -13,10 +13,11 @@ import { UiService } from '../../../services/ui.service';
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   email = '';
   password = '';
   loading = false;
+  errorMessage = '';
 
   constructor(
     private auth: AuthService,
@@ -24,6 +25,40 @@ export class LoginComponent {
     private ui: UiService,
     private router: Router,
   ) {}
+
+  ngOnInit(): void {
+    try {
+      const token = localStorage.getItem('jwtToken');
+      // se já houver token, considera usuário autenticado e navega para página principal
+      if (token) {
+        try {
+          // valida expiração do token quando disponível
+          const payload: any = this.legacy.decodeJwt(token as string) || {};
+          const now = Math.floor(Date.now() / 1000);
+          if (payload && payload.exp && Number(payload.exp) > 0) {
+            if (Number(payload.exp) > now) {
+              try { this.router.navigate(['/group']); } catch (_) { window.location.href = '/'; }
+              return;
+            } else {
+              // token expirado
+              try { localStorage.removeItem('jwtToken'); } catch(_) {}
+            }
+          } else {
+            // sem exp -> assumir válido (fallback) e navegar
+            try { this.router.navigate(['/group']); } catch (_) { window.location.href = '/'; }
+            return;
+          }
+        } catch (e) {
+          // Se houver erro ao decodificar, tentar navegar por segurança
+          try { this.router.navigate(['/group']); } catch (_) { window.location.href = '/'; }
+          return;
+        }
+      }
+    } catch (e) {
+      // não bloquear UI em caso de erro ao acessar storage
+      console.warn('[LoginComponent] erro ao verificar token no storage', e);
+    }
+  }
 
   async onSubmit(ev?: Event) {
     try {
@@ -34,6 +69,7 @@ export class LoginComponent {
       return;
     }
     this.loading = true;
+  this.errorMessage = '';
     try {
       const resp = await this.auth.login(this.email, this.password);
       // Resp pode ser o objeto retornado pelo ApiService
@@ -69,11 +105,25 @@ export class LoginComponent {
       }
 
       this.ui.showToast('Login realizado com sucesso', 'success');
+  this.errorMessage = '';
       // navegar para a página principal (group) — manter comportamento do legacy
       try { this.router.navigate(['/group']); } catch(_) { window.location.href = '/'; }
     } catch (err: any) {
-      const msg = (err && err.message) ? err.message : 'Erro ao efetuar login';
-      this.ui.showToast(msg, 'error');
+      let msg = 'Erro ao efetuar login';
+      try {
+        if (err && typeof err === 'object') {
+          // Erro de conexão / CORS / servidor inacessível
+          if (err.status === 0) msg = 'Falha de conexão com o servidor';
+          else if (err.status === 401) msg = 'Credenciais inválidas';
+          else if (err.error && typeof err.error === 'string') msg = err.error;
+          else if (err.error && err.error.message) msg = err.error.message;
+          else if (err.message) msg = err.message;
+        } else if (typeof err === 'string') {
+          msg = err;
+        }
+      } catch (_) {}
+  this.errorMessage = msg;
+  this.ui.showToast(msg, 'error');
       console.error('login error', err);
     } finally {
       this.loading = false;

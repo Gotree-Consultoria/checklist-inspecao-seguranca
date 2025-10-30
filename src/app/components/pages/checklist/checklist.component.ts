@@ -30,22 +30,19 @@ export class ChecklistComponent implements OnInit, AfterViewInit {
   constructor() {}
 
   ngOnInit(): void {
-    // carregar dados tipados do service
+    // Inicializa `checklistData` a partir do service
     try {
       const sections = this.checklistService.getAllSections();
       this.checklistData = sections as any[];
     } catch (err) {
-      console.warn('ChecklistService não pôde fornecer dados, usando fallback local.', err);
       this.checklistData = [];
     }
   }
 
   ngAfterViewInit(): void {
-    // garantir render após a view estar pronta
+    // Inicializações após a renderização
     requestAnimationFrame(() => this.renderChecklistForm());
-    // Carregar empresas no dropdown ao ter foco
     this.setupCompanySelector();
-    // Carregar dados do usuário autenticado
     this.loadUserResponsibleData();
   }
 
@@ -54,27 +51,33 @@ export class ChecklistComponent implements OnInit, AfterViewInit {
       const userProfile = await this.legacy.fetchUserProfile();
       if (userProfile) {
         const hostEl = this.host.nativeElement as HTMLElement;
-        
-        // Preencher responsável
+
         const responsavelInput = hostEl.querySelector('#responsavel') as HTMLInputElement;
         if (responsavelInput && userProfile.name) {
           responsavelInput.value = userProfile.name;
         }
 
-        // Preencher sigla do conselho
         const siglaInput = hostEl.querySelector('#responsavelSigla') as HTMLInputElement;
-        if (siglaInput && userProfile.sigla) {
-          siglaInput.value = userProfile.sigla;
+        if (siglaInput) {
+          const sigla = userProfile.councilAcronym || userProfile.siglaConselhoClasse || userProfile.conselhoSigla || 
+                       userProfile.sigla || userProfile.siglaConselho || userProfile.conselho || userProfile.council || 
+                       userProfile.acronym || userProfile.codigoConselho || '';
+          if (sigla) {
+            siglaInput.value = sigla;
+          }
         }
 
-        // Preencher registro do conselho
-        const registroInput = hostEl.querySelector('#responsavelRegistro') as HTMLInputElement;
-        if (registroInput && userProfile.registro) {
-          registroInput.value = userProfile.registro;
+    const registroInput = hostEl.querySelector('#responsavelRegistro') as HTMLInputElement;
+        if (registroInput) {
+          const registro = userProfile.councilNumber || userProfile.conselhoClasse || userProfile.registration || 
+                          userProfile.registro || userProfile.conselhoRegistro || userProfile.registrationNumber || 
+                          userProfile.crm || userProfile.crea || userProfile.numeroRegistro || userProfile.registroProfissional || '';
+          if (registro) {
+            registroInput.value = registro;
+          }
         }
       }
     } catch (err) {
-      console.warn('Não foi possível carregar dados do usuário:', err);
     }
   }
 
@@ -83,13 +86,11 @@ export class ChecklistComponent implements OnInit, AfterViewInit {
     if (!empresaSelect) return;
 
     const loadCompanies = async () => {
-      // se já carregado, não refaz
-      if (empresaSelect.options.length > 1) return;
+  if (empresaSelect.options.length > 1) return;
       
       try {
         const list = await this.reportService.fetchCompanies();
-        // limpar e popular
-        empresaSelect.innerHTML = '<option value="">Selecione a empresa</option>';
+  empresaSelect.innerHTML = '<option value="">Selecione a empresa</option>';
         if (Array.isArray(list)) {
           list.forEach((c: any) => {
             const opt = document.createElement('option');
@@ -102,32 +103,26 @@ export class ChecklistComponent implements OnInit, AfterViewInit {
           });
         }
       } catch (err) {
-        console.warn('fetchCompanies falhou', err);
         this.ui.showToast('Não foi possível carregar empresas do servidor.', 'error', 5000);
       }
     };
 
-    // Disparar ao clicar ou focar no dropdown
     empresaSelect.addEventListener('mousedown', loadCompanies);
     empresaSelect.addEventListener('focus', loadCompanies);
-
-    // Ao mudar a seleção de empresa, carregar CNPJ, unidades e setores
-    empresaSelect.addEventListener('change', (e: any) => {
-      this.handleCompanySelection(e.target);
-    });
+    empresaSelect.addEventListener('change', (e: any) => this.handleCompanySelection(e.target));
   }
 
   private handleCompanySelection(empresaSelect: HTMLSelectElement) {
     const selectedOption = empresaSelect.options[empresaSelect.selectedIndex];
     const hostEl = this.host.nativeElement as HTMLElement;
 
-    // Limpar campos
+  // Atualiza campos da seleção
     const cnpjInput = hostEl.querySelector('#empresaCnpj') as HTMLInputElement;
     const unidadeSelect = hostEl.querySelector('#empresaUnidade') as HTMLSelectElement;
     const setorSelect = hostEl.querySelector('#empresaSetor') as HTMLSelectElement;
 
     if (!selectedOption || !selectedOption.value) {
-      // Empresa não selecionada
+      // Nenhuma empresa selecionada
       if (cnpjInput) cnpjInput.value = '';
       if (unidadeSelect) {
         unidadeSelect.innerHTML = '<option value="">Selecione a unidade</option>';
@@ -140,11 +135,11 @@ export class ChecklistComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    // Preencher CNPJ
+  // Preenche CNPJ
     const cnpj = selectedOption.dataset['cnpj'] || '';
     if (cnpjInput) cnpjInput.value = cnpj;
 
-    // Carregar unidades
+  // Preenche unidades
     const unitsStr = selectedOption.dataset['units'] || '[]';
     const units = JSON.parse(unitsStr);
     if (unidadeSelect) {
@@ -162,7 +157,7 @@ export class ChecklistComponent implements OnInit, AfterViewInit {
       }
     }
 
-    // Carregar setores
+  // Preenche setores
     const sectorsStr = selectedOption.dataset['sectors'] || '[]';
     const sectors = JSON.parse(sectorsStr);
     if (setorSelect) {
@@ -209,17 +204,23 @@ export class ChecklistComponent implements OnInit, AfterViewInit {
     });
     container.innerHTML = html;
     this.addCollapsibleListeners();
-    // bind item NA toggles (visual state + disable inputs)
     container.querySelectorAll('.item-na-checkbox').forEach((el:any) => {
       el.addEventListener('change', (e:any) => {
         const itemId = el.dataset.item;
         if (!itemId) return;
-        const itemEl = container.querySelector(`#items-${itemId}`) ? container.querySelector(`#items-${itemId} .checklist-item`) : container.querySelector(`.checklist-item:has(.item-na-checkbox[data-item="${itemId}"])`);
-        // fallback search
-        const radios = Array.from(container.querySelectorAll(`input[name="q-${itemId}"]`)) as HTMLInputElement[];
-        const labels = Array.from(container.querySelectorAll(`label[for^="q-${itemId}-"]`)) as HTMLLabelElement[];
+        const escapedItemId = itemId.replace(/[.#:]/g, '\\$&');
+        let itemEl = null;
+        try {
+          itemEl = container.querySelector(`#items-${escapedItemId}`) ? 
+                   container.querySelector(`#items-${escapedItemId} .checklist-item`) : 
+                   container.querySelector(`.checklist-item:has(.item-na-checkbox[data-item="${itemId}"])`);
+        } catch (_) { itemEl = null; }
+        
+        
+        const radios = Array.from(container.querySelectorAll(`input[name="q-${escapedItemId}"]`)) as HTMLInputElement[];
+        const labels = Array.from(container.querySelectorAll(`label[for^="q-${escapedItemId}-"]`)) as HTMLLabelElement[];
+        
         if (el.checked) {
-          // Desabilitar: limpar seleção, desabilitar e remover required
           radios.forEach(r => { 
             r.checked = false;
             r.disabled = true;
@@ -228,7 +229,6 @@ export class ChecklistComponent implements OnInit, AfterViewInit {
           labels.forEach(l => l.setAttribute('aria-disabled','true'));
           if (itemEl) (itemEl as HTMLElement).classList.add('na-checked');
         } else {
-          // Reabilitar: remover disabled e restaurar required
           radios.forEach(r => { 
             r.disabled = false;
             r.setAttribute('required','required');
@@ -248,26 +248,16 @@ export class ChecklistComponent implements OnInit, AfterViewInit {
         const sectionItems = hostEl.querySelector(`#items-${sectionId}`) as HTMLElement | null;
         if (!sectionItems) return;
         if (event.target.checked) {
-          // Seção marcada como NA: ocultar, desabilitar e remover required
           sectionItems.style.display = 'none';
           const radioButtons = Array.from(sectionItems.querySelectorAll('input[type="radio"]')) as HTMLInputElement[];
-          radioButtons.forEach(r => { 
-            r.checked = false;
-            r.disabled = true;
-            r.removeAttribute('required');
-          });
+          radioButtons.forEach(r => { r.checked = false; r.disabled = true; r.removeAttribute('required'); });
         } else {
-          // Seção reabilitada: mostrar, reabilitar e restaurar required
           sectionItems.style.display = 'block';
           const radioButtons = Array.from(sectionItems.querySelectorAll('input[type="radio"]')) as HTMLInputElement[];
           radioButtons.forEach(r => { 
-            // Verificar se o item específico não está marcado como NA
             const itemContainer = r.closest('.checklist-item');
             const itemNaCheckbox = itemContainer?.querySelector('.item-na-checkbox') as HTMLInputElement;
-            if (!itemNaCheckbox?.checked) {
-              r.disabled = false;
-              r.setAttribute('required','required');
-            }
+            if (!itemNaCheckbox?.checked) { r.disabled = false; r.setAttribute('required','required'); }
           });
         }
       });
@@ -277,7 +267,7 @@ export class ChecklistComponent implements OnInit, AfterViewInit {
   async handleChecklistSubmit(e:any){
     e.preventDefault();
     
-    // Validar que todos os itens obrigatórios estejam respondidos
+  // Valida obrigatoriedade dos itens
     const hostEl = this.host.nativeElement as HTMLElement;
     const allRadios = Array.from(hostEl.querySelectorAll('input[type="radio"]')) as HTMLInputElement[];
     
@@ -301,7 +291,6 @@ export class ChecklistComponent implements OnInit, AfterViewInit {
       const isRequired = radios.some(r => r.required && !r.disabled);
       if (isRequired && !radios.some(r => r.checked && !r.disabled)) {
         isValid = false;
-        console.warn(`Campo obrigatório não preenchido: ${name}`);
       }
     });
 
@@ -310,7 +299,7 @@ export class ChecklistComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    // Recolhe seções e itens do DOM para montar o payload (equivalente ao legacy)
+  // Recolhe seções e itens do DOM para montar o payload
     const sections: any[] = [];
     hostEl.querySelectorAll('.section-container').forEach(sectionEl => {
       const sectionTitle = (sectionEl.querySelector('.section-title')?.textContent || '').trim();
@@ -327,19 +316,31 @@ export class ChecklistComponent implements OnInit, AfterViewInit {
       sections.push({ title: sectionTitle || 'Seção sem título', na: isSectionNa, items });
     });
 
-    // Armazenar dados para quando as assinaturas forem confirmadas
-    (window as any).__checklistData = {
-      sections,
-      metadata: {
-        title: (this.host.nativeElement.querySelector('#reportTitle') as HTMLInputElement)?.value,
-        dataInspecao: (this.host.nativeElement.querySelector('#dataInspecao') as HTMLInputElement)?.value,
-        responsavel: (this.host.nativeElement.querySelector('#responsavel') as HTMLInputElement)?.value,
-        anotacoes: (this.host.nativeElement.querySelector('#anotacoes') as HTMLTextAreaElement)?.value,
-        observacoes: (this.host.nativeElement.querySelector('#observacoes') as HTMLTextAreaElement)?.value,
-      }
-    };
+// Capture TODOS os dados do formulário AQUI, antes de abrir o modal.
+    const clientCompanyIdValue = (hostEl.querySelector('#empresaCliente') as HTMLSelectElement)?.value?.trim();
+    const unitIdValue = (hostEl.querySelector('#empresaUnidade') as HTMLSelectElement)?.value?.trim();
+    const sectorIdValue = (hostEl.querySelector('#empresaSetor') as HTMLSelectElement)?.value?.trim();
 
-    // Abrir modal de assinatura do Angular
+    (window as any).__checklistData = {
+        sections,
+        metadata: {
+            
+            companyId: clientCompanyIdValue,
+            unitId: unitIdValue,
+            sectorId: sectorIdValue,
+            
+            
+            title: (hostEl.querySelector('#reportTitle') as HTMLInputElement)?.value,
+            dataInspecao: (hostEl.querySelector('#dataInspecao') as HTMLInputElement)?.value,
+            localInspecao: (hostEl.querySelector('#localInspecao') as HTMLInputElement)?.value,
+            responsavel: (hostEl.querySelector('#responsavel') as HTMLInputElement)?.value,
+            responsavelSigla: (hostEl.querySelector('#responsavelSigla') as HTMLInputElement)?.value,
+            responsavelRegistro: (hostEl.querySelector('#responsavelRegistro') as HTMLInputElement)?.value,
+            anotacoes: (hostEl.querySelector('#anotacoes') as HTMLTextAreaElement)?.value,
+            observacoes: (hostEl.querySelector('#observacoes') as HTMLTextAreaElement)?.value,
+        }
+    };
+  // Abre o modal de assinatura
     if (this.signatureModal) {
       await this.signatureModal.open();
     } else {
@@ -348,43 +349,82 @@ export class ChecklistComponent implements OnInit, AfterViewInit {
   }
 
   onSignaturesConfirmed(data: any) {
-    // Dados das assinaturas foram coletados
+  // Monta payload usando os dados coletados
     const checklistData = (window as any).__checklistData;
     
     if (!checklistData) {
       this.ui.showToast('Erro: dados do checklist não encontrados.', 'error', 5000);
       return;
     }
-
-    // Preparar payload completo com assinaturas
+    // ⚠️ MAPEAR EXATAMENTE PARA O DTO: SaveInspectionReportRequestDTO
+    // O backend NÃO espera "id" ou "metadata" - espera os campos específicos do DTO!
+    
+    // Leia os dados diretamente do objeto metadata que já foi preenchido no handleChecklistSubmit.
     const payload = {
-      sections: checklistData.sections,
-      metadata: checklistData.metadata,
-      signatures: {
-        tech: {
-          name: data.techName,
-          signature: data.techSignature,
+        // IDs (lidos do metadata)
+        companyId: checklistData.metadata.companyId ? parseInt(checklistData.metadata.companyId) : null,
+        unitId: checklistData.metadata.unitId ? parseInt(checklistData.metadata.unitId) : null,
+        sectorId: checklistData.metadata.sectorId ? parseInt(checklistData.metadata.sectorId) : null,
+
+        // Título e dados do cabeçalho (lidos do metadata)
+        title: checklistData.metadata.title || 'Checklist de Inspeção',
+        inspectionDate: this.parseDate(checklistData.metadata.dataInspecao),
+        local: checklistData.metadata.localInspecao || '',
+        
+        // Campos de texto (lidos do metadata)
+        notes: checklistData.metadata.anotacoes || '',
+        observations: checklistData.metadata.observacoes || '',
+
+        // Dados do responsável (lidos do metadata)
+        responsavelSigla: checklistData.metadata.responsavelSigla || '',
+        responsavelRegistro: checklistData.metadata.responsavelRegistro || '',
+
+        // Assinaturas (recebidas do modal)
+        clientSignature: {
+            signerName: data.clientName || 'Cliente',
+            imageBase64: data.clientSignature,
+            latitude: data.geolocation?.latitude,
+            longitude: data.geolocation?.longitude
         },
-        client: {
-          name: data.clientName,
-          signature: data.clientSignature,
-        }
-      }
+        technicianSignature: {
+            imageBase64: data.techSignature
+        },
+        
+        // Seções (já no formato correto)
+        sections: checklistData.sections,
+
+        useDigitalSignature: true
     };
+
+
 
     // Salvar via ReportService
     this.saveChecklistWithSignatures(payload);
   }
 
+  private parseDate(dateString: string | undefined): any {
+    if (!dateString) return null;
+    // Converte DD/MM/YYYY ou YYYY-MM-DD para LocalDate (YYYY-MM-DD)
+    if (dateString.includes('/')) {
+      const [day, month, year] = dateString.split('/');
+      return `${year}-${month}-${day}`;
+    }
+    return dateString;
+  }
+
   private async saveChecklistWithSignatures(payload: any) {
     try {
+      
       const result = await this.reportService.postInspectionReport(payload);
+      
       this.ui.showToast('Checklist salvo com sucesso!', 'success', 5000);
       // Redirecionar para página de sucesso ou histórico
       window.location.href = '/#/group';
     } catch (err) {
-      console.error('Erro ao salvar checklist:', err);
-      this.ui.showToast('Erro ao salvar checklist. Tente novamente.', 'error', 5000);
+      const error = err as any;
+      
+      const msg = error.message || 'Erro desconhecido';
+      this.ui.showToast(`Erro ao salvar checklist: ${msg}`, 'error', 5000);
     }
   }
 }

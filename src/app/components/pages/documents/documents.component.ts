@@ -18,6 +18,12 @@ export class DocumentsComponent implements OnInit {
   filters = { q: '', type: 'all', date: '' };
   documents: any[] = [];
   openActionsIndex: number | null = null;
+  popupPosition: { top: string; left: string } = { top: '0px', left: '0px' };
+  
+  // Paginação
+  itemsPerPage = 10;
+  allDocuments: any[] = []; // todos os documentos carregados
+  
   private outsideClickHandler = (ev: Event) => {
     // fecha popup quando clicar fora
     this.openActionsIndex = null;
@@ -37,7 +43,51 @@ export class DocumentsComponent implements OnInit {
 
   toggleActions(index: number, ev: Event) {
     ev.stopPropagation();
-    this.openActionsIndex = this.openActionsIndex === index ? null : index;
+    if (this.openActionsIndex === index) {
+      this.openActionsIndex = null;
+    } else {
+      this.openActionsIndex = index;
+      // Calcular posição do popup após renderizar
+      requestAnimationFrame(() => this.positionPopup(index, ev as MouseEvent));
+    }
+  }
+
+  private positionPopup(index: number, ev: MouseEvent) {
+    try {
+      const button = ev.target as HTMLElement;
+      const rect = button.getBoundingClientRect();
+      
+      // Popup aparece logo abaixo e à direita do botão
+      let top = rect.bottom + 6;
+      let left = rect.right + 4;
+      
+      // Ajustar se popup sair da tela (lado direito)
+      const popupWidth = 160;
+      const viewportWidth = window.innerWidth;
+      if (left + popupWidth > viewportWidth - 16) {
+        left = rect.left - popupWidth - 4;
+      }
+      
+      // Ajustar se popup sair da tela (parte inferior)
+      const popupHeight = 140;
+      const viewportHeight = window.innerHeight;
+      if (top + popupHeight > viewportHeight - 16) {
+        top = rect.top - popupHeight - 6;
+      }
+      
+      this.popupPosition = {
+        top: `${Math.round(top)}px`,
+        left: `${Math.round(left)}px`
+      };
+      
+      console.log('[Documents] Popup positioned at', { 
+        buttonRect: { top: rect.top, left: rect.left, bottom: rect.bottom, right: rect.right },
+        popupPosition: { top, left },
+        viewport: { width: viewportWidth, height: viewportHeight }
+      });
+    } catch (e) {
+      console.warn('Erro ao posicionar popup', e);
+    }
   }
 
   formatDocumentType(type: any) {
@@ -60,6 +110,7 @@ export class DocumentsComponent implements OnInit {
   }
 
   async loadDocumentsList() {
+    this.allDocuments = [];
     this.documents = [];
     // show loading row
     try {
@@ -72,10 +123,11 @@ export class DocumentsComponent implements OnInit {
       const resp = await fetch(url, { headers: this.legacy.authHeaders() });
       if (resp.ok) {
         const list = await resp.json();
-        this.documents = Array.isArray(list) ? list : (list ? [list] : []);
+        this.allDocuments = Array.isArray(list) ? list : (list ? [list] : []);
+        this.updateDisplayedDocuments();
         // sync local storage (keep drafts)
         try {
-          const serverIds = new Set(this.documents.map(it => String(it.id || it.reportId || '')).filter(Boolean));
+          const serverIds = new Set(this.allDocuments.map(it => String(it.id || it.reportId || '')).filter(Boolean));
           const localAll = JSON.parse(localStorage.getItem('savedInspectionReports') || '[]');
           const newLocal = localAll.filter((x:any) => { const xid = String(x.id || x.reportId || ''); return !xid || serverIds.has(xid); });
           if (JSON.stringify(newLocal) !== JSON.stringify(localAll)) localStorage.setItem('savedInspectionReports', JSON.stringify(newLocal));
@@ -96,8 +148,18 @@ export class DocumentsComponent implements OnInit {
         return true;
       });
       this.ui.showToast('Servidor indisponível — exibindo apenas rascunhos locais.', 'info', 5000);
-      this.documents = filtered;
-    } catch (e) { this.documents = []; }
+      this.allDocuments = filtered;
+      this.updateDisplayedDocuments();
+    } catch (e) { this.allDocuments = []; this.documents = []; }
+  }
+
+  private updateDisplayedDocuments(): void {
+    this.documents = this.allDocuments.slice(0, this.itemsPerPage);
+  }
+
+  changeItemsPerPage(count: number): void {
+    this.itemsPerPage = count;
+    this.updateDisplayedDocuments();
   }
 
   async downloadDocument(d:any) {
@@ -138,8 +200,10 @@ export class DocumentsComponent implements OnInit {
     try {
       const confirm = window.confirm('Confirma exclusão do documento?');
       if (!confirm) return;
-      // prefer DELETE /documents/{id}
+      
+      const typeSlug = this.documentTypeToSlug(d.type || d.documentType || '');
       const id = d.id || d.reportId || '';
+      
       if (!id) {
         // remove local draft
         const all = JSON.parse(localStorage.getItem('savedInspectionReports') || '[]');
@@ -148,7 +212,9 @@ export class DocumentsComponent implements OnInit {
         this.loadDocumentsList();
         return;
       }
-      const resp = await fetch(`${this.legacy.apiBaseUrl}/documents/${encodeURIComponent(id)}`, { method: 'DELETE', headers: this.legacy.authHeaders() });
+      
+      // DELETE /documents/{type}/{id}
+      const resp = await fetch(`${this.legacy.apiBaseUrl}/documents/${encodeURIComponent(typeSlug)}/${encodeURIComponent(id)}`, { method: 'DELETE', headers: this.legacy.authHeaders() });
       if (!resp.ok) throw new Error('Falha ao excluir documento');
       this.ui.showToast('Documento excluído.', 'success');
       this.loadDocumentsList();

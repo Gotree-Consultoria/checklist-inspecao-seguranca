@@ -3,6 +3,7 @@ import { CommonModule, NgIf, NgForOf } from '@angular/common';
 import { Router } from '@angular/router';
 import { UiService } from '../../../services/ui.service';
 import { ReportService } from '../../../services/report.service';
+import { LegacyService } from '../../../services/legacy.service';
 
 @Component({
   standalone: true,
@@ -17,6 +18,7 @@ export class GroupComponent implements OnInit {
 
   private ui = inject(UiService);
   private report = inject(ReportService);
+  private legacy = inject(LegacyService);
   constructor(private el: ElementRef, private router: Router) {}
 
   ngOnInit(): void {
@@ -75,38 +77,54 @@ export class GroupComponent implements OnInit {
 
   async downloadDoc(item: any) {
     try {
+      const typeSlug = this.documentTypeToSlug(item.type || item.documentType || '');
       const id = item.id || item.reportId;
       if (!id) return;
-      const token = localStorage.getItem('jwtToken');
-      const headers: any = {};
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-      const resp = await fetch(`/documents/${encodeURIComponent(id)}/pdf`, { headers });
+      const resp = await fetch(`${this.legacy.apiBaseUrl}/documents/${encodeURIComponent(typeSlug)}/${encodeURIComponent(id)}/pdf`, { headers: this.legacy.authHeaders() });
       if (!resp.ok) throw new Error('Falha ao baixar PDF');
       const blob = await resp.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a'); a.href = url; a.download = `document-${id}.pdf`; document.body.appendChild(a); a.click(); a.remove(); window.URL.revokeObjectURL(url);
-    } catch (e) {
+      this.ui.showToast('Download iniciado.', 'success');
+    } catch (e: any) {
       console.warn('downloadDoc failed', e);
+      this.ui.showToast(e?.message || 'Não foi possível obter PDF do documento.', 'error');
     }
   }
 
   async viewDoc(item: any) {
     try {
+      const typeSlug = this.documentTypeToSlug(item.type || item.documentType || '');
       const id = item.id || item.reportId;
       if (!id) return;
-      const token = localStorage.getItem('jwtToken');
-      const headers: any = {};
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-      const resp = await fetch(`/documents/${encodeURIComponent(id)}/pdf`, { headers });
+      const resp = await fetch(`${this.legacy.apiBaseUrl}/documents/${encodeURIComponent(typeSlug)}/${encodeURIComponent(id)}/pdf`, { headers: this.legacy.authHeaders() });
       if (!resp.ok) throw new Error('Falha ao obter PDF');
       const blob = await resp.blob();
-      // open in new window as object URL
       const url = window.URL.createObjectURL(blob);
       window.open(url, '_blank');
-      // not revoking immediately to allow viewing; will be cleaned on page unload
-    } catch (e) {
+      setTimeout(()=>window.URL.revokeObjectURL(url), 5000);
+    } catch (e: any) {
       console.warn('viewDoc failed', e);
+      this.ui.showToast(e?.message || 'Não foi possível carregar PDF para visualização.', 'error');
     }
+  }
+
+  documentTypeToSlug(type: string): string {
+    if (!type) return 'document';
+    const raw = String(type || '');
+    const normalized = raw.normalize ? raw.normalize('NFD').replace(/\p{Diacritic}/gu, '') : raw;
+    const up = normalized.toUpperCase();
+    if (up.includes('CHECKLIST') || up.includes('INSPECAO') || up.includes('INSPEÇÃO') || up.includes('INSPECC')) return 'checklist';
+    if (up.includes('RELATORIO') || up.includes('RELAT') || (up.includes('VISITA') && up.includes('RELAT'))) return 'visit';
+    if (up.includes('VISITA') && !up.includes('CHECK')) return 'visit';
+    if (up.includes('AEP')) return 'aep';
+    switch (up) {
+      case 'CHECKLIST_INSPECAO': return 'checklist';
+      case 'RELATORIO_VISITA': return 'visit';
+      case 'AEP': return 'aep';
+    }
+    const slug = String(type).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    return slug || 'document';
   }
 
   go(route: string) {

@@ -11,14 +11,20 @@ export class SimpleSignaturePad {
   private backgroundColor: string;
   private drawing: boolean = false;
   private hasStroke: boolean = false;
+  private scaleFactor: number = 1;
+  private penWidth: number = 1.5;
 
   constructor(canvas: HTMLCanvasElement, opts: any = {}) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d')!;
-    this.penColor = opts.penColor || 'black';
-    this.backgroundColor = opts.backgroundColor || 'rgba(255,255,255,0)';
+  this.penColor = opts.penColor || 'black';
+  this.backgroundColor = opts.backgroundColor || 'rgba(255,255,255,0)';
+  this.penWidth = opts.penWidth || opts.penWidth === 0 ? opts.penWidth : 1.5;
+    // optional callback for diagnostics: (pos, event) => void
+    (this as any)._onPointerDownCallback = typeof opts.onPointerDown === 'function' ? opts.onPointerDown : null;
 
-    this._resizeCanvas();
+    // Inicializa canvas com dimensões corretas baseado no layout CSS
+    this._initCanvasSize();
     this.clear();
 
     this._pointerDown = this._pointerDown.bind(this);
@@ -33,33 +39,39 @@ export class SimpleSignaturePad {
     this.canvas.addEventListener('touchmove', this._pointerMove, { passive: false });
     document.addEventListener('touchend', this._pointerUp);
 
-    window.addEventListener('resize', () => this._resizeCanvas());
+    window.addEventListener('resize', () => this._initCanvasSize());
   }
 
-  private _resizeCanvas() {
+  private _initCanvasSize() {
     const ratio = Math.max(window.devicePixelRatio || 1, 1);
-    const w = this.canvas.clientWidth || this.canvas.width;
-    const h = this.canvas.clientHeight || this.canvas.height;
+    this.scaleFactor = ratio;
 
-    const tmp = document.createElement('canvas');
-    tmp.width = this.canvas.width;
-    tmp.height = this.canvas.height;
-    tmp.getContext('2d')!.drawImage(this.canvas, 0, 0);
+    const w = this.canvas.clientWidth || 400;
+    const h = this.canvas.clientHeight || 200;
 
-    this.canvas.width = Math.floor(w * ratio);
-    this.canvas.height = Math.floor(h * ratio);
-    this.canvas.style.width = w + 'px';
-    this.canvas.style.height = h + 'px';
+  this.canvas.width = Math.floor(w * ratio);
+  this.canvas.height = Math.floor(h * ratio);
+  this.canvas.style.width = w + 'px';
+  this.canvas.style.height = h + 'px';
 
-    this.ctx = this.canvas.getContext('2d')!;
-    this.ctx.scale(ratio, ratio);
-    this.ctx.drawImage(tmp, 0, 0, w, h);
+  this.ctx = this.canvas.getContext('2d')!;
+  // Use setTransform to avoid accumulating scales on resize
+  this.ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   }
 
   private _getPointerPos(e: any): { x: number; y: number } {
+    // Usa offsetX/offsetY quando disponível (mais confiável)
+    // Usa offsetX/offsetY quando disponível (mais direto e relativo ao elemento)
+    if (e.offsetX !== undefined && e.offsetY !== undefined) {
+      return { x: e.offsetX, y: e.offsetY };
+    }
+
+    // Fallback para touch ou eventos sem offsetX
     const rect = this.canvas.getBoundingClientRect();
     if (e.touches && e.touches.length) e = e.touches[0];
-    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    const x = (e.clientX - rect.left);
+    const y = (e.clientY - rect.top);
+    return { x, y };
   }
 
   private _pointerDown = (e: any) => {
@@ -69,9 +81,18 @@ export class SimpleSignaturePad {
     this.hasStroke = true;
     this.ctx.beginPath();
     this.ctx.strokeStyle = this.penColor;
-    this.ctx.lineWidth = 2.5;
+    // lineWidth is set in CSS pixels; ctx transform maps CSS->device pixels
+    this.ctx.lineWidth = this.penWidth;
     this.ctx.lineCap = 'round';
+    this.ctx.lineJoin = 'round';
     this.ctx.moveTo(p.x, p.y);
+    console.log('[SignaturePad] Pen down at:', { px: p.x, py: p.y, scale: this.scaleFactor, offsetX: e.offsetX, offsetY: e.offsetY });
+    try {
+      const cb = (this as any)._onPointerDownCallback;
+      if (cb) {
+        try { cb({ x: p.x, y: p.y }, e); } catch (_) {}
+      }
+    } catch (_) {}
   };
 
   private _pointerMove = (e: any) => {

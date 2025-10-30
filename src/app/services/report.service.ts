@@ -14,22 +14,132 @@ export class ReportService {
       };
       if (token) headers['Authorization'] = `Bearer ${token}`;
       
+      if (!payload || typeof payload !== 'object') {
+        throw new Error('Payload inválido: não é um objeto');
+      }
+      
+      // 🔍 DEBUG: Criar uma cópia do payload sem as imagens para log (ficam muito grandes)
+      const payloadForLogging = JSON.parse(JSON.stringify(payload));
+      if (payloadForLogging.clientSignature?.signatureImage) {
+        payloadForLogging.clientSignature.signatureImage = `[BASE64 - ${payloadForLogging.clientSignature.signatureImage.length} chars]`;
+      }
+      if (payloadForLogging.technicianSignature?.signatureImage) {
+        payloadForLogging.technicianSignature.signatureImage = `[BASE64 - ${payloadForLogging.technicianSignature.signatureImage.length} chars]`;
+      }
+      
+      console.log('[ReportService] 📤 Enviando para /inspection-reports');
+      console.log('[ReportService] 🔍 Validando e limpando IDs aninhados...');
+      this.validatePayloadIds(payload);
+      
+      // 🗑️ IMPORTANTE: Remover qualquer campo 'id' null/undefined que possa causar validação no backend
+      const cleanedPayload = this.removeNullIds(payload);
+      
+      console.log('[ReportService] 📋 Payload (sem Base64):', JSON.stringify(payloadForLogging, null, 2));
+      
+      const jsonPayload = JSON.stringify(cleanedPayload);
+      console.log('[ReportService] � Estrutura do payload:', Object.keys(payload));
+      console.log('[ReportService] 📊 Tamanho:', jsonPayload.length, 'bytes');
+      
       const resp = await fetch('http://localhost:8081/inspection-reports', { 
         headers,
         method: 'POST',
-        body: JSON.stringify(payload)
+        body: jsonPayload  // Usando cleanedPayload (sem IDs nulos)
       });
       
       if (!resp.ok) {
-        throw new Error(`Status ${resp.status}: ${resp.statusText}`);
+        let errorDetails = `Status ${resp.status}: ${resp.statusText}`;
+        try {
+          const contentType = resp.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const errorBody = await resp.json();
+            errorDetails += ` | ${JSON.stringify(errorBody)}`;
+            console.error('[ReportService] ❌ Erro JSON do backend:', errorBody);
+            console.error('[ReportService] 🔍 DICA: "The given id must not be null" geralmente significa:');
+            console.error('[ReportService] 🔍   1. Uma entidade com @GeneratedValue está sendo salva com id=null');
+            console.error('[ReportService] 🔍   2. Um relacionamento @ManyToOne está faltando ou mal estruturado');
+            console.error('[ReportService] 🔍   3. Um cascade não está configurado corretamente');
+            console.error('[ReportService] 📊 Payload enviado:', payloadForLogging);
+          } else {
+            const errorText = await resp.text();
+            errorDetails += ` | ${errorText}`;
+            console.error('[ReportService] ❌ Erro texto do backend:', errorText);
+          }
+        } catch (parseErr) {
+          console.warn('[ReportService] ⚠️ Não foi possível fazer parse da resposta de erro', parseErr);
+        }
+        throw new Error(errorDetails);
       }
       
       const data = await resp.json();
+      console.log('[ReportService] ✅ Inspeção salva com sucesso:', data);
       return data;
     } catch (err) {
-      console.error('[ReportService] Erro ao postar relatório:', err);
+      console.error('[ReportService] ❌ ERRO ao postar inspeção:', err);
       throw err;
     }
+  }
+
+  private validatePayloadIds(obj: any, path: string = ''): void {
+    if (!obj || typeof obj !== 'object') return;
+    
+    // Verificar se há campo 'id' com valor null
+    if (obj.hasOwnProperty('id')) {
+      if (obj.id === null || obj.id === undefined) {
+        console.warn(`[ReportService] ⚠️ Campo 'id' é nulo em: ${path || 'raiz'}`);
+      } else {
+        console.log(`[ReportService] ✅ Campo 'id' encontrado em ${path}: ${obj.id}`);
+      }
+    }
+    
+    // Verificar recursivamente em arrays
+    if (Array.isArray(obj)) {
+      obj.forEach((item, idx) => {
+        this.validatePayloadIds(item, `${path}[${idx}]`);
+      });
+    } else {
+      // Verificar recursivamente em objetos
+      Object.keys(obj).forEach(key => {
+        if (typeof obj[key] === 'object' && obj[key] !== null) {
+          this.validatePayloadIds(obj[key], `${path}.${key}`);
+        }
+      });
+    }
+  }
+
+  private removeNullIds(obj: any, depth: number = 0): any {
+    if (depth > 20) return obj; // Proteção contra recursão infinita
+    
+    if (!obj || typeof obj !== 'object') return obj;
+    
+    // Se for array, processar cada elemento
+    if (Array.isArray(obj)) {
+      return obj.map(item => this.removeNullIds(item, depth + 1));
+    }
+    
+    // Se for objeto, criar cópia sem campos 'id' nulos e 'undefined'
+    const cleaned: any = {};
+    Object.keys(obj).forEach(key => {
+      // Se for o campo 'id' e for null/undefined, não incluir
+      if (key === 'id' && (obj[key] === null || obj[key] === undefined)) {
+        console.log(`[ReportService] 🗑️ Removendo campo 'id' nulo`);
+        return; // Pula este campo
+      }
+      
+      // Se for 'undefined', pular (não enviar)
+      if (obj[key] === undefined) {
+        console.log(`[ReportService] 🗑️ Removendo campo '${key}' (undefined)`);
+        return;
+      }
+      
+      // Se for objeto/array, processar recursivamente
+      if (typeof obj[key] === 'object' && obj[key] !== null) {
+        cleaned[key] = this.removeNullIds(obj[key], depth + 1);
+      } else {
+        cleaned[key] = obj[key];
+      }
+    });
+    
+    return cleaned;
   }
 
   async fetchInspectionReports(params: Record<string, any> = {}) {
@@ -147,7 +257,21 @@ export class ReportService {
       });
       
       if (!resp.ok) {
-        throw new Error(`Status ${resp.status}: ${resp.statusText}`);
+        // Tentar capturar o erro detalhado do backend
+        let errorDetails = `Status ${resp.status}: ${resp.statusText}`;
+        try {
+          const contentType = resp.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const errorBody = await resp.json();
+            errorDetails += ` | ${JSON.stringify(errorBody)}`;
+          } else {
+            const errorText = await resp.text();
+            errorDetails += ` | ${errorText}`;
+          }
+        } catch (parseErr) {
+          console.warn('[ReportService] Não foi possível fazer parse da resposta de erro', parseErr);
+        }
+        throw new Error(errorDetails);
       }
       
       const data = await resp.json();

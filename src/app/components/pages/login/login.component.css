@@ -205,6 +205,24 @@
   margin-top: 1.6rem; /* mais espaço acima do botão */
 }
 
+.login-error {
+  color: #a94442;
+  background: transparent; /* sem preenchimento */
+  padding: 0; /* sem padding */
+  margin: 0 0 8px 0; /* pequeno espaçamento acima do botão */
+  border-radius: 0;
+  border: none;
+  max-width: 320px;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  font-size: 0.82rem; /* mensagem menor */
+  line-height: 1.1;
+  display: block; /* garante que fique acima do botão */
+  margin-left: auto;
+  margin-right: auto;
+}
+
 @media (max-width: 480px) {
   .login-buttons { margin-top: 1rem }
 }

@@ -58,7 +58,7 @@
             </div>
 
             <div class="field-row">
-              <label for="responsavel" class="field-label">Responsável pela Inspeção:</label>
+              <label for="responsavel" class="field-label">Responsável pela Visita:</label>
               <div class="field-input">
                 <input type="text" id="responsavel" name="responsavel" class="form-control" required />
               </div>
@@ -121,7 +121,7 @@
 
       <div class="form-group">
         <label class="form-label">Registros Fotográficos</label>
-        <p>Adicione registros com foto (captura ou upload), descrição e metadados. Cada clique em "Novo Registro" cria um novo bloco abaixo.</p>
+        <p class="record-instructions">Adicione registros com foto (captura ou upload), descrição e metadados. Cada clique em "Novo Registro" cria um novo bloco abaixo.</p>
         <div class="record-add">
           <button type="button" id="addRecordBtn" class="btn-add-empresa btn-sm add-record-btn" (click)="addRecord()">
             <span class="icon" aria-hidden="true">➕</span>
@@ -131,14 +131,98 @@
       </div>
 
       <div id="recordsContainer" class="records-list">
-        <div class="record-item" *ngFor="let r of records; let i = index">
-            <div class="record-row">
-            <input type="file" accept="image/*" title="Escolher imagem para registro" (change)="onRecordFileChange($event, r)" />
-            <input type="text" class="form-control" [(ngModel)]="r.description" placeholder="Descrição do registro" />
-            <button type="button" class="btn-secondary" (click)="removeRecord(i)">Remover</button>
+        <div class="record-item" *ngFor="let record of records; let i = index; trackBy: trackByIndex">
+          <div class="record-meta">
+            <!-- Fotos com dois slots -->
+            <div class="photo-section">
+              <label class="photo-label">Fotos do Registro (máx. 2)</label>
+              <div class="record-photos">
+                <div class="photo-slot" [class.empty]="!record.photos[0]">
+                  <img *ngIf="record.photos[0]" [src]="record.photos[0]" alt="Foto 1" class="rec-img" />
+                  <input type="file" accept="image/*" title="Upload de foto 1" (change)="onRecordFileChange($event, i, 0)" />
+                </div>
+                <div class="photo-slot" [class.empty]="!record.photos[1]">
+                  <img *ngIf="record.photos[1]" [src]="record.photos[1]" alt="Foto 2" class="rec-img" />
+                  <input type="file" accept="image/*" title="Upload de foto 2" (change)="onRecordFileChange($event, i, 1)" />
+                </div>
+              </div>
+              <div class="photo-actions">
+                <button type="button" class="btn-secondary btn-sm" (click)="onSelectFileClick(i)" title="Selecionar foto da galeria ou computador">
+                  📁 Galeria
+                </button>
+                <button type="button" class="btn-secondary btn-sm" (click)="onCaptureClick(i)" title="Usar câmera para capturar foto">
+                  📷 Capturar
+                </button>
+                <button type="button" class="btn-secondary btn-sm" (click)="removePhotos(i)" *ngIf="record.photos.length > 0" title="Remover todas as fotos">
+                  🗑️ Remover
+                </button>
+              </div>
+            </div>
+
+            <!-- Campos de descrição -->
+            <div class="record-fields">
+              <div class="field-row-inline">
+                <label for="rec-desc-{{i}}" class="field-label">Descrição:</label>
+                <input type="text" [id]="'rec-desc-' + i" [name]="'rec-desc-' + i" [(ngModel)]="record.description" (change)="onRecordChange(i)" class="form-control" placeholder="Descrição do achado" />
+              </div>
+
+              <div class="field-row-inline">
+                <label for="rec-conseq-{{i}}" class="field-label">Consequências:</label>
+                <input type="text" [id]="'rec-conseq-' + i" [name]="'rec-conseq-' + i" [(ngModel)]="record.consequences" (change)="onRecordChange(i)" class="form-control" placeholder="Consequências potenciais" />
+              </div>
+
+              <div class="field-row-inline">
+                <label for="rec-legal-{{i}}" class="field-label">Orientação Legal:</label>
+                <input type="text" [id]="'rec-legal-' + i" [name]="'rec-legal-' + i" [(ngModel)]="record.legal" (change)="onRecordChange(i)" class="form-control" placeholder="Base legal ou normativa" />
+              </div>
+
+              <div class="field-row-inline">
+                <label for="rec-penal-{{i}}" class="field-label">Penalidades:</label>
+                <input type="text" [id]="'rec-penal-' + i" [name]="'rec-penal-' + i" [(ngModel)]="record.penalties" (change)="onRecordChange(i)" class="form-control" placeholder="Penalidades aplicáveis" />
+              </div>
+
+              <div class="field-row-inline">
+                <label for="rec-resp-{{i}}" class="field-label">Responsável:</label>
+                <input type="text" [id]="'rec-resp-' + i" [name]="'rec-resp-' + i" [(ngModel)]="record.responsible" (change)="onRecordChange(i)" class="form-control" placeholder="Responsável pela correção" />
+              </div>
+
+              <div class="field-row-inline">
+                <label for="rec-priority-{{i}}" class="field-label">Prioridade:</label>
+                <select [id]="'rec-priority-' + i" [name]="'rec-priority-' + i" [(ngModel)]="record.priority" (change)="onRecordChange(i)" class="form-select" title="Selecione a prioridade do achado">
+                  <option value="Alta">Alta</option>
+                  <option value="Media">Média</option>
+                  <option value="Baixa">Baixa</option>
+                </select>
+              </div>
+
+              <div class="field-row-inline">
+                <label for="rec-deadline-{{i}}" class="field-label">Prazo:</label>
+                <input type="date" [id]="'rec-deadline-' + i" [name]="'rec-deadline-' + i" [(ngModel)]="record.deadline" (change)="onRecordChange(i)" class="form-control" title="Selecione a data do prazo" />
+              </div>
+
+              <div class="field-row-inline">
+                <label for="rec-unchanged-{{i}}" class="field-label">Reincidência:</label>
+                <select [id]="'rec-unchanged-' + i" [name]="'rec-unchanged-' + i" [(ngModel)]="record.unchanged" (change)="onRecordChange(i)" class="form-select" title="Indica se é uma reincidência">
+                  <option value="Sim">Sim</option>
+                  <option value="Não">Não</option>
+                </select>
+              </div>
+
+              <div class="record-actions">
+                <button type="button" class="btn-secondary" (click)="removeRecord(i)" title="Remover este registro">
+                  🗑️ Remover Registro
+                </button>
+              </div>
+            </div>
           </div>
-          <div class="record-preview" *ngIf="r.preview"><img [src]="r.preview" alt="preview" /></div>
         </div>
+      </div>
+
+      <div class="record-add-bottom">
+        <button type="button" id="addRecordBtnBottom" class="btn-add-empresa btn-sm add-record-btn" (click)="addRecord()">
+          <span class="icon" aria-hidden="true">➕</span>
+          <span>Novo Registro</span>
+        </button>
       </div>
 
       <div class="form-actions">
@@ -162,7 +246,7 @@
         </div>
         <div class="fg">
           <label>Assinatura do Técnico</label>
-          <canvas id="techSignatureCanvasReport" width="600" height="150" class="signature-canvas"></canvas>
+          <canvas id="techSignatureCanvasReport" class="signature-canvas"></canvas>
           <div class="signature-clear-btn"><button type="button" id="clearTechSigReport" class="btn-secondary">Limpar Assinatura (Técnico)</button></div>
         </div>
       </div>
@@ -170,15 +254,15 @@
       <hr />
 
       <div class="sign-block">
-        <h4>Cliente</h4>
+        <h4>Responsável</h4>
         <div class="fg">
-          <label for="clientSignerName">Nome do Cliente</label>
-          <input type="text" id="clientSignerName" class="form-control" placeholder="Nome do cliente" />
+          <label for="clientSignerName">Nome do Responsável</label>
+          <input type="text" id="clientSignerName" class="form-control" placeholder="Nome do responsável" />
         </div>
         <div class="fg">
-          <label>Assinatura do Cliente</label>
-          <canvas id="clientSignatureCanvasReport" width="600" height="150" class="signature-canvas"></canvas>
-          <div class="signature-clear-btn"><button type="button" id="clearClientSigReport" class="btn-secondary">Limpar Assinatura (Cliente)</button></div>
+          <label>Assinatura do Responsável</label>
+          <canvas id="clientSignatureCanvasReport" class="signature-canvas"></canvas>
+          <div class="signature-clear-btn"><button type="button" id="clearClientSigReport" class="btn-secondary">Limpar Assinatura (Responsável)</button></div>
         </div>
       </div>
     </div>
@@ -188,8 +272,4 @@
       <button type="button" id="cancelSendReportBtn" class="btn-secondary">Cancelar</button>
     </div>
   </div>
-</div>
-<div class="page report-page">
-  <h2>Relatórios</h2>
-  <p>Área de relatórios — migrate a lógica de `frontend/report.js` aqui.</p>
 </div>

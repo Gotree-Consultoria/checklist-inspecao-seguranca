@@ -33,7 +33,179 @@ body {
 	color: #111827;
 }
 
+/* Garante que inputs, textareas e selects também usem a mesma fonte */
+input, textarea, select, button {
+	font-family: "Montserrat", sans-serif;
+}
+
 /* helper for visually hidden content */
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+
+/* ==================== SISTEMA GLOBAL DE BOTÕES ==================== */
+
+/* Botão base - estilos padrão */
+button {
+	font-family: inherit;
+	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Botão primário - Verde (Salvar/Confirmar) */
+.btn,
+.btn-primary,
+.btn-add-empresa,
+.btn-filter,
+.btn-submit {
+	background-color: var(--verde-claro, #BFD83A);
+	color: #fff;
+	border: none;
+	padding: 8px 12px;
+	border-radius: 6px;
+	cursor: pointer;
+	font-weight: 600;
+	font-size: 0.9rem;
+	box-shadow: 0 2px 4px rgba(191, 216, 58, 0.15);
+}
+
+.btn:hover,
+.btn-primary:hover,
+.btn-add-empresa:hover,
+.btn-filter:hover,
+.btn-submit:hover {
+	background-color: #a8c226;
+	box-shadow: 0 4px 12px rgba(191, 216, 58, 0.25);
+	transform: translateY(-1px);
+}
+
+.btn:active,
+.btn-primary:active,
+.btn-add-empresa:active,
+.btn-filter:active,
+.btn-submit:active {
+	transform: translateY(0);
+	box-shadow: 0 1px 2px rgba(191, 216, 58, 0.15);
+}
+
+.btn:disabled,
+.btn-primary:disabled,
+.btn-add-empresa:disabled,
+.btn-filter:disabled,
+.btn-submit:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+	box-shadow: none;
+	transform: none;
+}
+
+/* Botão secundário - Cinza (Ações neutras) */
+.btn-secondary,
+.btn-clear {
+	background-color: #f3f4f6;
+	color: #374151;
+	border: 1px solid #d1d5db;
+	padding: 8px 12px;
+	border-radius: 6px;
+	cursor: pointer;
+	font-weight: 600;
+	font-size: 0.9rem;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-secondary:hover,
+.btn-clear:hover {
+	background-color: #e5e7eb;
+	border-color: #9ca3af;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	transform: translateY(-1px);
+}
+
+.btn-secondary:active,
+.btn-clear:active {
+	transform: translateY(0);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-secondary:disabled,
+.btn-clear:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+	box-shadow: none;
+	transform: none;
+}
+
+/* Botão perigo - Coral (Excluir/Cancelar) */
+.btn-danger,
+.btn-cancel {
+	background-color: #e65f3c;
+	color: #fff;
+	border: none;
+	padding: 8px 12px;
+	border-radius: 6px;
+	cursor: pointer;
+	font-weight: 600;
+	font-size: 0.9rem;
+	box-shadow: 0 2px 4px rgba(230, 95, 60, 0.15);
+}
+
+.btn-danger:hover,
+.btn-cancel:hover {
+	background-color: #d64325;
+	box-shadow: 0 4px 12px rgba(230, 95, 60, 0.25);
+	transform: translateY(-1px);
+}
+
+.btn-danger:active,
+.btn-cancel:active {
+	transform: translateY(0);
+	box-shadow: 0 1px 2px rgba(230, 95, 60, 0.15);
+}
+
+.btn-danger:disabled,
+.btn-cancel:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+	box-shadow: none;
+	transform: none;
+}
+
+/* Botão pequeno */
+.btn-sm,
+.btn-small {
+	padding: 6px 10px;
+	font-size: 0.85rem;
+}
+
+/* Botão ícone/toggle */
+.actions-toggle {
+	background: transparent;
+	border: 1px solid rgba(0, 0, 0, 0.1);
+	padding: 6px 8px;
+	border-radius: 6px;
+	cursor: pointer;
+	font-weight: 700;
+	font-size: 1.2rem;
+	line-height: 1;
+	color: #374151;
+	transition: all 0.2s;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 32px;
+	height: 32px;
+}
+
+.actions-toggle:hover {
+	background-color: #f3f4f6;
+	border-color: rgba(0, 0, 0, 0.2);
+	transform: scale(1.05);
+}
+
+.actions-toggle:active {
+	transform: scale(0.95);
+}
+
+/* Botão do filtro (específico) */
+.btn-filter {
+	padding: 8px 12px;
+}
 
 /* Checklist styles moved to component */

@@ -12,14 +12,16 @@ export class UiService {
     // Simple toast fallback — replace with a global component later
     const div = document.createElement('div');
     div.textContent = message;
-    div.style.position = 'fixed';
-    div.style.right = '16px';
-    div.style.bottom = '16px';
-    div.style.background = 'rgba(0,0,0,0.8)';
-    div.style.color = 'white';
-    div.style.padding = '8px 12px';
-    div.style.borderRadius = '6px';
-    div.style.zIndex = '9999';
+  div.style.position = 'fixed';
+  div.style.right = '16px';
+  // posicionar acima do footer fixo (footer tem height:40px e z-index:99999)
+  div.style.bottom = '56px';
+  div.style.background = 'rgba(0,0,0,0.8)';
+  div.style.color = 'white';
+  div.style.padding = '8px 12px';
+  div.style.borderRadius = '6px';
+  // garantir que o toast fique acima do footer (z-index maior que 99999)
+  div.style.zIndex = '100000';
     document.body.appendChild(div);
     setTimeout(() => div.remove(), duration);
   }

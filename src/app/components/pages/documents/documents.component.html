@@ -1,31 +1,57 @@
 <section class="documents-page page">
 	<div class="container">
-		<h1 class="page-title">Gerenciar Documentos</h1>
+		<div class="documents-header">
+			<div>
+				<h1 class="page-title">Gerenciar Documentos</h1>
+				<p class="page-subtitle">Visualize, baixe ou exclua documentos e rascunhos salvos localmente.</p>
+			</div>
+			<div class="header-actions">
+				<button class="btn btn-small" (click)="loadDocumentsList()" title="Atualizar lista">Atualizar</button>
+			</div>
+		</div>
 
 		<div class="filter-section">
-			<div class="filter-group">
-				<label for="search-input" class="filter-label">Buscar:</label>
-				<input type="text" id="search-input" class="filter-input" [(ngModel)]="filters.q" placeholder="Título, empresa...">
-			</div>
+			<div class="filter-row">
+				<div class="filter-group search-group">
+					<label for="search-input" class="filter-label">Buscar</label>
+					<input type="text" id="search-input" class="filter-input" [(ngModel)]="filters.q" placeholder="Título, empresa...">
+				</div>
 
-			<div class="filter-group">
-				<label for="type-filter" class="filter-label">Tipo:</label>
-				<select id="type-filter" class="filter-select" [(ngModel)]="filters.type">
-					<option value="all">Todos</option>
-					<option value="checklist">Checklist</option>
-					<option value="report">Relatório</option>
-				</select>
-			</div>
+				<div class="filter-group small">
+					<label for="type-filter" class="filter-label">Tipo</label>
+					<select id="type-filter" class="filter-select" [(ngModel)]="filters.type">
+						<option value="all">Todos</option>
+						<option value="checklist">Checklist</option>
+						<option value="report">Relatório</option>
+					</select>
+				</div>
 
-			<div class="filter-group">
-				<label for="date-filter" class="filter-label">Data:</label>
-				<input type="date" id="date-filter" class="filter-input" [(ngModel)]="filters.date">
-			</div>
+				<div class="filter-group small">
+					<label for="date-filter" class="filter-label">Data</label>
+					<input type="date" id="date-filter" class="filter-input" [(ngModel)]="filters.date">
+				</div>
 
-			<button id="documentsFilterBtn" class="btn-filter" (click)="loadDocumentsList()">Pesquisar</button>
+				<div class="filter-group small">
+					<label for="items-filter" class="filter-label">Itens</label>
+					<select id="items-filter" class="filter-select" [(ngModel)]="itemsPerPage" (change)="changeItemsPerPage(itemsPerPage)">
+						<option [value]="10">10</option>
+						<option [value]="20">20</option>
+						<option [value]="30">30</option>
+						<option [value]="50">50</option>
+					</select>
+				</div>
+
+				<div class="filter-actions">
+					<button id="documentsFilterBtn" class="btn-filter" (click)="loadDocumentsList()">Pesquisar</button>
+					<button class="btn-clear" (click)="filters = { q: '', type: 'all', date: '' }; loadDocumentsList();">Limpar</button>
+				</div>
+			</div>
 		</div>
 
 		<div class="documents-table-container">
+			<div class="documents-info">
+				Exibindo {{ documents.length }} de {{ allDocuments.length }} documentos
+			</div>
 			<table>
 				<thead>
 					<tr>
@@ -43,19 +69,19 @@
 						<td>{{ d.companyName || d.company || d.clientName || '-' }}</td>
 						<td>{{ formatDate(d.inspectionDate || d.createdAt || d.date) }}</td>
 						<td class="actions-cell">
-							<div class="actions-inline">
-								<button class="actions-toggle" (click)="toggleActions(i, $event)" aria-haspopup="true" [attr.aria-expanded]="openActionsIndex===i">⋯</button>
-								<div class="actions-popup" *ngIf="openActionsIndex===i" (click)="$event.stopPropagation()">
-									<button (click)="viewDocument(d)">Visualizar</button>
-									<button (click)="downloadDocument(d)">Baixar</button>
-									<button (click)="deleteDocument(d)" class="btn-danger">Excluir</button>
-								</div>
-							</div>
+							<button class="actions-toggle" (click)="toggleActions(i, $event)" aria-haspopup="true" [attr.aria-expanded]="openActionsIndex===i">⋯</button>
 						</td>
 					</tr>
 					<tr *ngIf="!documents || documents.length === 0"><td colspan="5">Nenhum documento encontrado.</td></tr>
 				</tbody>
 			</table>
 		</div>
+	</div>
+
+	<!-- Popup de ações flutuante (position: fixed) -->
+	<div class="actions-popup-container" *ngIf="openActionsIndex !== null" [style.top]="popupPosition.top" [style.left]="popupPosition.left" (click)="$event.stopPropagation()">
+		<button (click)="viewDocument(documents[openActionsIndex])">Visualizar</button>
+		<button (click)="downloadDocument(documents[openActionsIndex])">Baixar</button>
+		<button (click)="deleteDocument(documents[openActionsIndex])" class="btn-danger">Excluir</button>
 	</div>
 </section>

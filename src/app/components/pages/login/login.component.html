@@ -24,6 +24,9 @@
               <a href="#" (click)="$event.preventDefault()">Esqueci minha senha</a>
             </div>
           </div>
+          <div *ngIf="errorMessage" class="login-error" role="alert">
+            {{ errorMessage }}
+          </div>
           <div class="login-buttons">
             <button type="submit" class="btn btn-primary" [disabled]="loading">Entrar</button>
           </div>
