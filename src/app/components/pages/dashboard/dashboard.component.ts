@@ -18,6 +18,34 @@ export class DashboardComponent implements OnInit {
   latestInspection: any = null;
   loadingLatest = false;
 
+  // Mock metrics for the dashboard
+  metrics = {
+    totalInspections: 128,
+    openNonConformities: 12,
+    avgCompletionDays: 5
+  };
+
+  // Mock month data for bar chart
+  monthData: Array<{ month: string, value: number }> = [
+    { month: 'Jan', value: 42 },
+    { month: 'Fev', value: 51 },
+    { month: 'Mar', value: 63 },
+    { month: 'Abr', value: 78 },
+    { month: 'Mai', value: 55 },
+    { month: 'Jun', value: 69 }
+  ];
+
+  statusLegend: Array<{ label: string, value: number, color: string }> = [
+    { label: 'Conforme', value: 72, color: '#10B981' },
+    { label: 'Não conforme', value: 18, color: '#F97316' },
+    { label: 'Em análise', value: 10, color: '#06B6D4' }
+  ];
+
+  barPercent(v: number) {
+    const max = Math.max(...this.monthData.map(m => m.value), 1);
+    return Math.round((v / max) * 100);
+  }
+
   ngOnInit(): void {
     this.populateDashboardHistory();
     this.loadLatestInspection();

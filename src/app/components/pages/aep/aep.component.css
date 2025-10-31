@@ -1,14 +1,28 @@
 /* estilos simplificados para AEP, adaptados do legacy */
 .container { max-width: 980px; margin: 0 auto; padding: 16px; }
-.aep-form fieldset { border:1px solid #e2e2e2; padding:16px; border-radius:12px; margin-bottom:20px; background:#fff; }
-.aep-form legend { font-weight:600; padding:0 6px; }
-.aep-grid { display:grid; gap:16px; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); }
-.aep-grid .fg { display:flex; flex-direction:column; gap:4px; }
-.aep-grid label { font-size:.75rem; font-weight:600; letter-spacing:.5px; text-transform:uppercase; color:#444; }
-.aep-grid input, .aep-grid select { padding:8px 10px; border:1px solid #ccc; border-radius:6px; font-size:.85rem; }
-.field-row { display:flex; gap:10px; align-items:center; margin-bottom:10px; }
-.field-label { width:200px; font-size:0.85rem; font-weight:600; }
-.field-input { flex:1; }
+.page-title { font-size: 1.375rem; color: var(--verde-escuro); text-align: center; margin-bottom: 18px; font-weight: 700; }
+.aep-form fieldset { background: transparent; border: none; border-top: 1px solid #ddd; border-radius: 0; padding: 14px; margin-bottom: 18px; }
+.aep-form legend { padding: 0 8px; margin-left: -8px; font-weight: 700; font-size: 0.95rem; color: var(--muted); }
+
+/* Ajustes do cabeçalho AEP: remover bordas laterais e alinhar inputs como nas outras páginas */
+.aep-header { background: transparent; border: none; border-top: 1px solid #ddd; border-radius: 0; padding: 14px; margin-bottom: 18px; }
+.aep-header legend { padding: 0 8px; margin-left: -8px; font-weight: 700; font-size: 0.95rem; color: var(--muted); }
+.aep-header .fields { display: block; }
+.aep-header .field-row { display: grid; grid-template-columns: 220px 1fr; gap: 12px; align-items: center; margin-bottom: 10px; }
+.aep-header .field-label { width: 200px; font-size: 0.9rem; font-weight: 600; color: #444; }
+.aep-header .field-input { flex: 1; }
+.aep-header .form-control, .aep-header .form-select, .aep-header input, .aep-header select { width: 100%; padding: 8px 10px; border: 1px solid #e5e5e5; border-radius: 6px; font-size: 0.95rem; background: #fff; }
+
+/* Responsivo - ajustar para telas pequenas */
+@media (max-width:720px) {
+	.aep-header .field-row { grid-template-columns: 1fr; }
+	.aep-header .field-label { width: 100%; margin-bottom: 6px; }
+}
+
+/* Nota informativa sobre assinatura (não coletada aqui) */
+.aep-signature-note { margin: 12px 0; padding: 10px; background: #fff; border-radius: 8px; border: 1px solid #eee; }
+.aep-signature-note p { margin: 6px 0 0; color: #444; font-size: .95rem; }
+.aep-signature-fields { margin-top: 12px; background: transparent; border: none; padding: 0; }
 .form-control { width:100%; padding:8px 10px; border:1px solid #ccc; border-radius:6px; }
 .form-select { width:100%; padding:8px 10px; border:1px solid #ccc; border-radius:6px; }
 .aep-table { width:100%; border-collapse:collapse; font-size:.9rem; }

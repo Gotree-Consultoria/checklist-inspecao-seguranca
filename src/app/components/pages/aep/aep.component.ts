@@ -32,9 +32,16 @@ export class AepComponent implements OnInit {
       cnpj: [{ value: '', disabled: true }],
       unit: [{ value: '', disabled: true }],
       sector: [{ value: '', disabled: true }],
-      evaluator: [{ value: '', disabled: true }],
-      sigla: [{ value: '', disabled: true }],
-      registro: [{ value: '', disabled: true }],
+      // Avaliador, sigla e registro agora são editáveis: quem emite é técnico logado;
+      // a assinatura final será externa (fisioterapeuta) e não é coletada aqui.
+      evaluator: ['', Validators.required],
+      sigla: [''],
+      registro: [''],
+      // Especialidade do avaliador (ex: Fisioterapia)
+      especialidade: [''],
+      // Dados da assinatura externa (preenchimento manual após emissão)
+      fisioterapeutaNome: [''],
+      fisioterapeutaCrefito: [''],
       date: [this.todayIso(), Validators.required],
       funcao: ['', Validators.required]
     });
@@ -97,6 +104,9 @@ export class AepComponent implements OnInit {
         this.form.patchValue({ evaluator: me.name || '' });
         this.form.patchValue({ sigla: me.siglaConselhoClasse || me.siglaConselho || me.sigla || '' });
         this.form.patchValue({ registro: me.conselhoClasse || me.registroConselho || me.registro || '' });
+        // Tenta popular a especialidade a partir de possíveis chaves no perfil
+        const specialty = me.especialidade || me.specialty || me.profissao || me.profession || me.role || me.cargo || me.specialization || '';
+        if (specialty) this.form.patchValue({ especialidade: specialty });
       }
     }catch(e){/* ignore */}
   }
@@ -151,6 +161,9 @@ export class AepComponent implements OnInit {
     const payload = {
       empresa: v.company,
       avaliador: v.evaluator,
+      especialidade: v.especialidade || '',
+  fisioterapeutaNome: v.fisioterapeutaNome || '',
+  fisioterapeutaCrefito: v.fisioterapeutaCrefito || '',
       data: v.date,
       funcao: v.funcao,
       riscos: this.selectedRisks,

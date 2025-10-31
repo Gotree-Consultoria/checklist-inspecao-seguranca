@@ -22,64 +22,57 @@
             </div>
           </div>
 
-          <div class="field-row">
-            <label for="aepUnit" class="field-label">Unidade (opcional)</label>
-            <div class="field-input">
-              <select id="aepUnit" formControlName="unit" class="form-select" [disabled]="units.length===0">
-                <option value="">Selecione empresa</option>
-                <option *ngFor="let u of units" [value]="u.id || u.name">{{u.name}}</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="field-row">
-            <label for="aepSector" class="field-label">Setor (opcional)</label>
-            <div class="field-input">
-              <select id="aepSector" formControlName="sector" class="form-select" [disabled]="sectors.length===0">
-                <option value="">Selecione empresa</option>
-                <option *ngFor="let s of sectors" [value]="s.id || s.name">{{s.name}}</option>
-              </select>
-            </div>
-          </div>
-
           <div class="section-separator" aria-hidden="true"></div>
 
           <div class="field-row">
-            <label for="aepEvaluator" class="field-label">Responsável pela Avaliação</label>
+            <label for="aepEvaluator" class="field-label">Avaliador:</label>
             <div class="field-input">
-              <input id="aepEvaluator" formControlName="evaluator" class="form-control" readonly title="Avaliador" placeholder="Carregando..." />
+              <input id="aepEvaluator" formControlName="evaluator" class="form-control" title="Avaliador" placeholder="Nome do avaliador" />
             </div>
           </div>
 
           <div class="field-row">
-            <label for="aepSigla" class="field-label">Sigla do Conselho</label>
+            <label for="aepSigla" class="field-label">Sigla do Conselho:</label>
             <div class="field-input">
-              <input id="aepSigla" formControlName="sigla" class="form-control" readonly title="Sigla do Conselho" placeholder="—" />
+              <input id="aepSigla" formControlName="sigla" class="form-control" title="Sigla do Conselho" placeholder="Sigla (ex: TST)" />
             </div>
           </div>
 
           <div class="field-row">
-            <label for="aepRegistro" class="field-label">Registro do Conselho</label>
+            <label for="aepRegistro" class="field-label">Registro no Conselho:</label>
             <div class="field-input">
-              <input id="aepRegistro" formControlName="registro" class="form-control" readonly title="Registro" placeholder="—" />
+              <input id="aepRegistro" formControlName="registro" class="form-control" title="Registro" placeholder="Número do registro" />
             </div>
           </div>
 
           <div class="field-row">
-            <label for="aepDate" class="field-label">Data da Avaliação</label>
+            <label for="aepEspecialidade" class="field-label">Especialidade:</label>
+            <div class="field-input">
+              <input id="aepEspecialidade" formControlName="especialidade" class="form-control" title="Especialidade" placeholder="Ex: Técnico de Segurança do Trabalho" />
+            </div>
+          </div>
+
+          <div class="field-row">
+            <label for="aepDate" class="field-label">Data da Avaliação:</label>
             <div class="field-input">
               <input id="aepDate" formControlName="date" class="form-control" type="date" title="Data" />
             </div>
           </div>
 
           <div class="field-row">
-            <label for="aepFunction" class="field-label">Função Avaliada</label>
+            <label for="aepFunction" class="field-label">Função Avaliada:</label>
             <div class="field-input">
               <input id="aepFunction" formControlName="funcao" class="form-control" placeholder="Ex: Operador de Produção" title="Função" />
             </div>
           </div>
         </div>
       </fieldset>
+
+      <!-- Assinatura: informativo apenas — assinatura será realizada externamente por fisioterapeuta (ICP-Brasil/Gov). -->
+      <div class="aep-signature-note">
+        <strong>Assinatura:</strong>
+        <p>A assinatura deste documento deve ser realizada por um fisioterapeuta (assinatura externa válida via ICP-Brasil / Governo). Não coletamos assinatura eletrônica aqui. O documento pode ser emitido imediatamente e permanecerá editável.</p>
+      </div>
 
       <fieldset class="aep-risks">
         <legend>Riscos Identificados por Função</legend>
@@ -103,8 +96,27 @@
         </div>
       </fieldset>
 
+      <!-- Campos para registro da assinatura externa (opcionais) -->
+  <fieldset class="aep-signature-fields">
+        <div class="fields">
+          <div class="field-row">
+            <label for="fisioterapeutaNome" class="field-label">Nome do Fisioterapeuta:</label>
+            <div class="field-input">
+              <input id="fisioterapeutaNome" formControlName="fisioterapeutaNome" class="form-control" placeholder="Nome do fisioterapeuta (opcional)" />
+            </div>
+          </div>
+
+          <div class="field-row">
+            <label for="fisioterapeutaCrefito" class="field-label">CREFITO:</label>
+            <div class="field-input">
+              <input id="fisioterapeutaCrefito" formControlName="fisioterapeutaCrefito" class="form-control" placeholder="Número do CREFITO (opcional)" />
+            </div>
+          </div>
+        </div>
+      </fieldset>
+
       <div class="aep-actions">
-        <button type="submit" class="btn-primary">Salvar AEP (Local)</button>
+        <button type="submit" class="btn-primary">Emitir AEP</button>
         <button type="button" id="aepClear" class="btn-secondary" (click)="clear()">Limpar</button>
       </div>
       <div id="aepMsg" class="feedback">{{msg}}</div>

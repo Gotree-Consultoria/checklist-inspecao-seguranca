@@ -1,0 +1,172 @@
+<section class="checklist-page page">
+  <div class="container">
+    <!-- Cabeçalho idêntico ao outro Novo Checklist -->
+    <h1 class="page-title">Check List de Inspeção de Segurança do Trabalho</h1>
+    <h2 class="page-subtitle">Baseado em Normas Regulamentadoras (NRs)</h2>
+
+    <fieldset class="dados-relatorio">
+      <legend>Dados do Checklist-NR</legend>
+      <div class="form-group">
+        <div class="fields">
+          <div class="field-row">
+            <label for="empresaClienteNR" class="field-label">Empresa Cliente:</label>
+            <div class="field-input"><select id="empresaClienteNR" name="empresaClienteNR" class="form-control"></select></div>
+          </div>
+
+          <div class="field-row">
+            <label for="empresaCnpjNR" class="field-label">CNPJ:</label>
+            <div class="field-input"><input id="empresaCnpjNR" name="empresaCnpjNR" class="form-control" placeholder="00.000.000/0000-00"/></div>
+          </div>
+
+          <div class="field-row">
+            <label for="empresaUnidadeNR" class="field-label">Unidade:</label>
+            <div class="field-input"><select id="empresaUnidadeNR" name="empresaUnidadeNR" class="form-control" disabled></select></div>
+          </div>
+
+          <div class="field-row">
+            <label for="empresaSetorNR" class="field-label">Setor:</label>
+            <div class="field-input"><select id="empresaSetorNR" name="empresaSetorNR" class="form-control" disabled></select></div>
+          </div>
+
+          <div class="section-separator" aria-hidden="true"></div>
+
+          <div class="field-row">
+            <label for="reportTitleNR" class="field-label">Título do Documento:</label>
+            <div class="field-input"><input id="reportTitleNR" class="form-control" placeholder="Ex: Inspeção NR - Setor A"/></div>
+          </div>
+
+          <div class="field-row">
+            <label for="dataInspecaoNR" class="field-label">Data da Inspeção:</label>
+            <div class="field-input"><input id="dataInspecaoNR" type="date" name="dataInspecaoNR" class="form-control" required/></div>
+          </div>
+
+          <div class="field-row">
+            <label for="responsavelNR" class="field-label">Responsável pela Inspeção:</label>
+            <div class="field-input"><input id="responsavelNR" name="responsavelNR" class="form-control" required/></div>
+          </div>
+
+          <div class="field-row">
+            <label for="responsavelSiglaNR" class="field-label">Sigla do Conselho:</label>
+            <div class="field-input"><input id="responsavelSiglaNR" name="responsavelSiglaNR" class="form-control"/></div>
+          </div>
+
+          <div class="field-row">
+            <label for="responsavelRegistroNR" class="field-label">Registro do Conselho:</label>
+            <div class="field-input"><input id="responsavelRegistroNR" name="responsavelRegistroNR" class="form-control"/></div>
+          </div>
+
+          <div class="field-row">
+            <label for="localInspecaoNR" class="field-label">Local da Inspeção:</label>
+            <div class="field-input"><input id="localInspecaoNR" name="localInspecaoNR" class="form-control" placeholder="ex.: fabrica/escritório/banheiro" required/></div>
+          </div>
+        </div>
+      </div>
+    </fieldset>
+
+    <form id="checklist-nr-form" (submit)="openSignatureModal($event)">
+
+        <h2>1. Cozinha / Padaria</h2>
+        <h3>Higiene e Limpeza (NR 24 - Condições Sanitárias e de Conforto nos Locais de Trabalho)</h3>
+        <label><input type="checkbox" data-key="cozinha.higiene.superficies"/> Superfícies de trabalho limpas e desinfetadas.</label><br/>
+        <label><input type="checkbox" data-key="cozinha.higiene.utensilios"/> Utensílios e equipamentos higienizados.</label><br/>
+        <label><input type="checkbox" data-key="cozinha.higiene.pisos"/> Pisos limpos, secos e antiderrapantes.</label><br/>
+        <label><input type="checkbox" data-key="cozinha.higiene.lixeiras"/> Lixeiras com tampas e acionamento por pedal, esvaziadas regularmente.</label><br/>
+
+        <h3>Equipamentos e Máquinas (NR 12)</h3>
+        <label><input type="checkbox" data-key="cozinha.maquinas.operacaoSegura"/> Procedimentos para operação segura de equipamentos (fornos, batedeiras, fatiadores).</label><br/>
+
+        <h3>Ergonomia (NR 17)</h3>
+        <label><input type="checkbox" data-key="cozinha.ergonomia.posturas"/> Posturas adequadas ao levantar peso.</label><br/>
+        <label><input type="checkbox" data-key="cozinha.ergonomia.bancadas"/> Bancadas e estações de trabalho em altura ergonômica.</label><br/>
+
+        <h3>Coifas e Exaustores (NR 15 / NR 24)</h3>
+        <label><input type="checkbox" data-key="cozinha.coifas.funcionamento"/> Coifas e exaustores em funcionamento adequado.</label><br/>
+        <label><input type="checkbox" data-key="cozinha.coifas.limpeza"/> Limpeza periódica das coifas e dutos de exaustão.</label><br/>
+        <label><input type="checkbox" data-key="cozinha.coifas.manutencao"/> Manutenção preventiva dos sistemas de exaustão.</label><br/>
+
+        <h3>Pisos (NR 24)</h3>
+        <label><input type="checkbox" data-key="cozinha.pisos.antiderrapante"/> Pisos antiderrapantes em todas as áreas de trabalho.</label><br/>
+        <label><input type="checkbox" data-key="cozinha.pisos.conservacao"/> Pisos em bom estado de conservação, sem rachaduras ou desníveis.</label><br/>
+        <label><input type="checkbox" data-key="cozinha.pisos.limpezaFacil"/> Facilidade de limpeza e higienização dos pisos.</label><br/>
+
+        <h3>Área de Vivência (NR 18 / NR 24)</h3>
+        <label><input type="checkbox" data-key="cozinha.areaVivencia.sanitarios"/> Instalações sanitárias adequadas e em quantidade suficiente.</label><br/>
+        <label><input type="checkbox" data-key="cozinha.areaVivencia.vestiarios"/> Vestiários limpos e organizados.</label><br/>
+        <label><input type="checkbox" data-key="cozinha.areaVivencia.refeitorio"/> Refeitórios com condições de higiene e conforto.</label><br/>
+        <label><input type="checkbox" data-key="cozinha.areaVivencia.alojamentos"/> Alojamentos em conformidade com a NR 24 (se aplicável).</label><br/>
+
+        <h2>2. Canteiro de Obras</h2>
+        <label><input type="checkbox" data-key="canteiro.isolamento"/> Isolamento e sinalização adequados do canteiro de obras.</label><br/>
+        <label><input type="checkbox" data-key="canteiro.organizacao"/> Organização e limpeza do local, sem entulhos ou materiais espalhados.</label><br/>
+        <label><input type="checkbox" data-key="canteiro.protecaoAberturas"/> Proteção de aberturas no piso e vãos.</label><br/>
+        <label><input type="checkbox" data-key="canteiro.acessoSeguro"/> Acesso e circulação de pessoas e materiais seguros.</label><br/>
+        <label><input type="checkbox" data-key="canteiro.sinalizacao"/> Sinalização de segurança em bom estado.</label><br/>
+
+        <h3>Trabalho em Altura (NR 35 / NR 18)</h3>
+        <label><input type="checkbox" data-key="canteiro.trabalhoAltura.arpt"/> Análise de Risco (AR) e Permissão de Trabalho (PT) para atividades em altura.</label><br/>
+        <label><input type="checkbox" data-key="canteiro.trabalhoAltura.cinto"/> Uso de cinto tipo paraquedista com talabarte duplo.</label><br/>
+        <label><input type="checkbox" data-key="canteiro.trabalhoAltura.andaimes"/> Andaimes montados e inspecionados por profissional habilitado.</label><br/>
+        <label><input type="checkbox" data-key="canteiro.trabalhoAltura.redes"/> Redes de segurança instaladas quando necessário, com laudo técnico.</label><br/>
+        <label><input type="checkbox" data-key="canteiro.trabalhoAltura.plataformas"/> Plataformas de trabalho seguras com guarda-corpo e rodapé.</label><br/>
+        <label><input type="checkbox" data-key="canteiro.trabalhoAltura.escadas"/> Escadas em bom estado, fixas e com corrimão.</label><br/>
+        <label><input type="checkbox" data-key="canteiro.trabalhoAltura.linhasVida"/> Linhas de vida instaladas e certificadas.</label><br/>
+
+        <h3>Máquinas, Equipamentos e Ferramentas (NR 12 / NR 18)</h3>
+        <label><input type="checkbox" data-key="canteiro.maquinas.protecao"/> Máquinas com proteções e dispositivos de segurança.</label><br/>
+        <label><input type="checkbox" data-key="canteiro.maquinas.operadoresTreinados"/> Operadores treinados e autorizados.</label><br/>
+        <label><input type="checkbox" data-key="canteiro.maquinas.inspecaoDiaria"/> Inspeção diária de equipamentos.</label><br/>
+        <label><input type="checkbox" data-key="canteiro.maquinas.fiaçãoProtegida"/> Fiação elétrica protegida e aterrada (NR 10).</label><br/>
+
+        <h3>Movimentação e Armazenagem (NR 11 / NR 18)</h3>
+        <label><input type="checkbox" data-key="canteiro.movimentacao.cargas"/> Cargas armazenadas de forma segura e estável.</label><br/>
+        <label><input type="checkbox" data-key="canteiro.movimentacao.equipamentos"/> Equipamentos de movimentação com manutenção em dia e operadores habilitados.</label><br/>
+        <label><input type="checkbox" data-key="canteiro.movimentacao.corredores"/> Corredores de circulação desobstruídos e sinalizados.</label><br/>
+
+        <h3>Escavações e Fundações (NR 18)</h3>
+        <label><input type="checkbox" data-key="canteiro.escavacoes.taludes"/> Taludes escorados ou em ângulo seguro conforme projeto.</label><br/>
+        <label><input type="checkbox" data-key="canteiro.escavacoes.sinalizacao"/> Sinalização e isolamento da área de escavação.</label><br/>
+        <label><input type="checkbox" data-key="canteiro.escavacoes.acessoSeguro"/> Acesso seguro à escavação.</label><br/>
+
+        <h3>Instalações Elétricas (NR 10 / NR 18)</h3>
+        <label><input type="checkbox" data-key="canteiro.eletricidade.provisoria"/> Instalações elétricas provisórias e definitivas em conformidade.</label><br/>
+        <label><input type="checkbox" data-key="canteiro.eletricidade.quadros"/> Quadros elétricos aterrados e com proteção contra choques.</label><br/>
+
+        <h3>Proteção Contra Incêndios (NR 23)</h3>
+        <label><input type="checkbox" data-key="canteiro.incendio.extintores"/> Extintores de incêndio em locais visíveis e dentro da validade.</label><br/>
+        <label><input type="checkbox" data-key="canteiro.incendio.saidas"/> Saídas de emergência sinalizadas e desimpedidas.</label><br/>
+
+        <h3>Primeiros Socorros (NR 07)</h3>
+        <label><input type="checkbox" data-key="canteiro.primeirosSocorros.kit"/> Kit de primeiros socorros acessível e completo.</label><br/>
+
+        <h2>3. Fábrica</h2>
+        <h3>Gerenciamento de Riscos (NR 01)</h3>
+        <label><input type="checkbox" data-key="fabrica.pgr"/> Elaboração e implementação do Programa de Gerenciamento de Riscos (PGR).</label><br/>
+        <label><input type="checkbox" data-key="fabrica.apr"/> Análise Preliminar de Risco (APR) para atividades específicas.</label><br/>
+
+        <h3>Máquinas e Equipamentos (NR 12)</h3>
+        <label><input type="checkbox" data-key="fabrica.maquinas.protecao"/> Proteções de máquinas em perfeito estado.</label><br/>
+        <label><input type="checkbox" data-key="fabrica.maquinas.paradaEmergencia"/> Dispositivos de parada de emergência acessíveis e funcionando.</label><br/>
+        <label><input type="checkbox" data-key="fabrica.maquinas.loto"/> Procedimentos de Bloqueio e Etiquetagem (LOTO) para manutenção.</label><br/>
+
+        <h3>Movimentação de Cargas (NR 11)</h3>
+        <label><input type="checkbox" data-key="fabrica.movimentacao.equipamentos"/> Empilhadeiras e equipamentos com manutenção e operadores habilitados.</label><br/>
+
+        <h3>Produtos Químicos (NR 20 / NR 26)</h3>
+        <label><input type="checkbox" data-key="fabrica.quimicos.armazenamento"/> Armazenamento correto e seguro de produtos químicos.</label><br/>
+        <label><input type="checkbox" data-key="fabrica.quimicos.fispq"/> FISPQ acessíveis e compreensíveis.</label><br/>
+        <label><input type="checkbox" data-key="fabrica.quimicos.epi"/> Uso de EPIs específicos para manuseio de químicos.</label><br/>
+
+        <div class="section-gap" aria-hidden="true"></div>
+        <div class="form-group">
+          <label for="anotacoesNR">Anotações:</label>
+          <textarea id="anotacoesNR" class="form-control" rows="4"></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-submit">Prosseguir para Assinatura</button>
+        </div>
+
+      </form>
+  </div>
+  <app-signature-modal #nrSignatureModal (confirmSignatures)="onSignaturesConfirmed($event)"></app-signature-modal>
+</section>
