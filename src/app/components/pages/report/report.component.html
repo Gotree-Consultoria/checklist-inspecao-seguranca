@@ -232,44 +232,5 @@
   </div>
 </section>
 
-<!-- Modal de assinaturas (mantemos igual ao legacy para compatibilidade com o módulo legacy) -->
-<div id="reportSignatureModal" class="modal-overlay hidden" aria-hidden="true">
-  <div class="modal">
-    <div class="modal-header"><h3>Assinaturas</h3></div>
-    <div class="modal-body">
-      <p>Por favor, colete a assinatura do Técnico e do Cliente.</p>
-      <div class="sign-block">
-        <h4>Técnico</h4>
-        <div class="fg">
-          <label for="techNameReport">Nome do Técnico</label>
-          <input type="text" id="techNameReport" class="form-control" readonly />
-        </div>
-        <div class="fg">
-          <label>Assinatura do Técnico</label>
-          <canvas id="techSignatureCanvasReport" class="signature-canvas"></canvas>
-          <div class="signature-clear-btn"><button type="button" id="clearTechSigReport" class="btn-secondary">Limpar Assinatura (Técnico)</button></div>
-        </div>
-      </div>
-
-      <hr />
-
-      <div class="sign-block">
-        <h4>Responsável</h4>
-        <div class="fg">
-          <label for="clientSignerName">Nome do Responsável</label>
-          <input type="text" id="clientSignerName" class="form-control" placeholder="Nome do responsável" />
-        </div>
-        <div class="fg">
-          <label>Assinatura do Responsável</label>
-          <canvas id="clientSignatureCanvasReport" class="signature-canvas"></canvas>
-          <div class="signature-clear-btn"><button type="button" id="clearClientSigReport" class="btn-secondary">Limpar Assinatura (Responsável)</button></div>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button type="button" id="clearAllSignaturesBtnReport" class="btn-secondary">Limpar</button>
-      <button type="button" id="confirmSendReportBtn" class="btn-submit">Confirmar e Enviar</button>
-      <button type="button" id="cancelSendReportBtn" class="btn-secondary">Cancelar</button>
-    </div>
-  </div>
-</div>
+<!-- Shared signature modal component (used instead of inline modal) -->
+<app-signature-modal (confirmSignatures)="onSharedSignaturesConfirmed($event)" #reportSignatureModal></app-signature-modal>

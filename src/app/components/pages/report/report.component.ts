@@ -5,6 +5,7 @@ import { LegacyService } from '../../../services/legacy.service';
 import { UiService } from '../../../services/ui.service';
 import { ReportService } from '../../../services/report.service';
 import { SignatureService } from '../../../services/signature.service';
+import { SignatureModalComponent } from '../../shared/signature-modal/signature-modal.component';
 
 interface ReportRecord {
   id?: string;
@@ -22,7 +23,7 @@ interface ReportRecord {
 @Component({
   standalone: true,
   selector: 'app-report',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SignatureModalComponent],
   templateUrl: './report.component.html',
   styleUrls: ['./report.component.css']
 })
@@ -95,7 +96,7 @@ export class ReportComponent implements OnInit, OnDestroy {
       }
     } catch (e) {
       console.warn('fetchCompanies failed', e);
-      this.ui.showToast('Falha ao carregar empresas. Esta funcionalidade está sendo migrada.', 'error', 4000);
+      this.ui.showToast('Falha ao carregar, verifique o servidor e tente novamente.', 'error', 4000);
     }
   }
 
@@ -646,6 +647,9 @@ export class ReportComponent implements OnInit, OnDestroy {
   // Geolocalização capturada
   private geolocation: { latitude: number; longitude: number } = { latitude: 0, longitude: 0 };
 
+  // Ref para o componente compartilhado de assinatura
+  @ViewChild('reportSignatureModal', { static: false }) reportSignatureModalComp: any;
+
   private async openSignatureModalAngular(): Promise<void> {
     try {
       // Garante que pads anteriores foram limpos
@@ -681,14 +685,9 @@ export class ReportComponent implements OnInit, OnDestroy {
         this.ensureSignatureOverlay(techCanvas, 'tech');
         this.ensureSignatureOverlay(clientCanvas, 'client');
 
+        const baseOpts = this.signatureService.getDefaultPadOptions();
         const pads = await this.signatureService.initSignaturePads(techCanvas, clientCanvas, {
-          backgroundColor: 'rgba(255,255,255,0)',
-          penColor: 'black',
-          minWidth: 0.2,
-          maxWidth: 1.0,
-          throttle: 16,
-          minDistance: 5,
-          dotSize: 0,
+          ...baseOpts,
           onPointerDown: (pos: any, ev: any) => {
             // pos is in canvas CSS pixels as provided by SimpleSignaturePad
             try {
@@ -850,12 +849,102 @@ export class ReportComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Abrir modal de assinatura (Angular)
+    // Capturar geolocalização antes de abrir o modal de assinatura
     try {
+      this.captureGeolocation();
+    } catch (_) {}
+
+    // Abrir modal de assinatura compartilhado (SignatureModalComponent)
+    try {
+      if (this.reportSignatureModalComp && typeof this.reportSignatureModalComp.open === 'function') {
+        this.reportSignatureModalComp.open();
+        return;
+      }
+      // Fallback: antiga implementação que inicializava pads manualmente
       await this.openSignatureModalAngular();
     } catch (e) {
       console.warn('signature init failed', e);
       this.ui.showToast('Não foi possível inicializar a assinatura.', 'error');
+    }
+  }
+
+  // Recebe as assinaturas do componente compartilhado e envia o relatório
+  public async onSharedSignaturesConfirmed(data: any): Promise<void> {
+    try {
+      // Validações semelhantes às de handleSendReport
+      if (!this.records || this.records.length === 0) {
+        this.ui.showToast('Adicione pelo menos um registro antes de enviar.', 'warning');
+        return;
+      }
+
+      for (let i = 0; i < this.records.length; i++) {
+        const record = this.records[i];
+        if (!record.photos || record.photos.length === 0) {
+          this.ui.showToast(`Registro ${i + 1}: Adicione pelo menos 1 foto.`, 'warning');
+          return;
+        }
+      }
+
+      // Extrair IDs de unidade e setor - converter para number
+      const clientCompanyIdValue = (document.getElementById('empresaCliente') as HTMLSelectElement)?.value?.trim();
+      const unitIdValue = (document.getElementById('empresaUnidade') as HTMLSelectElement)?.value?.trim();
+      const sectorIdValue = (document.getElementById('empresaSetor') as HTMLSelectElement)?.value?.trim();
+
+      const visitDateFormatted = this.formatDate((document.getElementById('dataInspecao') as HTMLInputElement)?.value || '');
+      const startTimeFormatted = this.formatTime((document.getElementById('reportStartTime') as HTMLInputElement)?.value || '');
+
+      const payload: any = {
+        title: (document.getElementById('reportTitle') as HTMLInputElement)?.value?.trim() || '',
+        clientCompanyId: clientCompanyIdValue ? parseInt(clientCompanyIdValue) : null,
+        unitId: unitIdValue ? parseInt(unitIdValue) : null,
+        sectorId: sectorIdValue ? parseInt(sectorIdValue) : null,
+        location: (document.getElementById('localInspecao') as HTMLInputElement)?.value?.trim() || '',
+        visitDate: visitDateFormatted || null,
+        startTime: startTimeFormatted || null,
+        technicalReferences: Array.from(document.querySelectorAll('#referencesList li')).map(li => li.textContent?.trim() || '').filter(Boolean).join('; '),
+        summary: (document.getElementById('reportSummary') as HTMLTextAreaElement)?.value?.trim() || '',
+        findings: this.records.map(r => {
+          const photo1Base64 = this.stripDataUrl(r.photos[0] || '') || '';
+          const photo2Base64 = this.stripDataUrl(r.photos[1] || '') || '';
+          const deadlineFormatted = r.deadline ? this.formatDate(r.deadline) : null;
+          return {
+            photoBase64_1: photo1Base64,
+            photoBase64_2: photo2Base64,
+            description: r.description?.trim() || '',
+            consequences: r.consequences?.trim() || '',
+            legalGuidance: r.legal?.trim() || '',
+            responsible: r.responsible?.trim() || '',
+            penalties: r.penalties?.trim() || '',
+            priority: (r.priority || 'MEDIA').toUpperCase(),
+            deadline: deadlineFormatted,
+            recurrence: r.unchanged === 'Sim'
+          };
+        }),
+        technicianSignatureImageBase64: this.stripDataUrl(data.techSignature) || '',
+        clientSignatureImageBase64: this.stripDataUrl(data.clientSignature) || '',
+        clientSignerName: data.clientName || '',
+        clientSignatureLatitude: this.geolocation.latitude,
+        clientSignatureLongitude: this.geolocation.longitude
+      };
+
+      const resp = await this.report.postTechnicalVisit(payload);
+      if (!resp) throw new Error('Resposta vazia do servidor');
+
+      // Limpar e fechar modal
+      try { if (this.reportSignatureModalComp && typeof this.reportSignatureModalComp.close === 'function') this.reportSignatureModalComp.close(); } catch(_) {}
+      try { this.clearAllSignatures(); } catch(_) {}
+
+      // Limpar rascunho
+      localStorage.removeItem(this.DRAFT_KEY);
+      this.records = [];
+      this.reportDraft = { records: [] };
+
+      this.ui.showToast('Relatório enviado com sucesso!', 'success', 4000);
+    } catch (e) {
+      const error = e as any;
+      const errorMsg = error?.message || 'Erro desconhecido';
+      console.error('Erro ao enviar relatório via modal compartilhado:', error);
+      this.ui.showToast(`Falha ao enviar relatório: ${errorMsg}`, 'error');
     }
   }
 

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SignatureService } from '../../../services/signature.service';
 import { UiService } from '../../../services/ui.service';
+import { LegacyService } from '../../../services/legacy.service';
 
 @Component({
   selector: 'app-signature-modal',
@@ -22,7 +23,7 @@ import { UiService } from '../../../services/ui.service';
             <h4>Técnico</h4>
             <div class="fg">
               <label for="techName">Nome do Técnico</label>
-              <input type="text" id="techName" class="form-control" [(ngModel)]="techName" />
+              <input type="text" id="techName" class="form-control sig-name-input" [(ngModel)]="techName" readonly />
             </div>
             <div class="fg">
               <label>Assinatura do Técnico</label>
@@ -46,8 +47,8 @@ import { UiService } from '../../../services/ui.service';
           <div class="sign-block">
             <h4>Cliente</h4>
             <div class="fg">
-              <label for="clientName">Nome do Cliente</label>
-              <input type="text" id="clientName" class="form-control" [(ngModel)]="clientName" />
+              <label for="clientName">Nome do Responsável pela Empresa</label>
+              <input type="text" id="clientName" class="form-control sig-name-input" [(ngModel)]="clientName" />
             </div>
             <div class="fg">
               <label>Assinatura do Cliente</label>
@@ -134,12 +135,21 @@ import { UiService } from '../../../services/ui.service';
         padding: 20px;
       }
 
+      /* Sign blocks center the pads and align inputs to limited width */
       .sign-block {
         margin-bottom: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
       }
 
       .fg {
         margin-bottom: 15px;
+        width: 100%;
+        max-width: 620px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
       }
 
       label {
@@ -147,23 +157,34 @@ import { UiService } from '../../../services/ui.service';
         font-weight: 500;
         margin-bottom: 5px;
         color: #333;
+        width: 100%;
+        max-width: 620px;
+        text-align: left;
       }
 
       .form-control {
-        width: 100%;
+        width: 60%;
+        max-width: 360px;
         padding: 8px;
         border: 1px solid #ddd;
         border-radius: 4px;
-        font-size: 1rem;
+        font-size: 0.95rem;
       }
 
       .signature-canvas {
         border: 2px solid #ddd;
-        border-radius: 4px;
+        border-radius: 6px;
         cursor: crosshair;
         background-color: white;
         display: block;
-        margin: 10px 0;
+        margin: 10px auto; /* centraliza horizontalmente */
+      }
+
+      /* inputs menores para nomes nas assinaturas */
+      .sig-name-input {
+        width: 60%;
+        max-width: 360px;
+        display: inline-block;
       }
 
       .signature-clear-btn {
@@ -171,20 +192,21 @@ import { UiService } from '../../../services/ui.service';
       }
 
       .modal-footer {
-        padding: 20px;
+        padding: 16px;
         border-top: 1px solid #eee;
         display: flex;
-        justify-content: flex-end;
-        gap: 10px;
+        justify-content: flex-end; /* alinhamento à direita (restaurado) */
+        gap: 8px;
       }
 
+      /* botões menores e compactos */
       .btn-submit,
       .btn-secondary {
-        padding: 10px 20px;
+        padding: 6px 12px;
         border: none;
         border-radius: 4px;
         cursor: pointer;
-        font-size: 1rem;
+        font-size: 0.9rem;
       }
 
       .btn-submit {
@@ -220,6 +242,7 @@ export class SignatureModalComponent implements OnInit {
 
   private signatureService = inject(SignatureService);
   private ui = inject(UiService);
+  private legacy = inject(LegacyService);
 
   private techPad: any;
   private clientPad: any;
@@ -230,15 +253,32 @@ export class SignatureModalComponent implements OnInit {
 
   async open() {
     this.isOpen = true;
-    // Aguardar que a view seja renderizada
-    setTimeout(() => this.initSignaturePads(), 0);
+    // Aguardar que a view seja renderizada e carregar o nome do técnico automaticamente
+    setTimeout(async () => {
+      try {
+        await this.loadTechnicianName();
+      } catch (_) {}
+      this.initSignaturePads();
+    }, 0);
+  }
+
+  private async loadTechnicianName(): Promise<void> {
+    try {
+      const me = await this.legacy.fetchUserProfile().catch(() => null) || null;
+      if (!me) return;
+      const name = me.name || me.fullName || me.nome || me.usuario || '';
+      if (name) this.techName = String(name).trim();
+    } catch (e) {
+      // ignore failures to avoid blocking modal
+    }
   }
 
   private async initSignaturePads() {
     try {
       const pads = await this.signatureService.initSignaturePads(
         this.techCanvas.nativeElement,
-        this.clientCanvas.nativeElement
+        this.clientCanvas.nativeElement,
+        this.signatureService.getDefaultPadOptions()
       );
       this.techPad = pads.tech;
       this.clientPad = pads.client;

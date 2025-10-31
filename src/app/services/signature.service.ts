@@ -137,6 +137,24 @@ export class SimpleSignaturePad {
 export class SignatureService {
   private CDN_URL = 'https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js';
 
+  /**
+   * Opções padrão para inicialização dos signature pads.
+   * Use este método para manter um estilo unificado entre modais.
+   */
+  public getDefaultPadOptions(): any {
+    return {
+      backgroundColor: 'rgba(255,255,255,0)',
+      penColor: 'black',
+      minWidth: 0.2,
+      maxWidth: 1.0,
+      throttle: 16,
+      minDistance: 5,
+      dotSize: 0,
+      // penWidth é usado pelo fallback SimpleSignaturePad
+      penWidth: 1.0
+    };
+  }
+
   async loadScript(src: string): Promise<void> {
     return new Promise((resolve, reject) => {
       if (document.querySelector(`script[src="${src}"]`)) return resolve();
