@@ -216,6 +216,148 @@ export class ReportService {
     }
   }
 
+  async fetchPhysiotherapists() {
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const headers: any = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const resp = await fetch('http://localhost:8081/physiotherapists', { headers, method: 'GET' });
+      if (!resp.ok) throw new Error(`Status ${resp.status}: ${resp.statusText}`);
+      const data = await resp.json();
+      return data;
+    } catch (err) {
+      console.error('[ReportService] Erro ao buscar fisioterapeutas:', err);
+      throw err;
+    }
+  }
+
+  // Agenda endpoints
+  async fetchAgendaEvents() {
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const headers: any = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const base = this.getBase() || 'http://localhost:8081';
+      const resp = await fetch(`${base}/api/agenda/eventos`, { headers, method: 'GET' });
+      if (!resp.ok) throw new Error(`Status ${resp.status}: ${resp.statusText}`);
+      return await resp.json();
+    } catch (err) {
+      console.error('[ReportService] Erro ao buscar eventos da agenda:', err);
+      throw err;
+    }
+  }
+
+  async postAgendaEvent(payload: { title: string; description?: string; eventDate: string }) {
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const headers: any = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const base = this.getBase() || 'http://localhost:8081';
+      const resp = await fetch(`${base}/api/agenda/eventos`, { headers, method: 'POST', body: JSON.stringify(payload) });
+      if (!resp.ok) {
+        let errorDetails = `Status ${resp.status}: ${resp.statusText}`;
+        try { const ct = resp.headers.get('content-type') || ''; if (ct.includes('application/json')) { const b = await resp.json(); errorDetails += ` | ${JSON.stringify(b)}`; } else { const t = await resp.text(); errorDetails += ` | ${t}`; } } catch(_) {}
+        throw new Error(errorDetails);
+      }
+      return await resp.json();
+    } catch (err) {
+      console.error('[ReportService] Erro ao criar evento da agenda:', err);
+      throw err;
+    }
+  }
+
+  async postPhysiotherapist(payload: any) {
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const headers: any = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      // Garantir o formato exigido pelo backend: { id: 0, name: "", crefito: "" }
+      const bodyPayload = {
+        id: 0,
+        name: payload?.name || payload?.nome || '',
+        crefito: payload?.crefito || payload?.CREFITO || ''
+      };
+
+      const resp = await fetch('http://localhost:8081/physiotherapists', { 
+        headers,
+        method: 'POST',
+        body: JSON.stringify(bodyPayload)
+      });
+
+      if (!resp.ok) {
+        let errorDetails = `Status ${resp.status}: ${resp.statusText}`;
+        try {
+          const contentType = resp.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const errorBody = await resp.json();
+            errorDetails += ` | ${JSON.stringify(errorBody)}`;
+          } else {
+            const errorText = await resp.text();
+            errorDetails += ` | ${errorText}`;
+          }
+        } catch (_) { /* ignore */ }
+        throw new Error(errorDetails);
+      }
+
+      const data = await resp.json();
+      return data;
+    } catch (err) {
+      console.error('[ReportService] Erro ao cadastrar fisioterapeuta:', err);
+      throw err;
+    }
+  }
+
+  // AEP specific endpoints
+  async postAepReport(payload: any) {
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const headers: any = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+  const base = this.getBase() || 'http://localhost:8081';
+  const resp = await fetch(`${base}/aep-reports`, { headers, method: 'POST', body: JSON.stringify(payload) });
+      if (!resp.ok) {
+        let errorDetails = `Status ${resp.status}: ${resp.statusText}`;
+        try { const ct = resp.headers.get('content-type') || ''; if (ct.includes('application/json')) { const b = await resp.json(); errorDetails += ` | ${JSON.stringify(b)}`; } else { const t = await resp.text(); errorDetails += ` | ${t}`; } } catch(_){}
+        throw new Error(errorDetails);
+      }
+      return await resp.json();
+    } catch (err) { console.error('[ReportService] Erro ao postar AEP:', err); throw err; }
+  }
+
+  async putAepReport(id: any, payload: any) {
+    if (!id) throw new Error('id é necessário para atualizar AEP');
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const headers: any = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+  const base = this.getBase() || 'http://localhost:8081';
+  const resp = await fetch(`${base}/aep-reports/${encodeURIComponent(String(id))}`, { headers, method: 'PUT', body: JSON.stringify(payload) });
+      if (!resp.ok) {
+        let errorDetails = `Status ${resp.status}: ${resp.statusText}`;
+        try { const ct = resp.headers.get('content-type') || ''; if (ct.includes('application/json')) { const b = await resp.json(); errorDetails += ` | ${JSON.stringify(b)}`; } else { const t = await resp.text(); errorDetails += ` | ${t}`; } } catch(_){}
+        throw new Error(errorDetails);
+      }
+      return await resp.json();
+    } catch (err) { console.error('[ReportService] Erro ao atualizar AEP:', err); throw err; }
+  }
+
+  async getAepReport(id: any) {
+    if (!id) throw new Error('id é necessário para obter AEP');
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const headers: any = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const base = this.getBase() || 'http://localhost:8081';
+      const resp = await fetch(`${base}/aep-reports/${encodeURIComponent(String(id))}`, { headers, method: 'GET' });
+      if (!resp.ok) {
+        let errorDetails = `Status ${resp.status}: ${resp.statusText}`;
+        try { const ct = resp.headers.get('content-type') || ''; if (ct.includes('application/json')) { const b = await resp.json(); errorDetails += ` | ${JSON.stringify(b)}`; } else { const t = await resp.text(); errorDetails += ` | ${t}`; } } catch(_){ }
+        throw new Error(errorDetails);
+      }
+      return await resp.json();
+    } catch (err) { console.error('[ReportService] Erro ao obter AEP:', err); throw err; }
+  }
+
   async postCompany(payload: any) {
     try {
       const token = localStorage.getItem('jwtToken');

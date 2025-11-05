@@ -87,7 +87,7 @@
             </thead>
             <tbody id="aepRisks">
               <tr *ngFor="let rf of riskFactors; let i = index">
-                <td class="chk"><input title="Selecionar risco" type="checkbox" [id]="'risk_'+i" (change)="toggleRisk(rf,$event)" name="risks" [value]="rf"></td>
+                <td class="chk"><input title="Selecionar risco" type="checkbox" [id]="'risk_'+i" (change)="toggleRisk(rf,$event)" name="risks" [value]="rf" [checked]="selectedRisks.includes(rf)"></td>
                 <td class="tipo">ERGONÔMICO</td>
                 <td class="fator"><label [for]="'risk_'+i">{{rf}}</label></td>
               </tr>
@@ -97,21 +97,45 @@
       </fieldset>
 
       <!-- Campos para registro da assinatura externa (opcionais) -->
-  <fieldset class="aep-signature-fields">
+      <fieldset class="aep-signature-fields">
         <div class="fields">
           <div class="field-row">
-            <label for="fisioterapeutaNome" class="field-label">Nome do Fisioterapeuta:</label>
+            <label for="fisioterapeutaSelect" class="field-label">Selecionar Fisioterapeuta:</label>
             <div class="field-input">
-              <input id="fisioterapeutaNome" formControlName="fisioterapeutaNome" class="form-control" placeholder="Nome do fisioterapeuta (opcional)" />
+              <div class="physio-select-row">
+                <select id="fisioterapeutaSelect" formControlName="fisioterapeutaId" class="form-select" title="Fisioterapeuta">
+                  <option value="">{{ loadingPhysios ? 'Carregando...' : 'Selecione um fisioterapeuta...' }}</option>
+                  <option *ngFor="let p of physiotherapists" [value]="p.id || p._id">{{ (p.name || p.nome) + ((p.crefito || p.CREFITO) ? (' | ' + (p.crefito || p.CREFITO)) : '') }}</option>
+                </select>
+                <button type="button" class="btn-secondary" (click)="creatingPhysio = !creatingPhysio">Novo</button>
+              </div>
             </div>
           </div>
 
-          <div class="field-row">
-            <label for="fisioterapeutaCrefito" class="field-label">CREFITO:</label>
-            <div class="field-input">
-              <input id="fisioterapeutaCrefito" formControlName="fisioterapeutaCrefito" class="form-control" placeholder="Número do CREFITO (opcional)" />
+          <div class="physio-create-inline" *ngIf="creatingPhysio">
+            <div class="field-row">
+              <label class="field-label">Novo Fisioterapeuta:</label>
+              <div class="field-input">
+                <input class="form-control" [(ngModel)]="newPhysioName" name="newPhysioName" placeholder="Nome" />
+              </div>
+            </div>
+            <div class="field-row">
+              <label class="field-label">CREFITO:</label>
+              <div class="field-input">
+                <input class="form-control" [(ngModel)]="newPhysioCrefito" name="newPhysioCrefito" placeholder="CREFITO" />
+              </div>
+            </div>
+            <div class="field-row">
+              <label class="field-label">&nbsp;</label>
+              <div class="field-input physio-create-actions">
+                <button type="button" class="btn-primary" (click)="createPhysiotherapist()">Salvar</button>
+                <button type="button" class="btn-secondary" (click)="cancelCreatePhysio()">Cancelar</button>
+              </div>
             </div>
           </div>
+
+          <!-- Nome preenchido automaticamente a partir do select; campo de edição direto removido para evitar duplicidade -->
+          <!-- Campo CREFITO removido conforme solicitado -->
         </div>
       </fieldset>
 

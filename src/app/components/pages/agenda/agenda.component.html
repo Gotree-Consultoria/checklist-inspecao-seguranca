@@ -1,0 +1,91 @@
+<section class="agenda-page page">
+  <h1 class="page-title">Agenda</h1>
+  <div class="container">
+
+    <div class="agenda-controls">
+      <label for="agendaDate" class="visually-hidden">Data</label>
+      <input id="agendaDate" class="date-input" type="date" [value]="selectedDate" (change)="changeDate($event)" aria-label="Data da agenda" />
+    </div>
+
+    <div class="agenda-grid">
+      <div class="calendar-mock">
+        <div class="calendar-header">
+          <div class="cal-controls">
+            <button (click)="prevMonth()" aria-label="Mês anterior">‹</button>
+            <div class="month-title">{{ displayedMonthPadded }}/{{ displayedYear }}</div>
+            <button (click)="nextMonth()" aria-label="Próximo mês">›</button>
+            <button class="today-btn" (click)="goToToday()">Hoje</button>
+          </div>
+        </div>
+        <div class="calendar-body">
+          <div class="month">{{ getDisplayedMonthName() }}</div>
+          <div class="weekdays">
+            <div *ngFor="let wd of weekdays" class="weekday">{{ wd }}</div>
+          </div>
+          <div class="days">
+            <div *ngFor="let b of blankDays" class="day empty"></div>
+            <div *ngFor="let d of daysInMonth" class="day" [class.selected]="selectedDate === (displayedYear + '-' + displayedMonthPadded + '-' + formatDay(d))" [class.has-event]="hasEventsOnDay(d)" (click)="selectDay(d)">{{ d }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="events-list">
+        <div class="events-header">
+          <h2>Eventos em {{ selectedDate.split('-').reverse().join('/') }}</h2>
+          <button class="new-event-btn" (click)="openCreateModal()" aria-haspopup="dialog">+ Novo evento</button>
+        </div>
+        <div *ngIf="loading" class="no-events">Carregando eventos...</div>
+        <div *ngIf="!loading && eventsOfDay.length===0" class="no-events">Nenhum evento para esta data.</div>
+        <ul>
+          <li *ngFor="let ev of eventsOfDay" class="event-item">
+            <div class="time">{{ ev.time || '-' }}</div>
+            <div class="meta">
+              <div class="title">{{ ev.title }}</div>
+              <div class="prof">{{ ev.professional || '' }}</div>
+              <div class="notes">{{ ev.notes || ev.description }}</div>
+            </div>
+            <div class="duration">{{ ev.duration || '' }}</div>
+          </li>
+        </ul>
+
+        <hr />
+        <h3>Eventos do mês</h3>
+        <div *ngIf="eventsOfMonth.length===0" class="no-events">Nenhum evento neste mês.</div>
+        <ul class="events-month-list">
+          <li *ngFor="let ev of eventsOfMonth" class="event-item">
+            <div class="time">{{ (ev.date || '').slice(8,10) }} {{ ev.time ? (' - ' + ev.time) : '' }}</div>
+            <div class="meta">
+              <div class="title">{{ ev.title }}</div>
+              <div class="prof">{{ ev.professional || '' }}</div>
+              <div class="notes">{{ ev.notes || ev.description }}</div>
+            </div>
+          </li>
+        </ul>
+
+        <!-- botão que abre modal de criação; o formulário foi movido para modal abaixo -->
+      </div>
+    </div>
+
+    <!-- Modal de criação de evento -->
+    <div class="modal-backdrop" *ngIf="showCreateModal" (click)="closeCreateModal()">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3 id="modalTitle">Criar novo evento</h3>
+          <button class="modal-close" aria-label="Fechar" (click)="closeCreateModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <label for="newTitle">Título</label>
+          <input id="newTitle" aria-label="Título do evento" type="text" [(ngModel)]="newTitle" placeholder="Título do evento" />
+          <label for="newDescription">Descrição</label>
+          <textarea id="newDescription" aria-label="Descrição do evento" [(ngModel)]="newDescription" rows="3" placeholder="Descrição (opcional)"></textarea>
+          <label for="newEventDate">Data</label>
+          <input id="newEventDate" aria-label="Data do evento" type="date" [(ngModel)]="newEventDate" />
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" (click)="closeCreateModal()">Cancelar</button>
+          <button class="btn btn-primary" (click)="createEvent()" [disabled]="loading">{{ loading ? 'Enviando...' : 'Criar evento' }}</button>
+        </div>
+      </div>
+    </div>
+    </div>
+  </section>

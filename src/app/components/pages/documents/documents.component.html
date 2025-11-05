@@ -64,10 +64,10 @@
 				</thead>
 				<tbody>
 					<tr *ngFor="let d of documents; let i = index" class="doc-row" [attr.data-index]="i">
-						<td>{{ formatDocumentType(d.type) }}</td>
+						<td>{{ d.documentType || formatDocumentType(d.type) }}</td>
 						<td>{{ d.title || d.name || '-' }}</td>
 						<td>{{ d.companyName || d.company || d.clientName || '-' }}</td>
-						<td>{{ formatDate(d.inspectionDate || d.createdAt || d.date) }}</td>
+						<td>{{ formatDate(d.creationDate || d.inspectionDate || d.createdAt || d.date) }}</td>
 						<td class="actions-cell">
 							<button class="actions-toggle" (click)="toggleActions(i, $event)" aria-haspopup="true" [attr.aria-expanded]="openActionsIndex===i">⋯</button>
 						</td>
@@ -82,6 +82,8 @@
 	<div class="actions-popup-container" *ngIf="openActionsIndex !== null" [style.top]="popupPosition.top" [style.left]="popupPosition.left" (click)="$event.stopPropagation()">
 		<button (click)="viewDocument(documents[openActionsIndex])">Visualizar</button>
 		<button (click)="downloadDocument(documents[openActionsIndex])">Baixar</button>
+		<!-- Editar apenas para AEPs -->
+		<button *ngIf="documentTypeToSlug(documents[openActionsIndex]?.documentType || documents[openActionsIndex]?.type)==='aep'" (click)="editDocument(documents[openActionsIndex])">Editar</button>
 		<button (click)="deleteDocument(documents[openActionsIndex])" class="btn-danger">Excluir</button>
 	</div>
 </section>

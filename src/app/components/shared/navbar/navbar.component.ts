@@ -22,6 +22,7 @@ import { LegacyService } from '../../../services/legacy.service';
       <ul class="nav-links">
         <li><a href="#" (click)="navigate('group', $event)" data-nav="group">Início</a></li>
         <li><a href="#" (click)="navigate('dashboard', $event)" data-nav="dashboard">Dashboard</a></li>
+        <li><a href="#" (click)="navigate('agenda', $event)" data-nav="agenda">Agenda</a></li>
         <li><a href="#" (click)="navigate('documents', $event)" data-nav="documents">Documentos</a></li>
         <li class="admin-only" *ngIf="isAdmin"><a href="#" (click)="navigate('admin', $event)" data-nav="admin">Administrador</a></li>
       </ul>

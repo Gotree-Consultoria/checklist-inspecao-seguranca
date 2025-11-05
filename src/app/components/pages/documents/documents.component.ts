@@ -1,4 +1,5 @@
 import { Component, ElementRef, OnInit, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LegacyService } from '../../../services/legacy.service';
@@ -29,7 +30,7 @@ export class DocumentsComponent implements OnInit {
     this.openActionsIndex = null;
   };
 
-  constructor(private el: ElementRef) {}
+  constructor(private el: ElementRef, private router: Router) {}
 
   ngOnInit(): void {
     this.loadDocumentsList();
@@ -164,7 +165,7 @@ export class DocumentsComponent implements OnInit {
 
   async downloadDocument(d:any) {
     try {
-      const typeSlug = this.documentTypeToSlug(d.type || d.documentType || '');
+  const typeSlug = this.documentTypeToSlug(d.documentType || d.type || '');
       const id = d.id || d.reportId || '';
       if (!id) throw new Error('ID ausente');
       const resp = await fetch(`${this.legacy.apiBaseUrl}/documents/${encodeURIComponent(typeSlug)}/${encodeURIComponent(id)}/pdf`, { headers: this.legacy.authHeaders() });
@@ -181,7 +182,7 @@ export class DocumentsComponent implements OnInit {
 
   async viewDocument(d:any) {
     try {
-      const typeSlug = this.documentTypeToSlug(d.type || d.documentType || '');
+  const typeSlug = this.documentTypeToSlug(d.documentType || d.type || '');
       const id = d.id || d.reportId || '';
       if (!id) throw new Error('ID ausente');
       const resp = await fetch(`${this.legacy.apiBaseUrl}/documents/${encodeURIComponent(typeSlug)}/${encodeURIComponent(id)}/pdf`, { headers: this.legacy.authHeaders() });
@@ -201,7 +202,7 @@ export class DocumentsComponent implements OnInit {
       const confirm = window.confirm('Confirma exclusão do documento?');
       if (!confirm) return;
       
-      const typeSlug = this.documentTypeToSlug(d.type || d.documentType || '');
+  const typeSlug = this.documentTypeToSlug(d.documentType || d.type || '');
       const id = d.id || d.reportId || '';
       
       if (!id) {
@@ -221,14 +222,28 @@ export class DocumentsComponent implements OnInit {
     } catch (err:any) { this.ui.showToast(err?.message || 'Erro ao excluir documento', 'error'); }
   }
 
+  editDocument(d:any) {
+    try {
+      const id = d.id || d.reportId || '';
+      if (!id) { this.ui.showToast('Documento não possui ID para edição', 'error'); return; }
+      // salvar rascunho temporário para acelerar o preenchimento no AEP
+      try { localStorage.setItem('aepDraft', JSON.stringify(d)); } catch(_) {}
+      // navegar para a rota AEP com query param id
+      this.router.navigate(['/aep'], { queryParams: { id } });
+    } catch (err:any) { this.ui.showToast(err?.message || 'Não foi possível iniciar edição', 'error'); }
+  }
+
   documentTypeToSlug(type: any) {
     if (!type) return 'document';
     const raw = String(type || '');
     const normalized = raw.normalize ? raw.normalize('NFD').replace(/\p{Diacritic}/gu, '') : raw;
     const up = normalized.toUpperCase();
-    if (up.includes('CHECKLIST') || up.includes('INSPECAO') || up.includes('INSPEÇÃO') || up.includes('INSPECC')) return 'checklist';
+    // Map common full-text document types to canonical slugs
+    if (up.includes('CHECKLIST') || up.includes('INSPECAO') || up.includes('INSPECAO') || up.includes('INSPECC')) return 'checklist';
     if (up.includes('RELATORIO') || up.includes('RELAT') || (up.includes('VISITA') && up.includes('RELAT'))) return 'visit';
     if (up.includes('VISITA') && !up.includes('CHECK')) return 'visit';
+    // Recognize full phrase for Avaliação Ergonômica Preliminar (with or without accents)
+    if (up.includes('AVALIACAO') && up.includes('ERGONOMICA')) return 'aep';
     if (up.includes('AEP')) return 'aep';
     switch (up) {
       case 'CHECKLIST_INSPECAO': return 'checklist';

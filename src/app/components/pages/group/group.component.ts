@@ -117,7 +117,9 @@ export class GroupComponent implements OnInit {
     if (up.includes('CHECKLIST') || up.includes('INSPECAO') || up.includes('INSPEÇÃO') || up.includes('INSPECC')) return 'checklist';
     if (up.includes('RELATORIO') || up.includes('RELAT') || (up.includes('VISITA') && up.includes('RELAT'))) return 'visit';
     if (up.includes('VISITA') && !up.includes('CHECK')) return 'visit';
-    if (up.includes('AEP')) return 'aep';
+  // Reconhecer a frase 'Avaliação Ergonômica Preliminar' (com ou sem acentos)
+  if (up.includes('AVALIACAO') && up.includes('ERGONOMICA')) return 'aep';
+  if (up.includes('AEP')) return 'aep';
     switch (up) {
       case 'CHECKLIST_INSPECAO': return 'checklist';
       case 'RELATORIO_VISITA': return 'visit';

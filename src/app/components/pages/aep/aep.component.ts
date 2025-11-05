@@ -1,13 +1,16 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { LegacyService } from '../../../services/legacy.service';
 import { UiService } from '../../../services/ui.service';
+import { ReportService } from '../../../services/report.service';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   standalone: true,
   selector: 'app-aep',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './aep.component.html',
   styleUrls: ['./aep.component.css']
 })
@@ -15,19 +18,33 @@ export class AepComponent implements OnInit {
   private legacy = inject(LegacyService);
   private fb = inject(FormBuilder);
   private ui = inject(UiService);
+  private report = inject(ReportService);
+  private el = inject(ElementRef);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   form!: FormGroup;
   companies: any[] = [];
+  // usado quando carregamos AEP antes das companies estarem disponíveis
+  pendingCompanyToSelect: any = null;
   units: any[] = [];
   sectors: any[] = [];
   loadingCompanies = false;
   msg = '';
+
+  // fisioterapeutas
+  physiotherapists: any[] = [];
+  loadingPhysios = false;
+  creatingPhysio = false;
+  newPhysioName = '';
+  newPhysioCrefito = '';
 
   riskFactors: string[] = [];
   selectedRisks: string[] = [];
 
   ngOnInit(): void {
     this.form = this.fb.group({
+      id: [''],
       company: ['', Validators.required],
       cnpj: [{ value: '', disabled: true }],
       unit: [{ value: '', disabled: true }],
@@ -39,9 +56,9 @@ export class AepComponent implements OnInit {
       registro: [''],
       // Especialidade do avaliador (ex: Fisioterapia)
       especialidade: [''],
-      // Dados da assinatura externa (preenchimento manual após emissão)
-      fisioterapeutaNome: [''],
-      fisioterapeutaCrefito: [''],
+  // Dados da assinatura externa (preenchimento manual após emissão)
+  fisioterapeutaId: [''],
+  fisioterapeutaNome: [''],
       date: [this.todayIso(), Validators.required],
       funcao: ['', Validators.required]
     });
@@ -49,9 +66,88 @@ export class AepComponent implements OnInit {
     this.initRiskFactors();
     this.loadProfile();
     this.loadCompanies();
+  this.loadPhysiotherapists();
+
+    // Se houver query param ?id=..., carregar AEP existente para edição
+    try {
+      const qid = this.route.snapshot.queryParams['id'] || null;
+      if (qid) {
+        // carregar os dados do servidor
+        (async () => {
+          try {
+            const data = await this.report.getAepReport(qid);
+            if (data) {
+              // preencher campos conhecidos
+              this.form.patchValue({
+                id: data.id || data.reportId || qid,
+                company: data.companyId || data.company || '',
+                date: data.evaluationDate || data.date || this.todayIso(),
+                funcao: data.evaluatedFunction || data.funcao || '' ,
+                fisioterapeutaId: data.physiotherapistId || data.physiotherapistId || '',
+                fisioterapeutaNome: data.physiotherapistName || data.physiotherapistNome || ''
+              });
+              // preencher avaliador e outros campos se presentes
+              if (data.evaluator) this.form.patchValue({ evaluator: data.evaluator });
+              if (data.sigla) this.form.patchValue({ sigla: data.sigla });
+              if (data.registro) this.form.patchValue({ registro: data.registro });
+              if (data.especialidade) this.form.patchValue({ especialidade: data.especialidade });
+
+              // riscos selecionados (podem ser descrições)
+              // Mapear cuidadosamente: normalizar acentos/case/espacos para encontrar correspondência com riskFactors
+              // Suportar ambos os nomes que o backend pode retornar: `selectedRiskIds` ou `selectedRisks`
+              const incoming = Array.isArray(data.selectedRiskIds) ? data.selectedRiskIds : (Array.isArray(data.selectedRisks) ? data.selectedRisks : []);
+              const normalize = (s: any) => {
+                if (s === null || s === undefined) return '';
+                try { return String(s).normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim(); } catch(e) { return String(s).toLowerCase().trim(); }
+              };
+              const mapped: string[] = [];
+              incoming.forEach((inc: any) => {
+                const n = normalize(inc);
+                // tentar encontrar risco idêntico em riskFactors
+                const found = this.riskFactors.find(rf => normalize(rf) === n);
+                if (found) mapped.push(found);
+                else if (typeof inc === 'string' && inc.trim()) mapped.push((inc || '').trim());
+              });
+              this.selectedRisks = mapped;
+              // Garantir que os checkboxes do DOM reflitam a seleção (fallback para casos onde binding não atualize imediatamente)
+              try {
+                requestAnimationFrame(() => {
+                  const host = (this.el && (this.el.nativeElement as HTMLElement)) || document;
+                  mapped.forEach(mv => {
+                    // procurar input cujo value ou label corresponda à descrição mapeada
+                    const input = Array.from(host.querySelectorAll('input[type="checkbox"][name="risks"]'))
+                      .find((inp: Element) => {
+                        const el = inp as HTMLInputElement;
+                        const val = (el.value || '').toString().trim();
+                        if (val && val === mv) return true;
+                        // verificar label associado
+                        const id = el.id;
+                        if (id) {
+                          const lbl = host.querySelector(`label[for="${id}"]`);
+                          if (lbl && (lbl.textContent || '').toString().trim() === mv) return true;
+                        }
+                        // tentar comparar normalizados
+                        const normalize = (s: string) => s.normalize ? s.normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase().trim() : s.toLowerCase().trim();
+                        if (normalize(val) === normalize(mv)) return true;
+                        if (id && normalize((host.querySelector(`label[for="${id}"]`)?.textContent||'') as string) === normalize(mv)) return true;
+                        return false;
+                      }) as HTMLInputElement | undefined;
+                    if (input) input.checked = true;
+                  });
+                });
+              } catch (e) { /* ignore */ }
+            }
+          } catch (err) { /* ignore - formulário permanecerá em branco */ }
+        })();
+      }
+    } catch (e) { /* ignore */ }
 
     this.form.get('company')?.valueChanges.subscribe(val => {
       this.onCompanyChange(val);
+    });
+
+    this.form.get('fisioterapeutaId')?.valueChanges.subscribe(id => {
+      this.onPhysioSelected(id);
     });
   }
 
@@ -118,9 +214,55 @@ export class AepComponent implements OnInit {
       if (!resp.ok) throw new Error('Falha ao carregar empresas');
       const data = await resp.json();
       this.companies = Array.isArray(data) ? data : [];
+      // se temos uma company pendente (vinha no AEP), tentar preencher agora
+      if (this.pendingCompanyToSelect) {
+        try {
+          // patchValue company com o identificador pendente e acionar preenchimento
+          this.form.patchValue({ company: this.pendingCompanyToSelect });
+          this.onCompanyChange(this.pendingCompanyToSelect);
+        } catch(_) {}
+        this.pendingCompanyToSelect = null;
+      }
     }catch(e:any){ this.ui.showToast(e?.message || 'Erro ao carregar empresas', 'error'); this.companies = []; }
     finally{ this.loadingCompanies = false; }
   }
+
+  async loadPhysiotherapists(){
+    this.loadingPhysios = true;
+    try{
+      const data = await this.report.fetchPhysiotherapists();
+      this.physiotherapists = Array.isArray(data) ? data : [];
+    }catch(e:any){ this.ui.showToast(e?.message || 'Erro ao carregar fisioterapeutas', 'error'); this.physiotherapists = []; }
+    finally{ this.loadingPhysios = false; }
+  }
+
+  onPhysioSelected(id: any){
+    if (!id) return;
+    const sel = this.physiotherapists.find((p:any) => String(p.id || p._id) === String(id));
+    if (sel) {
+      this.form.patchValue({ fisioterapeutaNome: sel.name || sel.nome || '' });
+    }
+  }
+
+  async createPhysiotherapist(){
+    const name = (this.newPhysioName || '').trim();
+    const cref = (this.newPhysioCrefito || '').trim();
+    if (!name) { this.ui.showToast('Nome do fisioterapeuta é obrigatório', 'error'); return; }
+    try{
+      const payload = { name, crefito: cref };
+      const created = await this.report.postPhysiotherapist(payload);
+      // acrescentar à lista e selecionar
+      this.physiotherapists = [ ...(this.physiotherapists || []), created ];
+      const id = created.id || created._id || created.ID || created.idPhysio || '';
+  this.form.patchValue({ fisioterapeutaId: id, fisioterapeutaNome: created.name || name });
+      this.creatingPhysio = false;
+      this.newPhysioName = '';
+      this.newPhysioCrefito = '';
+      this.ui.showToast('Fisioterapeuta cadastrado com sucesso', 'success');
+    }catch(e:any){ this.ui.showToast(e?.message || 'Erro ao cadastrar fisioterapeuta', 'error'); }
+  }
+
+  cancelCreatePhysio(){ this.creatingPhysio = false; this.newPhysioName = ''; this.newPhysioCrefito = ''; }
 
   onCompanyChange(companyId: any){
     if (!companyId) {
@@ -158,21 +300,58 @@ export class AepComponent implements OnInit {
   submit(){
     if (this.form.invalid) { this.msg = 'Preencha os campos obrigatórios.'; return; }
     const v = this.form.getRawValue();
-    const payload = {
-      empresa: v.company,
-      avaliador: v.evaluator,
-      especialidade: v.especialidade || '',
-  fisioterapeutaNome: v.fisioterapeutaNome || '',
-  fisioterapeutaCrefito: v.fisioterapeutaCrefito || '',
-      data: v.date,
-      funcao: v.funcao,
-      riscos: this.selectedRisks,
-      unit: v.unit,
-      sector: v.sector,
-      cnpj: v.cnpj
+
+    // Varre o DOM do componente para coletar descrições dos riscos marcados
+    let selectedRiskDescriptions: string[] = [];
+    try {
+      const host = (this.el && (this.el.nativeElement as HTMLElement)) || document;
+      const checked = Array.from(host.querySelectorAll('input[type="checkbox"][name="risks"]:checked')) as HTMLInputElement[];
+      selectedRiskDescriptions = checked.map(chk => {
+        const id = chk.id;
+        let labelText = '';
+        if (id) {
+          const lbl = host.querySelector(`label[for="${id}"]`);
+          if (lbl) labelText = (lbl.textContent || '').trim();
+        }
+        return labelText || (chk.value || '').trim();
+      }).filter(Boolean);
+    } catch (err) {
+      // fallback: usar selectedRisks mantido por toggleRisk
+      selectedRiskDescriptions = Array.isArray(this.selectedRisks) ? this.selectedRisks.slice() : [];
+    }
+
+    // Construir payload conforme contrato solicitado
+    const aepPayload: any = {
+      companyId: Number(v.company) || null,
+      evaluationDate: v.date || '',
+      evaluatedFunction: v.funcao || '',
+      // enviar as descrições dos riscos marcados (até definirmos ids)
+      selectedRiskIds: selectedRiskDescriptions || [],
+      physiotherapistId: Number(v.fisioterapeutaId) || null
     };
-    localStorage.setItem('aepDraft', JSON.stringify(payload));
-    this.msg = 'AEP salva localmente (draft).';
+
+    // Se houver id, atualizar via PUT, caso contrário criar via POST
+    (async () => {
+      try {
+        if (v.id) {
+          const updated = await this.report.putAepReport(v.id, aepPayload);
+          this.ui.showToast('AEP atualizada com sucesso.', 'success');
+          // atualizar rascunho local com id
+          localStorage.setItem('aepDraft', JSON.stringify({ ...aepPayload, id: updated.id || v.id }));
+          this.msg = 'AEP atualizada no servidor.';
+        } else {
+          const created = await this.report.postAepReport(aepPayload);
+          this.ui.showToast('AEP criada com sucesso.', 'success');
+          localStorage.setItem('aepDraft', JSON.stringify({ ...aepPayload, id: created.id || created.reportId || '' }));
+          this.msg = 'AEP criada no servidor.';
+        }
+      } catch (err:any) {
+        // fallback: salvar localmente e mostrar erro
+        localStorage.setItem('aepDraft', JSON.stringify(aepPayload));
+        this.msg = 'Erro ao salvar no servidor — rascunho salvo localmente.';
+        this.ui.showToast(err?.message || 'Erro ao enviar AEP', 'error');
+      }
+    })();
   }
 
   clear(){

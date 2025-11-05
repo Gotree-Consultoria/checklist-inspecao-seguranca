@@ -926,6 +926,11 @@ export class ReportComponent implements OnInit, OnDestroy {
         clientSignatureLatitude: this.geolocation.latitude,
         clientSignatureLongitude: this.geolocation.longitude
       };
+      // campo opcional: próxima visita
+      try {
+        const nextVisit = (document.getElementById('nextVisitDate') as HTMLInputElement)?.value || '';
+        payload.nextVisitDate = this.formatDate(nextVisit) || null;
+      } catch(_) { payload.nextVisitDate = null; }
 
       const resp = await this.report.postTechnicalVisit(payload);
       if (!resp) throw new Error('Resposta vazia do servidor');
@@ -1022,6 +1027,11 @@ export class ReportComponent implements OnInit, OnDestroy {
         clientSignatureLatitude: this.geolocation.latitude,
         clientSignatureLongitude: this.geolocation.longitude
       };
+      // campo opcional: próxima visita
+      try {
+        const nextVisit = (document.getElementById('nextVisitDate') as HTMLInputElement)?.value || '';
+        (payload as any).nextVisitDate = this.formatDate(nextVisit) || null;
+      } catch(_) { (payload as any).nextVisitDate = null; }
 
       console.log('[report] payload to send', payload);
       console.log('[report] findings count:', payload.findings.length);

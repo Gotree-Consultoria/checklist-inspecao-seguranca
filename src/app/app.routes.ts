@@ -6,6 +6,7 @@ import { ChecklistNrComponent } from './components/pages/checklist-nr/checklist-
 import { ReportComponent } from './components/pages/report/report.component';
 import { AdminComponent } from './components/pages/admin/admin.component';
 import { AepComponent } from './components/pages/aep/aep.component';
+import { AgendaComponent } from './components/pages/agenda/agenda.component';
 import { GroupComponent } from './components/pages/group/group.component';
 import { DocumentsComponent } from './components/pages/documents/documents.component';
 import { ProfileComponent } from './components/pages/profile/profile.component';
@@ -22,6 +23,7 @@ export const routes: Routes = [
 	{ path: 'checklist', component: ChecklistComponent },
 	{ path: 'checklist-nr', component: ChecklistNrComponent },
 	{ path: 'report', component: ReportComponent },
+	{ path: 'agenda', component: AgendaComponent },
 	{ path: 'documents', component: DocumentsComponent },
 	{ path: 'profile', component: ProfileComponent },
 	// rotas forms/change-password removidas temporariamente até migração completa

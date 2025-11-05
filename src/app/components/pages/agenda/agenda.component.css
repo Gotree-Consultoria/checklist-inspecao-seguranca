@@ -1,0 +1,70 @@
+.agenda-page .agenda-controls { margin: 12px 0; display:flex; gap:8px; align-items:center; }
+.agenda-grid { display:flex; gap:20px; margin-top:16px; }
+.calendar-mock { width:320px; border:1px solid #ddd; padding:12px; border-radius:6px; background:#fafafa }
+.calendar-header { font-weight:600; margin-bottom:8px }
+.calendar-body .month { font-size:14px; margin-bottom:6px; font-weight:600 }
+.calendar-body .weekdays {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 6px;
+	font-size:12px;
+	color:#666;
+	margin-bottom:8px;
+	text-align:center;
+	align-items: center;
+}
+.calendar-body .weekdays .weekday { padding:4px 6px; }
+.calendar-body .days { display:grid; grid-template-columns: repeat(7, 1fr); gap:6px }
+.calendar-body .day { width:100%; height:40px; display:flex; align-items:center; justify-content:center; border-radius:6px; background:#fff; border:1px solid #eee; cursor:pointer; transition: all .12s ease }
+.calendar-body .day:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(13,38,76,0.06) }
+.calendar-body .day.today { background:#fff7e6; border-color:#ffd591 }
+.calendar-body .day.selected { background: linear-gradient(90deg,#4ea8ff,#1b6ef6); color:#fff; border-color:transparent }
+.calendar-body .day.has-event { box-shadow: inset 0 -6px 0 0 rgba(27,110,246,0.12); border-color:#cfe5ff }
+.calendar-body .day.empty { background: transparent; border: 0; box-shadow: none; cursor: default }
+.events-list { flex:1; border:1px solid #eee; padding:12px; border-radius:6px; background:#fff }
+.events-list h2 { margin-top:0; margin-bottom:12px }
+.date-input { padding:8px 10px; border-radius:6px; border:1px solid #ddd; background:#fff; font-size:14px }
+.date-input:focus { outline: 2px solid rgba(30,120,255,0.12); box-shadow: 0 4px 14px rgba(13,38,76,0.06) }
+.event-item { display:flex; gap:12px; padding:8px 6px; border-bottom:1px solid #f2f2f2; align-items:center }
+.event-item .time { width:64px; font-weight:600; color:#0b57d0 }
+.event-item .meta { flex:1 }
+.event-item .title { font-weight:600 }
+.event-item .prof { font-size:13px; color:#666 }
+.event-item .notes { font-size:12px; color:#888 }
+.event-item .duration { width:60px; text-align:right; color:#666 }
+.no-events { color:#888; padding:8px }
+.create-event-form { display:flex; flex-direction:column; gap:8px; margin-top:10px }
+.create-event-form input[type="text"], .create-event-form input[type="date"], .create-event-form textarea { padding:8px; border-radius:6px; border:1px solid #ddd; font-size:14px }
+.create-event-actions { margin-top:8px }
+.create-event-actions button { padding:8px 12px; border-radius:6px; background:#1b6ef6; color:#fff; border:0; cursor:pointer }
+.create-event-actions button[disabled] { opacity:0.6; cursor:not-allowed }
+.cal-controls { display:flex; gap:8px; align-items:center }
+.cal-controls button { background:#fff; border:1px solid #ddd; padding:6px 8px; border-radius:6px; cursor:pointer }
+.cal-controls .month-title { font-weight:700; margin:0 8px }
+.cal-controls .today-btn { margin-left:8px; background:#1b6ef6; color:#fff; border:0 }
+.events-month-list { margin-top:8px; border-top:1px solid #f2f2f2 }
+.events-month-list .event-item { display:flex; gap:12px; padding:8px 6px; border-bottom:1px solid #f9f9f9 }
+.events-month-list .event-item .time { width:56px; color:#0b57d0; font-weight:600 }
+
+/* Modal styles */
+.modal-backdrop { position: fixed; left:0; top:0; right:0; bottom:0; background: linear-gradient(rgba(3,10,30,0.28), rgba(3,10,30,0.28)); display:flex; align-items:center; justify-content:center; z-index:3000; padding:20px }
+.modal { width:640px; max-width:960px; background:linear-gradient(180deg,#ffffff,#fbfdff); border-radius:12px; box-shadow: 0 20px 60px rgba(2,6,23,0.22); overflow:hidden; transform: translateY(-8px); opacity:0; animation: modalIn .22s ease-out forwards }
+.modal-header { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid #eef2f7; background: linear-gradient(90deg, rgba(27,110,246,0.06), rgba(30,160,255,0.02)) }
+.modal-header h3 { margin:0; font-size:18px; font-weight:700; color:#0b3a80 }
+.modal-body { padding:16px 18px; display:flex; flex-direction:column; gap:10px }
+.modal-actions { padding:12px 18px; display:flex; gap:8px; justify-content:flex-end; border-top:1px solid #f6f9fc; background:#fff }
+.modal-close { background:transparent; border:0; font-size:20px; cursor:pointer; width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center; border-radius:8px }
+.modal-close:hover { background:rgba(11,58,128,0.06) }
+.btn { padding:9px 14px; border-radius:8px; font-weight:600; font-size:14px }
+.btn-primary { background:#1366d6; color:#fff; border:0; box-shadow: 0 6px 18px rgba(19,102,214,0.14) }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(19,102,214,0.18) }
+.btn-secondary { background:#f6f8fb; border:0; color:#213a57 }
+
+/* Inputs do modal */
+.modal-body input[type="text"], .modal-body input[type="date"], .modal-body textarea { padding:10px 12px; border-radius:8px; border:1px solid #e6eef9; font-size:14px; background:#fff; box-shadow: inset 0 1px 0 rgba(255,255,255,0.6) }
+.modal-body input:focus, .modal-body textarea:focus { outline: 2px solid rgba(19,102,214,0.12); box-shadow: 0 6px 18px rgba(19,102,214,0.06) }
+.modal-body label { font-size:13px; color:#334a66 }
+.modal-body textarea { min-height:88px; resize:vertical }
+
+@keyframes modalIn { from { transform: translateY(-10px) scale(.995); opacity:0 } to { transform: translateY(0) scale(1); opacity:1 } }
+.new-event-btn { margin-left:12px; padding:6px 10px; border-radius:6px; background:#1b6ef6; color:#fff; border:0; cursor:pointer }
