@@ -38,11 +38,19 @@
         <div *ngIf="!loading && eventsOfDay.length===0" class="no-events">Nenhum evento para esta data.</div>
         <ul>
           <li *ngFor="let ev of eventsOfDay" class="event-item">
-            <div class="time">{{ ev.time || '-' }}</div>
+            <div class="time">{{ ev.time ? ev.time : ((ev.date || '').slice(8,10) || '-') }}</div>
             <div class="meta">
-              <div class="title">{{ ev.title }}</div>
+              <div class="title">
+                {{ ev.title }}
+                <span *ngIf="ev.type" class="event-badge">{{ ev.type }}</span>
+              </div>
               <div class="prof">{{ ev.professional || '' }}</div>
               <div class="notes">{{ ev.notes || ev.description }}</div>
+              <div *ngIf="ev.unitName || ev.sectorName" class="unit-sector">
+                <span *ngIf="ev.unitName" class="unit">{{ ev.unitName }}</span>
+                <span *ngIf="ev.unitName && ev.sectorName"> • </span>
+                <span *ngIf="ev.sectorName" class="sector">{{ ev.sectorName }}</span>
+              </div>
             </div>
             <div class="duration">{{ ev.duration || '' }}</div>
           </li>
@@ -55,9 +63,14 @@
           <li *ngFor="let ev of eventsOfMonth" class="event-item">
             <div class="time">{{ (ev.date || '').slice(8,10) }} {{ ev.time ? (' - ' + ev.time) : '' }}</div>
             <div class="meta">
-              <div class="title">{{ ev.title }}</div>
+              <div class="title">{{ ev.title }} <span *ngIf="ev.type" class="event-badge small">{{ ev.type }}</span></div>
               <div class="prof">{{ ev.professional || '' }}</div>
               <div class="notes">{{ ev.notes || ev.description }}</div>
+              <div *ngIf="ev.unitName || ev.sectorName" class="unit-sector">
+                <span *ngIf="ev.unitName" class="unit">{{ ev.unitName }}</span>
+                <span *ngIf="ev.unitName && ev.sectorName"> • </span>
+                <span *ngIf="ev.sectorName" class="sector">{{ ev.sectorName }}</span>
+              </div>
             </div>
           </li>
         </ul>

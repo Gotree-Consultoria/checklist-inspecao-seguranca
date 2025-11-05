@@ -50,6 +50,10 @@ export class AgendaComponent implements OnInit {
     this.rebuildDaysInMonth();
   }
 
+  // month picker state
+  showMonthPicker = false;
+  pickerYear = this.displayedYear;
+  monthNamesShort = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
   async loadEvents(): Promise<void> {
     this.loading = true;
     try {
@@ -63,8 +67,14 @@ export class AgendaComponent implements OnInit {
           date: (it.eventDate || it.date || it.event_date || '').slice(0,10),
           time: it.time || it.eventTime || '',
           duration: it.duration || '',
-          notes: it.description || it.notes || ''
+          notes: it.description || it.notes || '',
+          // preservar informações extras do backend para exibição/diagnóstico
+          type: it.type || it.tipo || '',
+          referenceId: it.referenceId || it.reference_id || it.refId || null,
+          unitName: it.unitName || it.unidade || it.unit_name || null,
+          sectorName: it.sectorName || it.sector_name || it.setor || null
         }));
+      
       } else {
         // fallback: mock local
         const today = this.selectedDate;
@@ -130,6 +140,24 @@ export class AgendaComponent implements OnInit {
     this.selectedDate = this.formatLocalDate(now);
     this.rebuildDaysInMonth();
   }
+
+  toggleMonthPicker(): void {
+    this.showMonthPicker = !this.showMonthPicker;
+    if (this.showMonthPicker) this.pickerYear = this.displayedYear;
+  }
+
+  pickMonth(idxOneBased: number): void {
+    this.displayedMonth = idxOneBased;
+    this.displayedYear = this.pickerYear;
+    this.rebuildDaysInMonth();
+    // keep selectedDate in same month: set to first day to avoid out-of-range
+    const day = Math.min( Number(this.selectedDate.split('-')[2] || '1'), this.daysInMonth.length );
+    this.selectedDate = `${this.displayedYear}-${String(this.displayedMonth).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    this.showMonthPicker = false;
+  }
+
+  incPickerYear(): void { this.pickerYear += 1; }
+  decPickerYear(): void { this.pickerYear -= 1; }
 
   private formatLocalDate(d: Date): string {
     const yyyy = d.getFullYear();
@@ -216,7 +244,9 @@ export class AgendaComponent implements OnInit {
 
   // filtra eventos do dia selecionado
   get eventsOfDay() {
-    return this.events.filter(e => e.date === this.selectedDate).sort((a,b) => a.time.localeCompare(b.time));
+    return this.events
+      .filter(e => ((e.date || '').slice(0,10)) === this.selectedDate)
+      .sort((a,b) => (a.time || '').localeCompare(b.time || ''));
   }
 
   changeDate(ev: any) {

@@ -33,6 +33,12 @@
 .event-item .notes { font-size:12px; color:#888 }
 .event-item .duration { width:60px; text-align:right; color:#666 }
 .no-events { color:#888; padding:8px }
+.event-badge { display:inline-block; margin-left:8px; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:700; color:#fff; background:#1976d2 }
+.event-badge.small { padding:2px 6px; font-size:10px; margin-left:6px }
+/* Unidade e setor (ex.: unidade física, setor do cliente) */
+.unit-sector { font-size:12px; color:#556; margin-top:8px }
+.unit-sector .unit { color:#334a66; font-weight:600 }
+.unit-sector .sector { color:#4b5563 }
 .create-event-form { display:flex; flex-direction:column; gap:8px; margin-top:10px }
 .create-event-form input[type="text"], .create-event-form input[type="date"], .create-event-form textarea { padding:8px; border-radius:6px; border:1px solid #ddd; font-size:14px }
 .create-event-actions { margin-top:8px }
