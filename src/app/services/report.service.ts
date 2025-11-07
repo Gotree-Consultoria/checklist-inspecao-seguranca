@@ -79,6 +79,55 @@ export class ReportService {
     }
   }
 
+  // Envia relatório NRS específico para endpoint /inspection-reports/nrs
+  async postNrsReport(payload: any) {
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const headers: any = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      if (!payload || typeof payload !== 'object') {
+        throw new Error('Payload inválido: não é um objeto');
+      }
+
+      const payloadForLogging = JSON.parse(JSON.stringify(payload));
+      if (payloadForLogging.clientSignature?.signatureImage) {
+        payloadForLogging.clientSignature.signatureImage = `[BASE64 - ${payloadForLogging.clientSignature.signatureImage.length} chars]`;
+      }
+
+      console.log('[ReportService] 📤 Enviando NRS para /inspection-reports/nrs');
+      this.validatePayloadIds(payload);
+      const cleanedPayload = this.removeNullIds(payload);
+
+      const resp = await fetch('http://localhost:8081/inspection-reports/nrs', {
+        headers,
+        method: 'POST',
+        body: JSON.stringify(cleanedPayload)
+      });
+
+      if (!resp.ok) {
+        let errorDetails = `Status ${resp.status}: ${resp.statusText}`;
+        try {
+          const ct = resp.headers.get('content-type') || '';
+          if (ct.includes('application/json')) {
+            const body = await resp.json();
+            errorDetails += ` | ${JSON.stringify(body)}`;
+          } else {
+            const txt = await resp.text();
+            errorDetails += ` | ${txt}`;
+          }
+        } catch (_) { /* ignore */ }
+        throw new Error(errorDetails);
+      }
+
+      const data = await resp.json();
+      return data;
+    } catch (err) {
+      console.error('[ReportService] ❌ ERRO ao postar NRS:', err);
+      throw err;
+    }
+  }
+
   private validatePayloadIds(obj: any, path: string = ''): void {
     if (!obj || typeof obj !== 'object') return;
     

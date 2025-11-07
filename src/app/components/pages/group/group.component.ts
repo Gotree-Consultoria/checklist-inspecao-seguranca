@@ -15,6 +15,11 @@ import { LegacyService } from '../../../services/legacy.service';
 export class GroupComponent implements OnInit {
   history: any[] = [];
   loading = true;
+  // próximos eventos/visitas (agenda)
+  upcomingEventsAll: any[] = [];
+  loadingUpcoming = false;
+  upcomingPageIndex = 0;
+  upcomingPageSize = 5; // mostrar 5 por página
 
   private ui = inject(UiService);
   private report = inject(ReportService);
@@ -27,6 +32,10 @@ export class GroupComponent implements OnInit {
     setTimeout(() => {
       try { this.loadHistory(); } catch (e) { console.warn('loadHistory init failed', e); }
     }, 100);
+    // carregar próximos eventos da agenda
+    setTimeout(() => {
+      try { this.loadUpcomingEvents(); } catch (e) { console.warn('loadUpcomingEvents init failed', e); }
+    }, 120);
   }
 
   async loadHistory(limit = 10) {
@@ -47,6 +56,71 @@ export class GroupComponent implements OnInit {
     } finally {
       this.loading = false;
     }
+  }
+
+  // Carrega eventos da agenda e filtra apenas os futuros/pendentes
+  async loadUpcomingEvents(limit = 5) {
+    this.loadingUpcoming = true;
+    this.upcomingEventsAll = [];
+    try {
+      const data = await this.report.fetchAgendaEvents();
+      const items = Array.isArray(data) ? data : (data ? [data] : []);
+      const normalized = items.map((it: any, idx: number) => ({
+        id: it.id || it._id || idx + 1,
+        title: it.title || it.titulo || '',
+        description: it.description || it.descricao || '',
+        date: (it.eventDate || it.date || it.event_date || '').slice(0,10),
+        type: it.type || it.tipo || '',
+        unitName: it.unitName || it.unidade || it.unit_name || null,
+        sectorName: it.sectorName || it.sector_name || it.setor || null
+      }));
+
+      const today = new Date();
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+      // filtrar eventos cuja data >= hoje
+      const future = normalized.filter(e => (e.date || '') >= todayStr);
+
+      // ordenar por data asc
+      future.sort((a,b) => (a.date || '').localeCompare(b.date || ''));
+
+      // armazenar todos e inicializar paginação
+      this.upcomingEventsAll = future;
+      this.upcomingPageIndex = 0;
+      this.upcomingPageSize = limit;
+    } catch (err) {
+      console.warn('[GroupComponent] Falha ao carregar eventos da agenda', err);
+      this.upcomingEventsAll = [];
+    } finally {
+      this.loadingUpcoming = false;
+    }
+  }
+
+  // retorna página atual de eventos
+  get pagedUpcoming() {
+    const start = this.upcomingPageIndex * this.upcomingPageSize;
+    return this.upcomingEventsAll.slice(start, start + this.upcomingPageSize);
+  }
+
+  prevUpcomingPage() {
+    if (this.upcomingPageIndex > 0) this.upcomingPageIndex -= 1;
+  }
+
+  nextUpcomingPage() {
+    const maxIndex = Math.max(0, Math.ceil(this.upcomingEventsAll.length / this.upcomingPageSize) - 1);
+    if (this.upcomingPageIndex < maxIndex) this.upcomingPageIndex += 1;
+  }
+
+  get upcomingPageStart() {
+    return this.upcomingPageIndex * this.upcomingPageSize + 1;
+  }
+
+  get upcomingPageEnd() {
+    return Math.min((this.upcomingPageIndex + 1) * this.upcomingPageSize, this.upcomingEventsAll.length);
+  }
+
+  get upcomingMaxPageIndex() {
+    return Math.max(0, Math.ceil(this.upcomingEventsAll.length / this.upcomingPageSize) - 1);
   }
 
   formatDocumentType(type: any) {

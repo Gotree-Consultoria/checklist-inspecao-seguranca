@@ -34,6 +34,28 @@
 			</button>
 		</div>
 
+		<!-- Próximos eventos / visitas (Agenda) -->
+		<div class="upcoming-section">
+			<h2>Próximos eventos / visitas</h2>
+			<div *ngIf="loadingUpcoming" class="small-muted">Carregando próximos eventos...</div>
+			<div *ngIf="!loadingUpcoming && (upcomingEventsAll.length===0)" class="small-muted">Nenhum evento agendado.</div>
+			<ul *ngIf="!loadingUpcoming && pagedUpcoming.length" class="upcoming-list">
+				<li *ngFor="let ev of pagedUpcoming" class="upcoming-item">
+					<div class="ev-date">{{ formatDateToBrazil(ev.date) }}</div>
+					<div class="ev-body">
+						<div class="ev-title">{{ ev.title }} <span class="agenda-badge" [ngClass]="{ 'visita': ev.type==='VISITA', 'evento': ev.type==='EVENTO' }">{{ ev.type }}</span></div>
+						<div class="ev-sub">{{ ev.unitName || '' }}<span *ngIf="ev.unitName && ev.sectorName"> • </span>{{ ev.sectorName || '' }}</div>
+					</div>
+				</li>
+			</ul>
+			<!-- Controles de paginação -->
+			<div *ngIf="upcomingEventsAll.length > upcomingPageSize" class="upcoming-controls">
+				<button class="btn btn-ghost" (click)="prevUpcomingPage()" [disabled]="upcomingPageIndex===0">Anterior</button>
+				<div class="page-indicator">{{ upcomingPageStart }} - {{ upcomingPageEnd }} de {{ upcomingEventsAll.length }}</div>
+				<button class="btn btn-ghost" (click)="nextUpcomingPage()" [disabled]="upcomingPageIndex >= upcomingMaxPageIndex">Próximo</button>
+			</div>
+		</div>
+
 		<div class="history-section">
 			<h2>Histórico</h2>
 			<div class="table-container">
@@ -51,7 +73,7 @@
 						<tr *ngIf="loading">
 							<td colspan="5">Carregando...</td>
 						</tr>
-						<tr *ngIf="!loading && history?.length === 0">
+						<tr *ngIf="!loading && history.length === 0">
 							<td colspan="5">Nenhum histórico encontrado.</td>
 						</tr>
 						<tr *ngFor="let item of history" [attr.data-doc-id]="item.id || item.reportId">

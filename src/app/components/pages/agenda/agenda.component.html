@@ -42,7 +42,7 @@
             <div class="meta">
               <div class="title">
                 {{ ev.title }}
-                <span *ngIf="ev.type" class="event-badge">{{ ev.type }}</span>
+                <span *ngIf="ev.type" class="event-badge" [ngClass]="{'visita': ev.type==='VISITA', 'evento': ev.type==='EVENTO'}">{{ ev.type }}</span>
               </div>
               <div class="prof">{{ ev.professional || '' }}</div>
               <div class="notes">{{ ev.notes || ev.description }}</div>
@@ -63,7 +63,7 @@
           <li *ngFor="let ev of eventsOfMonth" class="event-item">
             <div class="time">{{ (ev.date || '').slice(8,10) }} {{ ev.time ? (' - ' + ev.time) : '' }}</div>
             <div class="meta">
-              <div class="title">{{ ev.title }} <span *ngIf="ev.type" class="event-badge small">{{ ev.type }}</span></div>
+              <div class="title">{{ ev.title }} <span *ngIf="ev.type" class="event-badge small" [ngClass]="{'visita': ev.type==='VISITA', 'evento': ev.type==='EVENTO'}">{{ ev.type }}</span></div>
               <div class="prof">{{ ev.professional || '' }}</div>
               <div class="notes">{{ ev.notes || ev.description }}</div>
               <div *ngIf="ev.unitName || ev.sectorName" class="unit-sector">

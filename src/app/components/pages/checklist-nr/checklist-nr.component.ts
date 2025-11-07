@@ -18,16 +18,163 @@ export class ChecklistNrComponent {
 
   companies: Array<any> = [];
 
+  // Nova estrutura: lista de seções contendo itens
+  sections: Array<any> = [
+    {
+      title: 'Higiene e Limpeza (NR 24 - Condições Sanitárias e de Conforto nos Locais de Trabalho)',
+      items: [
+        { key: 'cozinha.higiene.superficies', description: 'Superfícies de trabalho limpas e desinfetadas.', status: '', justification: '' },
+        { key: 'cozinha.higiene.utensilios', description: 'Utensílios e equipamentos higienizados.', status: '', justification: '' },
+        { key: 'cozinha.higiene.pisos', description: 'Pisos limpos, secos e antiderrapantes.', status: '', justification: '' },
+        { key: 'cozinha.higiene.lixeiras', description: 'Lixeiras com tampas e acionamento por pedal, esvaziadas regularmente.', status: '', justification: '' }
+      ]
+    },
+    {
+      title: 'Equipamentos e Máquinas (NR 12)',
+      items: [ { key: 'cozinha.maquinas.operacaoSegura', description: 'Procedimentos para operação segura de equipamentos (fornos, batedeiras, fatiadores).', status: '', justification: '' } ]
+    },
+    {
+      title: 'Ergonomia (NR 17)',
+      items: [
+        { key: 'cozinha.ergonomia.posturas', description: 'Posturas adequadas ao levantar peso.', status: '', justification: '' },
+        { key: 'cozinha.ergonomia.bancadas', description: 'Bancadas e estações de trabalho em altura ergonômica.', status: '', justification: '' }
+      ]
+    },
+    {
+      title: 'Coifas e Exaustores (NR 15 / NR 24)',
+      items: [
+        { key: 'cozinha.coifas.funcionamento', description: 'Coifas e exaustores em funcionamento adequado.', status: '', justification: '' },
+        { key: 'cozinha.coifas.limpeza', description: 'Limpeza periódica das coifas e dutos de exaustão.', status: '', justification: '' },
+        { key: 'cozinha.coifas.manutencao', description: 'Manutenção preventiva dos sistemas de exaustão.', status: '', justification: '' }
+      ]
+    },
+    {
+      title: 'Pisos (NR 24)',
+      items: [
+        { key: 'cozinha.pisos.antiderrapante', description: 'Pisos antiderrapantes em todas as áreas de trabalho.', status: '', justification: '' },
+        { key: 'cozinha.pisos.conservacao', description: 'Pisos em bom estado de conservação, sem rachaduras ou desníveis.', status: '', justification: '' },
+        { key: 'cozinha.pisos.limpezaFacil', description: 'Facilidade de limpeza e higienização dos pisos.', status: '', justification: '' }
+      ]
+    },
+    {
+      title: 'Área de Vivência (NR 18 / NR 24)',
+      items: [
+        { key: 'cozinha.areaVivencia.sanitarios', description: 'Instalações sanitárias adequadas e em quantidade suficiente.', status: '', justification: '' },
+        { key: 'cozinha.areaVivencia.vestiarios', description: 'Vestiários limpos e organizados.', status: '', justification: '' },
+        { key: 'cozinha.areaVivencia.refeitorio', description: 'Refeitórios com condições de higiene e conforto.', status: '', justification: '' },
+        { key: 'cozinha.areaVivencia.alojamentos', description: 'Alojamentos em conformidade com a NR 24 (se aplicável).', status: '', justification: '' }
+      ]
+    },
+    // Canteiro de Obras (seções e itens)
+    {
+      title: 'Canteiro - Geral',
+      items: [
+        { key: 'canteiro.isolamento', description: 'Isolamento e sinalização adequados do canteiro de obras.', status: '', justification: '' },
+        { key: 'canteiro.organizacao', description: 'Organização e limpeza do local, sem entulhos ou materiais espalhados.', status: '', justification: '' },
+        { key: 'canteiro.protecaoAberturas', description: 'Proteção de aberturas no piso e vãos.', status: '', justification: '' },
+        { key: 'canteiro.acessoSeguro', description: 'Acesso e circulação de pessoas e materiais seguros.', status: '', justification: '' },
+        { key: 'canteiro.sinalizacao', description: 'Sinalização de segurança em bom estado.', status: '', justification: '' }
+      ]
+    },
+    {
+      title: 'Trabalho em Altura (NR 35 / NR 18)',
+      items: [
+        { key: 'canteiro.trabalhoAltura.arpt', description: 'Análise de Risco (AR) e Permissão de Trabalho (PT) para atividades em altura.', status: '', justification: '' },
+        { key: 'canteiro.trabalhoAltura.cinto', description: 'Uso de cinto tipo paraquedista com talabarte duplo.', status: '', justification: '' },
+        { key: 'canteiro.trabalhoAltura.andaimes', description: 'Andaimes montados e inspecionados por profissional habilitado.', status: '', justification: '' },
+        { key: 'canteiro.trabalhoAltura.redes', description: 'Redes de segurança instaladas quando necessário, com laudo técnico.', status: '', justification: '' },
+        { key: 'canteiro.trabalhoAltura.plataformas', description: 'Plataformas de trabalho seguras com guarda-corpo e rodapé.', status: '', justification: '' },
+        { key: 'canteiro.trabalhoAltura.escadas', description: 'Escadas em bom estado, fixas e com corrimão.', status: '', justification: '' },
+        { key: 'canteiro.trabalhoAltura.linhasVida', description: 'Linhas de vida instaladas e certificadas.', status: '', justification: '' }
+      ]
+    },
+    {
+      title: 'Canteiro - Máquinas e Equipamentos',
+      items: [
+        { key: 'canteiro.maquinas.protecao', description: 'Máquinas com proteções e dispositivos de segurança.', status: '', justification: '' },
+        { key: 'canteiro.maquinas.operadoresTreinados', description: 'Operadores treinados e autorizados.', status: '', justification: '' },
+        { key: 'canteiro.maquinas.inspecaoDiaria', description: 'Inspeção diária de equipamentos.', status: '', justification: '' },
+        { key: 'canteiro.maquinas.fiaçãoProtegida', description: 'Fiação elétrica protegida e aterrada (NR 10).', status: '', justification: '' }
+      ]
+    },
+    {
+      title: 'Canteiro - Movimentação e Armazenagem',
+      items: [
+        { key: 'canteiro.movimentacao.cargas', description: 'Cargas armazenadas de forma segura e estável.', status: '', justification: '' },
+        { key: 'canteiro.movimentacao.equipamentos', description: 'Equipamentos de movimentação com manutenção em dia e operadores habilitados.', status: '', justification: '' },
+        { key: 'canteiro.movimentacao.corredores', description: 'Corredores de circulação desobstruídos e sinalizados.', status: '', justification: '' }
+      ]
+    },
+    {
+      title: 'Canteiro - Escavações e Fundações (NR 18)',
+      items: [
+        { key: 'canteiro.escavacoes.taludes', description: 'Taludes escorados ou em ângulo seguro conforme projeto.', status: '', justification: '' },
+        { key: 'canteiro.escavacoes.sinalizacao', description: 'Sinalização e isolamento da área de escavação.', status: '', justification: '' },
+        { key: 'canteiro.escavacoes.acessoSeguro', description: 'Acesso seguro à escavação.', status: '', justification: '' }
+      ]
+    },
+    {
+      title: 'Canteiro - Instalações Elétricas (NR 10 / NR 18)',
+      items: [
+        { key: 'canteiro.eletricidade.provisoria', description: 'Instalações elétricas provisórias e definitivas em conformidade.', status: '', justification: '' },
+        { key: 'canteiro.eletricidade.quadros', description: 'Quadros elétricos aterrados e com proteção contra choques.', status: '', justification: '' }
+      ]
+    },
+    {
+      title: 'Canteiro - Proteção Contra Incêndios (NR 23)',
+      items: [
+        { key: 'canteiro.incendio.extintores', description: 'Extintores de incêndio em locais visíveis e dentro da validade.', status: '', justification: '' },
+        { key: 'canteiro.incendio.saidas', description: 'Saídas de emergência sinalizadas e desimpedidas.', status: '', justification: '' }
+      ]
+    },
+    {
+      title: 'Canteiro - Primeiros Socorros (NR 07)',
+      items: [ { key: 'canteiro.primeirosSocorros.kit', description: 'Kit de primeiros socorros acessível e completo.', status: '', justification: '' } ]
+    },
+    // Fábrica
+    {
+      title: 'Gerenciamento de Riscos (NR 01)',
+      items: [
+        { key: 'fabrica.pgr', description: 'Elaboração e implementação do Programa de Gerenciamento de Riscos (PGR).', status: '', justification: '' },
+        { key: 'fabrica.apr', description: 'Análise Preliminar de Risco (APR) para atividades específicas.', status: '', justification: '' }
+      ]
+    },
+    {
+      title: 'Máquinas e Equipamentos (NR 12) - Fábrica',
+      items: [
+        { key: 'fabrica.maquinas.protecao', description: 'Proteções de máquinas em perfeito estado.', status: '', justification: '' },
+        { key: 'fabrica.maquinas.paradaEmergencia', description: 'Dispositivos de parada de emergência acessíveis e funcionando.', status: '', justification: '' },
+        { key: 'fabrica.maquinas.loto', description: 'Procedimentos de Bloqueio e Etiquetagem (LOTO) para manutenção.', status: '', justification: '' }
+      ]
+    },
+    {
+      title: 'Movimentação de Cargas (NR 11) - Fábrica',
+      items: [ { key: 'fabrica.movimentacao.equipamentos', description: 'Empilhadeiras e equipamentos com manutenção e operadores habilitados.', status: '', justification: '' } ]
+    },
+    {
+      title: 'Produtos Químicos (NR 20 / NR 26)',
+      items: [
+        { key: 'fabrica.quimicos.armazenamento', description: 'Armazenamento correto e seguro de produtos químicos.', status: '', justification: '' },
+        { key: 'fabrica.quimicos.fispq', description: 'FISPQ acessíveis e compreensíveis.', status: '', justification: '' },
+        { key: 'fabrica.quimicos.epi', description: 'Uso de EPIs específicos para manuseio de químicos.', status: '', justification: '' }
+      ]
+    }
+  ];
+
   saveChecklist(e?: Event) {
     if (e) e.preventDefault();
     // coletar valores dos checkboxes
     try {
+      // coletar dados a partir da nova estrutura interna
       const data: any = {};
-      const checks = Array.from(document.querySelectorAll<HTMLInputElement>('#checklist-nr-form input[type=checkbox]'));
-      data.checked = checks.filter(c => c.checked).map(c => c.getAttribute('data-key'));
       data.title = (document.getElementById('reportTitleNR') as HTMLInputElement)?.value || 'Checklist NR';
       data.date = (document.getElementById('dataInspecaoNR') as HTMLInputElement)?.value || new Date().toISOString().substring(0,10);
       data.notes = (document.getElementById('anotacoesNR') as HTMLTextAreaElement)?.value || '';
+      // mapear seções/itens
+      data.sections = this.sections.map((s: any) => ({
+        title: s.title,
+        items: s.items.map((it: any) => ({ description: it.description, status: it.status || null, justification: it.justification || null }))
+      }));
       this.pendingPayload = data;
       this.saveChecklistLocally(data);
     } catch (err: any) {
@@ -79,10 +226,8 @@ export class ChecklistNrComponent {
   
   openSignatureModal(e?: Event) {
     if (e) e.preventDefault();
-    // collect form values into pendingPayload
+    // coletar cabeçalho e mapear a estrutura de seções/itens conforme DTO esperado
     const data: any = {};
-    const checks = Array.from(document.querySelectorAll<HTMLInputElement>('#checklist-nr-form input[type=checkbox]'));
-    data.checked = checks.filter(c => c.checked).map(c => c.getAttribute('data-key'));
     data.title = (document.getElementById('reportTitleNR') as HTMLInputElement)?.value || 'Checklist NR';
     data.date = (document.getElementById('dataInspecaoNR') as HTMLInputElement)?.value || new Date().toISOString().substring(0,10);
     data.notes = (document.getElementById('anotacoesNR') as HTMLTextAreaElement)?.value || '';
@@ -95,7 +240,18 @@ export class ChecklistNrComponent {
     data.responsibleSigla = (document.getElementById('responsavelSiglaNR') as HTMLInputElement)?.value || '';
     data.responsibleRegistro = (document.getElementById('responsavelRegistroNR') as HTMLInputElement)?.value || '';
     data.location = (document.getElementById('localInspecaoNR') as HTMLInputElement)?.value || '';
-  
+
+    // mapear para NrsSectionDTO-like
+    data.sections = this.sections.map((s: any) => ({
+      title: s.title,
+      items: s.items.map((it: any) => ({
+        key: it.key || null,
+        description: it.description,
+        status: it.status || null,
+        justification: it.justification || null
+      }))
+    }));
+
     this.pendingPayload = data;
     // open shared signature modal
     try {
@@ -107,11 +263,48 @@ export class ChecklistNrComponent {
   }
   
   onSignaturesConfirmed(signs: any) {
-    // combine signatures into payload and save locally
+    // combinar assinaturas e enviar ao backend via ReportService no endpoint /inspection-reports/nrs
     const finalPayload = Object.assign({}, this.pendingPayload || {});
     finalPayload.signatures = signs;
-    this.saveChecklistLocally(finalPayload);
-    this.pendingPayload = null;
+    // enviar
+    (async () => {
+      try {
+        const resp = await this.report.postNrsReport(finalPayload);
+        this.ui.showToast('Checklist NR enviado com sucesso.', 'success', 4000);
+        console.log('[ChecklistNr] resposta backend:', resp);
+      } catch (err: any) {
+        console.error('[ChecklistNr] erro ao enviar NRS:', err);
+        this.ui.showToast('Falha ao enviar checklist para o servidor. Salvando localmente.', 'error', 5000);
+        this.saveChecklistLocally(finalPayload);
+      } finally {
+        this.pendingPayload = null;
+      }
+    })();
+  }
+
+  // Atualiza status do item e gerencia justificativa visível
+  setItemStatus(sectionIdx: number, itemIdx: number, status: 'CONFORME' | 'NAO_CONFORME' | 'NAO_APLICA') {
+    try {
+      const it = this.sections[sectionIdx].items[itemIdx];
+      if (!it) return;
+      it.status = status;
+      if (status !== 'NAO_APLICA') {
+        it.justification = '';
+      }
+    } catch (e) { console.warn('setItemStatus', e); }
+  }
+
+  setItemJustification(sectionIdx: number, itemIdx: number, value: string) {
+    try { this.sections[sectionIdx].items[itemIdx].justification = value || ''; } catch(e) { /* ignore */ }
+  }
+
+  // Regra visual da seção-pai: se todos NAO_CONFORME => 'NC', se todos NAO_APLICA => 'NA', else ''
+  getSectionVisualStatus(section: any): string {
+    if (!section || !Array.isArray(section.items) || section.items.length === 0) return '';
+    const statuses = section.items.map((i: any) => i.status || null);
+    if (statuses.every((s: any) => s === 'NAO_CONFORME')) return 'NC';
+    if (statuses.every((s: any) => s === 'NAO_APLICA')) return 'NA';
+    return '';
   }
 
   private populateCompanyDropdownNR(): void {
