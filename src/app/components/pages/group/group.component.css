@@ -42,7 +42,6 @@ section.group-page .action-buttons { margin-bottom: 44px !important; }
 .action-btn strong { font-size:0.95rem; color: var(--verde-escuro); }
 .action-btn small { font-size:0.68rem; color:rgba(0,0,0,0.55); letter-spacing:.2px; }
 .action-btn:focus-visible { outline:3px solid rgba(191,216,58,0.18); outline-offset:2px; }
-.action-btn.action-checklist { border-color: rgba(191,216,58,0.28); }
 .action-btn.action-report { border-color: rgba(230,95,60,0.18); }
 .action-btn.action-aep { border-color: rgba(0,90,50,0.12); }
 .action-btn:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }

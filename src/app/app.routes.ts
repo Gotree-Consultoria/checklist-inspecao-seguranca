@@ -1,8 +1,7 @@
 import { Routes } from '@angular/router';
 import { LoginComponent } from './components/pages/login/login.component';
 import { DashboardComponent } from './components/pages/dashboard/dashboard.component';
-import { ChecklistComponent } from './components/pages/checklist/checklist.component';
-import { ChecklistNrComponent } from './components/pages/checklist-nr/checklist-nr.component';
+// Checklist components removed from project
 import { ReportComponent } from './components/pages/report/report.component';
 import { AdminComponent } from './components/pages/admin/admin.component';
 import { AepComponent } from './components/pages/aep/aep.component';
@@ -19,9 +18,7 @@ export const routes: Routes = [
     { path: '', redirectTo: 'login', pathMatch: 'full' },
     { path: 'login', component: LoginComponent },
 	{ path: 'dashboard', component: DashboardComponent },
-    { path: 'group', component: GroupComponent },
-	{ path: 'checklist', component: ChecklistComponent },
-	{ path: 'checklist-nr', component: ChecklistNrComponent },
+	{ path: 'group', component: GroupComponent },
 	{ path: 'report', component: ReportComponent },
 	{ path: 'agenda', component: AgendaComponent },
 	{ path: 'documents', component: DocumentsComponent },

@@ -1269,8 +1269,8 @@ export async function loadCompanyHierarchyForAEP() {
 // LÓGICA DE RENDERIZAÇÃO DO FORMULÁRIO E INTERATIVIDADE
 // =======================================================
 
-// Importa os dados do seu arquivo
-import { checklistData } from './data.js';
+// Checklist legacy data removed - stubbed to avoid loading removed checklist UI
+// (original import removed)
 
 
 // Função para carregar empresas/unidades/setores no formulário de relatório
@@ -1286,71 +1286,10 @@ export function setupReportCompanySelectors() {
  * Renderiza o formulário do checklist e adiciona os listeners de interação.
  */
 export function renderChecklistForm() {
+    // Checklist UI removed from project. Provide a minimal stub so legacy pages don't break if invoked.
     const checklistContainer = document.getElementById('checklistContainer');
     if (!checklistContainer) return;
-
-    let formContent = '';
-    
-    checklistData.forEach(section => {
-        const isNaOption = section.naOption;
-
-        formContent += `
-            <div class="section-container">
-                <div class="section-header">
-                    <span class="section-number">${section.sectionId}</span>
-                    <h3 class="section-title"> ${section.sectionTitle}</h3>
-                    ${isNaOption ? `
-                        <div class="na-option">
-                            <input type="checkbox" id="na-${section.sectionId}" name="na-${section.sectionId}">
-                            <label for="na-${section.sectionId}">Não se Aplica</label>
-                        </div>
-                    ` : ''}
-                </div>
-                <div class="section-items ${isNaOption ? 'collapsible' : ''}" id="items-${section.sectionId}">
-        `;
-        
-        section.items.forEach(item => {
-            const itemNa = item.naOption ? `<label class="item-na"><input type="checkbox" class="item-na-checkbox" id="na-item-${item.id}" data-item="${item.id}" /> Não se Aplica</label>` : '';
-            formContent += `
-                <div class="checklist-item">
-                    <p class="question-text">${item.id} - ${item.text}</p>
-                    <div class="radio-options">
-                        <input type="radio" id="q-${item.id}-sim" name="q-${item.id}" value="sim" required>
-                        <label for="q-${item.id}-sim">Sim</label>
-                        <input type="radio" id="q-${item.id}-nao" name="q-${item.id}" value="nao">
-                        <label for="q-${item.id}-nao">Não</label>
-                        ${itemNa}
-                    </div>
-                </div>
-            `;
-        });
-        
-        formContent += `
-                </div>
-            </div>
-        `;
-    });
-    
-    checklistContainer.innerHTML = formContent;
-    
-    // Adiciona o evento de clique após a renderização
-    addCollapsibleListeners();
-    // listeners para checkbox 'Não se Aplica' de cada item
-    document.querySelectorAll('.item-na-checkbox').forEach(cb => {
-        cb.addEventListener('change', (e) => {
-            const itemId = cb.dataset.item;
-            if (!itemId) return;
-            const radios = document.querySelectorAll(`input[name="q-${itemId}"]`);
-            if (cb.checked) {
-                radios.forEach(r => { r.checked = false; r.disabled = true; r.removeAttribute('required'); });
-            } else {
-                radios.forEach(r => { r.disabled = false; r.setAttribute('required','required'); });
-            }
-        });
-    });
-    // Chama a função para carregar as empresas quando o formulário estiver pronto
-    // nova hierarquia (empresa/unidade/setor)
-    loadCompanyHierarchyForChecklist();
+    checklistContainer.innerHTML = '<div class="removed-note">O formulário de Checklist foi removido deste projeto.</div>';
 }
 
 function addCollapsibleListeners() {
