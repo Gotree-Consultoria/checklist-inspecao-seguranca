@@ -234,11 +234,13 @@ export class SignatureModalComponent implements OnInit {
     techSignature: string;
     clientName: string;
     clientSignature: string;
+    geolocation?: { latitude: number | null; longitude: number | null } | null;
   }>();
 
   isOpen = false;
   techName = '';
   clientName = '';
+  geolocation: { latitude: number | null; longitude: number | null } | null = null;
 
   private signatureService = inject(SignatureService);
   private ui = inject(UiService);
@@ -246,6 +248,67 @@ export class SignatureModalComponent implements OnInit {
 
   private techPad: any;
   private clientPad: any;
+
+  // Recorta o canvas removendo margens transparentes
+  private cropCanvas(sourceCanvas: HTMLCanvasElement, alphaThreshold: number = 10): HTMLCanvasElement {
+    try {
+      const w = sourceCanvas.width;
+      const h = sourceCanvas.height;
+      const ctx = sourceCanvas.getContext('2d');
+      if (!ctx) return sourceCanvas;
+
+      const imgData = ctx.getImageData(0, 0, w, h);
+      const data = imgData.data;
+
+      let minX = w, minY = h, maxX = 0, maxY = 0;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const idx = (y * w + x) * 4;
+          const alpha = data[idx + 3];
+          if (alpha > alphaThreshold) {
+            if (x < minX) minX = x;
+            if (y < minY) minY = y;
+            if (x > maxX) maxX = x;
+            if (y > maxY) maxY = y;
+          }
+        }
+      }
+
+      // se não encontrou pixels opacos, retorna o original
+      if (maxX < minX || maxY < minY) return sourceCanvas;
+
+      const cropW = maxX - minX + 1;
+      const cropH = maxY - minY + 1;
+      const out = document.createElement('canvas');
+      out.width = cropW;
+      out.height = cropH;
+      const outCtx = out.getContext('2d');
+      if (!outCtx) return sourceCanvas;
+      outCtx.drawImage(sourceCanvas, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
+      return out;
+    } catch (e) {
+      return sourceCanvas;
+    }
+  }
+
+  // Exporta base64 a partir do canvas, aplicando crop e redimensionamento opcional
+  private exportCroppedDataUrl(sourceCanvas: HTMLCanvasElement, type: string = 'image/png', maxWidth: number | null = 1200): string {
+    try {
+      const cropped = this.cropCanvas(sourceCanvas);
+      if (maxWidth && cropped.width > maxWidth) {
+        const scale = maxWidth / cropped.width;
+        const resized = document.createElement('canvas');
+        resized.width = Math.round(cropped.width * scale);
+        resized.height = Math.round(cropped.height * scale);
+        const rctx = resized.getContext('2d');
+        if (rctx) rctx.drawImage(cropped, 0, 0, resized.width, resized.height);
+        return resized.toDataURL(type);
+      }
+      return cropped.toDataURL(type);
+    } catch (e) {
+      try { return sourceCanvas.toDataURL(type); } catch (_) { return '';}
+    }
+  }
 
   async ngOnInit() {
     // Inicializar signature pads após a view estar pronta
@@ -259,6 +322,27 @@ export class SignatureModalComponent implements OnInit {
         await this.loadTechnicianName();
       } catch (_) {}
       this.initSignaturePads();
+      // tentar obter geolocalização do dispositivo (se permitido pelo usuário)
+      try {
+        if (navigator && typeof navigator.geolocation !== 'undefined' && navigator.geolocation.getCurrentPosition) {
+          navigator.geolocation.getCurrentPosition(
+            pos => {
+              try {
+                this.geolocation = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+              } catch (_) { this.geolocation = { latitude: null, longitude: null }; }
+            },
+            err => {
+              // se o usuário negar ou houver erro, armazenar nulls
+              this.geolocation = { latitude: null, longitude: null };
+            },
+            { enableHighAccuracy: false, timeout: 5000 }
+          );
+        } else {
+          this.geolocation = { latitude: null, longitude: null };
+        }
+      } catch (e) {
+        this.geolocation = { latitude: null, longitude: null };
+      }
     }, 0);
   }
 
@@ -322,12 +406,16 @@ export class SignatureModalComponent implements OnInit {
       return;
     }
 
-    // Emitir evento com as assinaturas
+    // Emitir evento com as assinaturas (usar canvas recortado/redimensionado para remover margens transparentes)
+    const techDataUrl = this.techCanvas && this.techCanvas.nativeElement ? this.exportCroppedDataUrl(this.techCanvas.nativeElement) : (this.techPad && typeof this.techPad.toDataURL === 'function' ? this.techPad.toDataURL() : '');
+    const clientDataUrl = this.clientCanvas && this.clientCanvas.nativeElement ? this.exportCroppedDataUrl(this.clientCanvas.nativeElement) : (this.clientPad && typeof this.clientPad.toDataURL === 'function' ? this.clientPad.toDataURL() : '');
+
     this.confirmSignatures.emit({
       techName: this.techName.trim(),
-      techSignature: this.techPad.toDataURL(),
+      techSignature: techDataUrl,
       clientName: this.clientName.trim(),
-      clientSignature: this.clientPad.toDataURL(),
+      clientSignature: clientDataUrl,
+      geolocation: this.geolocation || null
     });
 
     this.close();

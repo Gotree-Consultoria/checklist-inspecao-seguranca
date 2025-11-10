@@ -1126,8 +1126,14 @@ export class ReportComponent implements OnInit, OnDestroy {
       // Tentar pegar do canvas primeiro (mais direto)
       const canvas = document.getElementById('techSignatureCanvasReport') as HTMLCanvasElement;
       if (canvas) {
-        const dataUrl = canvas.toDataURL('image/png');
-        return this.stripDataUrl(dataUrl) || '';
+        // Crop and export to avoid large transparent margins and keep stroke proportion
+        try {
+          const dataUrl = this.exportCroppedDataUrlLocal(canvas, 'image/png');
+          return this.stripDataUrl(dataUrl) || '';
+        } catch (_) {
+          const dataUrl = canvas.toDataURL('image/png');
+          return this.stripDataUrl(dataUrl) || '';
+        }
       }
       
       // Fallback para this.techPad
@@ -1146,8 +1152,13 @@ export class ReportComponent implements OnInit, OnDestroy {
       // Tentar pegacar do canvas primeiro (mais direto)
       const canvas = document.getElementById('clientSignatureCanvasReport') as HTMLCanvasElement;
       if (canvas) {
-        const dataUrl = canvas.toDataURL('image/png');
-        return this.stripDataUrl(dataUrl) || '';
+        try {
+          const dataUrl = this.exportCroppedDataUrlLocal(canvas, 'image/png');
+          return this.stripDataUrl(dataUrl) || '';
+        } catch (_) {
+          const dataUrl = canvas.toDataURL('image/png');
+          return this.stripDataUrl(dataUrl) || '';
+        }
       }
       
       // Fallback para this.clientPad
@@ -1159,6 +1170,66 @@ export class ReportComponent implements OnInit, OnDestroy {
       console.warn('Erro ao obter assinatura do cliente', e);
     }
     return '';
+  }
+
+  // Local helper to crop a canvas removing transparent margins (similar to SignatureModalComponent)
+  private cropCanvasLocal(sourceCanvas: HTMLCanvasElement, alphaThreshold: number = 10): HTMLCanvasElement {
+    try {
+      const w = sourceCanvas.width;
+      const h = sourceCanvas.height;
+      const ctx = sourceCanvas.getContext('2d');
+      if (!ctx) return sourceCanvas;
+
+      const imgData = ctx.getImageData(0, 0, w, h);
+      const data = imgData.data;
+
+      let minX = w, minY = h, maxX = 0, maxY = 0;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const idx = (y * w + x) * 4;
+          const alpha = data[idx + 3];
+          if (alpha > alphaThreshold) {
+            if (x < minX) minX = x;
+            if (y < minY) minY = y;
+            if (x > maxX) maxX = x;
+            if (y > maxY) maxY = y;
+          }
+        }
+      }
+
+      if (maxX < minX || maxY < minY) return sourceCanvas;
+
+      const cropW = maxX - minX + 1;
+      const cropH = maxY - minY + 1;
+      const out = document.createElement('canvas');
+      out.width = cropW;
+      out.height = cropH;
+      const outCtx = out.getContext('2d');
+      if (!outCtx) return sourceCanvas;
+      outCtx.drawImage(sourceCanvas, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
+      return out;
+    } catch (e) {
+      return sourceCanvas;
+    }
+  }
+
+  // Export cropped canvas to dataURL and optionally resize if wider than maxWidth
+  private exportCroppedDataUrlLocal(sourceCanvas: HTMLCanvasElement, type: string = 'image/png', maxWidth: number | null = 1200): string {
+    try {
+      const cropped = this.cropCanvasLocal(sourceCanvas);
+      if (maxWidth && cropped.width > maxWidth) {
+        const scale = maxWidth / cropped.width;
+        const resized = document.createElement('canvas');
+        resized.width = Math.round(cropped.width * scale);
+        resized.height = Math.round(cropped.height * scale);
+        const rctx = resized.getContext('2d');
+        if (rctx) rctx.drawImage(cropped, 0, 0, resized.width, resized.height);
+        return resized.toDataURL(type);
+      }
+      return cropped.toDataURL(type);
+    } catch (e) {
+      try { return sourceCanvas.toDataURL(type); } catch (_) { return ''; }
+    }
   }
 
   private formatDate(dateString: string): string {

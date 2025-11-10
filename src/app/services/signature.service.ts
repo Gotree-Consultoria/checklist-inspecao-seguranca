@@ -19,7 +19,8 @@ export class SimpleSignaturePad {
     this.ctx = canvas.getContext('2d')!;
   this.penColor = opts.penColor || 'black';
   this.backgroundColor = opts.backgroundColor || 'rgba(255,255,255,0)';
-  this.penWidth = opts.penWidth || opts.penWidth === 0 ? opts.penWidth : 1.5;
+  // prefer explicit option, otherwise fallback to a reasonable default (1.0)
+  this.penWidth = (opts && typeof opts.penWidth === 'number') ? opts.penWidth : 1.0;
     // optional callback for diagnostics: (pos, event) => void
     (this as any)._onPointerDownCallback = typeof opts.onPointerDown === 'function' ? opts.onPointerDown : null;
 
@@ -145,13 +146,14 @@ export class SignatureService {
     return {
       backgroundColor: 'rgba(255,255,255,0)',
       penColor: 'black',
-      minWidth: 0.2,
-      maxWidth: 1.0,
+      // Ajustes para traço mais fino e consistente entre implementação nativa e fallback
+      minWidth: 0.6,
+      maxWidth: 1.1,
       throttle: 16,
-      minDistance: 5,
+      minDistance: 2,
       dotSize: 0,
       // penWidth é usado pelo fallback SimpleSignaturePad
-      penWidth: 1.0
+      penWidth: 0.9
     };
   }
 

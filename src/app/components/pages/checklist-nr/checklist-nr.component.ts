@@ -2,6 +2,7 @@ import { Component, inject, ViewChild, ElementRef, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common';
 import { UiService } from '../../../services/ui.service';
 import { ReportService } from '../../../services/report.service';
+import { LegacyService } from '../../../services/legacy.service';
 import { SignatureModalComponent } from '../../shared/signature-modal/signature-modal.component';
 
 @Component({
@@ -15,70 +16,48 @@ export class ChecklistNrComponent {
   private ui = inject(UiService);
   private report = inject(ReportService);
   private host = inject(ElementRef);
+  private legacy = inject(LegacyService);
 
   companies: Array<any> = [];
 
   // Nova estrutura: lista de seções contendo itens
   sections: Array<any> = [
-    {
-      title: 'Higiene e Limpeza (NR 24 - Condições Sanitárias e de Conforto nos Locais de Trabalho)',
-      items: [
+    { title: 'Higiene e Limpeza (NR 24 - Condições Sanitárias e de Conforto nos Locais de Trabalho)', group: 1, items: [
         { key: 'cozinha.higiene.superficies', description: 'Superfícies de trabalho limpas e desinfetadas.', status: '', justification: '' },
         { key: 'cozinha.higiene.utensilios', description: 'Utensílios e equipamentos higienizados.', status: '', justification: '' },
         { key: 'cozinha.higiene.pisos', description: 'Pisos limpos, secos e antiderrapantes.', status: '', justification: '' },
         { key: 'cozinha.higiene.lixeiras', description: 'Lixeiras com tampas e acionamento por pedal, esvaziadas regularmente.', status: '', justification: '' }
-      ]
-    },
-    {
-      title: 'Equipamentos e Máquinas (NR 12)',
-      items: [ { key: 'cozinha.maquinas.operacaoSegura', description: 'Procedimentos para operação segura de equipamentos (fornos, batedeiras, fatiadores).', status: '', justification: '' } ]
-    },
-    {
-      title: 'Ergonomia (NR 17)',
-      items: [
+      ] },
+    { title: 'Equipamentos e Máquinas (NR 12)', group: 1, items: [ { key: 'cozinha.maquinas.operacaoSegura', description: 'Procedimentos para operação segura de equipamentos (fornos, batedeiras, fatiadores).', status: '', justification: '' } ] },
+    { title: 'Ergonomia (NR 17)', group: 1, items: [
         { key: 'cozinha.ergonomia.posturas', description: 'Posturas adequadas ao levantar peso.', status: '', justification: '' },
         { key: 'cozinha.ergonomia.bancadas', description: 'Bancadas e estações de trabalho em altura ergonômica.', status: '', justification: '' }
-      ]
-    },
-    {
-      title: 'Coifas e Exaustores (NR 15 / NR 24)',
-      items: [
+      ] },
+    { title: 'Coifas e Exaustores (NR 15 / NR 24)', group: 1, items: [
         { key: 'cozinha.coifas.funcionamento', description: 'Coifas e exaustores em funcionamento adequado.', status: '', justification: '' },
         { key: 'cozinha.coifas.limpeza', description: 'Limpeza periódica das coifas e dutos de exaustão.', status: '', justification: '' },
         { key: 'cozinha.coifas.manutencao', description: 'Manutenção preventiva dos sistemas de exaustão.', status: '', justification: '' }
-      ]
-    },
-    {
-      title: 'Pisos (NR 24)',
-      items: [
+      ] },
+    { title: 'Pisos (NR 24)', group: 1, items: [
         { key: 'cozinha.pisos.antiderrapante', description: 'Pisos antiderrapantes em todas as áreas de trabalho.', status: '', justification: '' },
         { key: 'cozinha.pisos.conservacao', description: 'Pisos em bom estado de conservação, sem rachaduras ou desníveis.', status: '', justification: '' },
         { key: 'cozinha.pisos.limpezaFacil', description: 'Facilidade de limpeza e higienização dos pisos.', status: '', justification: '' }
-      ]
-    },
-    {
-      title: 'Área de Vivência (NR 18 / NR 24)',
-      items: [
+      ] },
+    { title: 'Área de Vivência (NR 18 / NR 24)', group: 1, items: [
         { key: 'cozinha.areaVivencia.sanitarios', description: 'Instalações sanitárias adequadas e em quantidade suficiente.', status: '', justification: '' },
         { key: 'cozinha.areaVivencia.vestiarios', description: 'Vestiários limpos e organizados.', status: '', justification: '' },
         { key: 'cozinha.areaVivencia.refeitorio', description: 'Refeitórios com condições de higiene e conforto.', status: '', justification: '' },
         { key: 'cozinha.areaVivencia.alojamentos', description: 'Alojamentos em conformidade com a NR 24 (se aplicável).', status: '', justification: '' }
-      ]
-    },
+      ] },
     // Canteiro de Obras (seções e itens)
-    {
-      title: 'Canteiro - Geral',
-      items: [
+    { title: 'Canteiro - Geral', group: 2, items: [
         { key: 'canteiro.isolamento', description: 'Isolamento e sinalização adequados do canteiro de obras.', status: '', justification: '' },
         { key: 'canteiro.organizacao', description: 'Organização e limpeza do local, sem entulhos ou materiais espalhados.', status: '', justification: '' },
         { key: 'canteiro.protecaoAberturas', description: 'Proteção de aberturas no piso e vãos.', status: '', justification: '' },
         { key: 'canteiro.acessoSeguro', description: 'Acesso e circulação de pessoas e materiais seguros.', status: '', justification: '' },
         { key: 'canteiro.sinalizacao', description: 'Sinalização de segurança em bom estado.', status: '', justification: '' }
-      ]
-    },
-    {
-      title: 'Trabalho em Altura (NR 35 / NR 18)',
-      items: [
+      ] },
+    { title: 'Trabalho em Altura (NR 35 / NR 18)', group: 2, items: [
         { key: 'canteiro.trabalhoAltura.arpt', description: 'Análise de Risco (AR) e Permissão de Trabalho (PT) para atividades em altura.', status: '', justification: '' },
         { key: 'canteiro.trabalhoAltura.cinto', description: 'Uso de cinto tipo paraquedista com talabarte duplo.', status: '', justification: '' },
         { key: 'canteiro.trabalhoAltura.andaimes', description: 'Andaimes montados e inspecionados por profissional habilitado.', status: '', justification: '' },
@@ -86,80 +65,74 @@ export class ChecklistNrComponent {
         { key: 'canteiro.trabalhoAltura.plataformas', description: 'Plataformas de trabalho seguras com guarda-corpo e rodapé.', status: '', justification: '' },
         { key: 'canteiro.trabalhoAltura.escadas', description: 'Escadas em bom estado, fixas e com corrimão.', status: '', justification: '' },
         { key: 'canteiro.trabalhoAltura.linhasVida', description: 'Linhas de vida instaladas e certificadas.', status: '', justification: '' }
-      ]
-    },
-    {
-      title: 'Canteiro - Máquinas e Equipamentos',
-      items: [
+      ] },
+    { title: 'Canteiro - Máquinas e Equipamentos', group: 2, items: [
         { key: 'canteiro.maquinas.protecao', description: 'Máquinas com proteções e dispositivos de segurança.', status: '', justification: '' },
         { key: 'canteiro.maquinas.operadoresTreinados', description: 'Operadores treinados e autorizados.', status: '', justification: '' },
         { key: 'canteiro.maquinas.inspecaoDiaria', description: 'Inspeção diária de equipamentos.', status: '', justification: '' },
         { key: 'canteiro.maquinas.fiaçãoProtegida', description: 'Fiação elétrica protegida e aterrada (NR 10).', status: '', justification: '' }
-      ]
-    },
-    {
-      title: 'Canteiro - Movimentação e Armazenagem',
-      items: [
+      ] },
+    { title: 'Canteiro - Movimentação e Armazenagem', group: 2, items: [
         { key: 'canteiro.movimentacao.cargas', description: 'Cargas armazenadas de forma segura e estável.', status: '', justification: '' },
         { key: 'canteiro.movimentacao.equipamentos', description: 'Equipamentos de movimentação com manutenção em dia e operadores habilitados.', status: '', justification: '' },
         { key: 'canteiro.movimentacao.corredores', description: 'Corredores de circulação desobstruídos e sinalizados.', status: '', justification: '' }
-      ]
-    },
-    {
-      title: 'Canteiro - Escavações e Fundações (NR 18)',
-      items: [
+      ] },
+    { title: 'Canteiro - Escavações e Fundações (NR 18)', group: 2, items: [
         { key: 'canteiro.escavacoes.taludes', description: 'Taludes escorados ou em ângulo seguro conforme projeto.', status: '', justification: '' },
         { key: 'canteiro.escavacoes.sinalizacao', description: 'Sinalização e isolamento da área de escavação.', status: '', justification: '' },
         { key: 'canteiro.escavacoes.acessoSeguro', description: 'Acesso seguro à escavação.', status: '', justification: '' }
-      ]
-    },
-    {
-      title: 'Canteiro - Instalações Elétricas (NR 10 / NR 18)',
-      items: [
+      ] },
+    { title: 'Canteiro - Instalações Elétricas (NR 10 / NR 18)', group: 2, items: [
         { key: 'canteiro.eletricidade.provisoria', description: 'Instalações elétricas provisórias e definitivas em conformidade.', status: '', justification: '' },
         { key: 'canteiro.eletricidade.quadros', description: 'Quadros elétricos aterrados e com proteção contra choques.', status: '', justification: '' }
-      ]
-    },
-    {
-      title: 'Canteiro - Proteção Contra Incêndios (NR 23)',
-      items: [
+      ] },
+    { title: 'Canteiro - Proteção Contra Incêndios (NR 23)', group: 2, items: [
         { key: 'canteiro.incendio.extintores', description: 'Extintores de incêndio em locais visíveis e dentro da validade.', status: '', justification: '' },
         { key: 'canteiro.incendio.saidas', description: 'Saídas de emergência sinalizadas e desimpedidas.', status: '', justification: '' }
-      ]
-    },
-    {
-      title: 'Canteiro - Primeiros Socorros (NR 07)',
-      items: [ { key: 'canteiro.primeirosSocorros.kit', description: 'Kit de primeiros socorros acessível e completo.', status: '', justification: '' } ]
-    },
+      ] },
+    { title: 'Canteiro - Primeiros Socorros (NR 07)', group: 2, items: [ { key: 'canteiro.primeirosSocorros.kit', description: 'Kit de primeiros socorros acessível e completo.', status: '', justification: '' } ] },
     // Fábrica
-    {
-      title: 'Gerenciamento de Riscos (NR 01)',
-      items: [
+    { title: 'Gerenciamento de Riscos (NR 01)', group: 3, items: [
         { key: 'fabrica.pgr', description: 'Elaboração e implementação do Programa de Gerenciamento de Riscos (PGR).', status: '', justification: '' },
         { key: 'fabrica.apr', description: 'Análise Preliminar de Risco (APR) para atividades específicas.', status: '', justification: '' }
-      ]
-    },
-    {
-      title: 'Máquinas e Equipamentos (NR 12) - Fábrica',
-      items: [
+      ] },
+    { title: 'Máquinas e Equipamentos (NR 12) - Fábrica', group: 3, items: [
         { key: 'fabrica.maquinas.protecao', description: 'Proteções de máquinas em perfeito estado.', status: '', justification: '' },
         { key: 'fabrica.maquinas.paradaEmergencia', description: 'Dispositivos de parada de emergência acessíveis e funcionando.', status: '', justification: '' },
         { key: 'fabrica.maquinas.loto', description: 'Procedimentos de Bloqueio e Etiquetagem (LOTO) para manutenção.', status: '', justification: '' }
-      ]
-    },
-    {
-      title: 'Movimentação de Cargas (NR 11) - Fábrica',
-      items: [ { key: 'fabrica.movimentacao.equipamentos', description: 'Empilhadeiras e equipamentos com manutenção e operadores habilitados.', status: '', justification: '' } ]
-    },
-    {
-      title: 'Produtos Químicos (NR 20 / NR 26)',
-      items: [
+      ] },
+    { title: 'Movimentação de Cargas (NR 11) - Fábrica', group: 3, items: [ { key: 'fabrica.movimentacao.equipamentos', description: 'Empilhadeiras e equipamentos com manutenção e operadores habilitados.', status: '', justification: '' } ] },
+    { title: 'Produtos Químicos (NR 20 / NR 26)', group: 3, items: [
         { key: 'fabrica.quimicos.armazenamento', description: 'Armazenamento correto e seguro de produtos químicos.', status: '', justification: '' },
         { key: 'fabrica.quimicos.fispq', description: 'FISPQ acessíveis e compreensíveis.', status: '', justification: '' },
         { key: 'fabrica.quimicos.epi', description: 'Uso de EPIs específicos para manuseio de químicos.', status: '', justification: '' }
-      ]
-    }
+      ] }
   ];
+
+  // estado de colapso das seções principais
+  // sections[i].collapsed === true => itens ocultos
+
+  // estrutura agrupada para renderização (grupos 1,2,3)
+  groupedSections: Array<any> = [];
+
+  private buildGroupedSections(): void {
+    try {
+      const groups = [
+        { id: 1, title: '1. Cozinha / Padaria' },
+        { id: 2, title: '2. Canteiro de Obras' },
+        { id: 3, title: '3. Fábrica' }
+      ];
+
+      // preservar índice original para operações sobre items
+      const withIndex = this.sections.map((s: any, idx: number) => ({ ...s, __index: idx }));
+
+      this.groupedSections = groups.map(g => ({
+        id: g.id,
+        title: g.title,
+        sections: withIndex.filter((s: any) => s.group === g.id)
+      }));
+    } catch (e) { console.warn('buildGroupedSections', e); }
+  }
 
   saveChecklist(e?: Event) {
     if (e) e.preventDefault();
@@ -169,11 +142,18 @@ export class ChecklistNrComponent {
       const data: any = {};
       data.title = (document.getElementById('reportTitleNR') as HTMLInputElement)?.value || 'Checklist NR';
       data.date = (document.getElementById('dataInspecaoNR') as HTMLInputElement)?.value || new Date().toISOString().substring(0,10);
-      data.notes = (document.getElementById('anotacoesNR') as HTMLTextAreaElement)?.value || '';
+  data.notes = (document.getElementById('anotacoesNR') as HTMLTextAreaElement)?.value || '';
+  // Observações gerais (opcional)
+  data.observations = (document.getElementById('observationsNR') as HTMLTextAreaElement)?.value || null;
       // mapear seções/itens
       data.sections = this.sections.map((s: any) => ({
         title: s.title,
-        items: s.items.map((it: any) => ({ description: it.description, status: it.status || null, justification: it.justification || null }))
+        items: s.items.map((it: any) => {
+          const validStatuses = ['CONFORME','NAO_CONFORME','NAO_APLICA'];
+          const status = validStatuses.includes(it.status) ? it.status : null;
+          const justification = status === 'NAO_APLICA' ? (it.justification && String(it.justification).trim() !== '' ? it.justification : null) : null;
+          return { description: it.description, status, justification };
+        })
       }));
       this.pendingPayload = data;
       this.saveChecklistLocally(data);
@@ -210,6 +190,93 @@ export class ChecklistNrComponent {
         selectEl.addEventListener('change', (e: any) => this.onCompanyChangeNR(e));
       }
     } catch (e) { /* ignore */ }
+
+    // carregar dados do emissor (usuário logado) nos campos de responsável
+    try {
+      this.loadUserResponsibleData();
+    } catch (e) { /* ignore */ }
+
+    // garantir propriedade collapsed em todas as seções
+    for (let i = 0; i < this.sections.length; i++) {
+      if (this.sections[i] && typeof this.sections[i].collapsed === 'undefined') {
+        this.sections[i].collapsed = false;
+      }
+    }
+
+    // construir estrutura agrupada para template
+    this.buildGroupedSections();
+  }
+
+  isGroupOpen(groupId: number): boolean {
+    return this.sections.some(s => s.group === groupId && !s.collapsed);
+  }
+
+  toggleGroup(groupId: number, event?: Event | KeyboardEvent) {
+    try {
+      // determinar estado atual (usar primeiro match)
+      const first = this.sections.find(s => s.group === groupId);
+      if (!first) return;
+      const newState = !first.collapsed;
+      this.sections.forEach(s => { if (s.group === groupId) s.collapsed = newState; });
+      // rebuild groupedSections so template reflects indices
+      this.buildGroupedSections();
+      // scroll header into view
+      try {
+        if ((event as KeyboardEvent)?.key === ' ' || (event as KeyboardEvent)?.code === 'Space') (event as KeyboardEvent).preventDefault();
+        const el = event && (event as any).currentTarget ? (event as any).currentTarget as HTMLElement : null;
+        if (el && typeof el.scrollIntoView === 'function') el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } catch (_) {}
+    } catch (e) { console.warn('toggleGroup', e); }
+  }
+
+  toggleSection(sectionIdx: number, event?: Event | KeyboardEvent) {
+    try {
+      const sec = this.sections[sectionIdx];
+      if (!sec) return;
+      // if called from keyboard space, prevent default page scroll
+      try { if ((event as KeyboardEvent)?.key === ' ' || (event as KeyboardEvent)?.code === 'Space') (event as KeyboardEvent).preventDefault(); } catch (_) {}
+      sec.collapsed = !sec.collapsed;
+      // rebuild grouped view so template reflects new collapsed state
+      try { this.buildGroupedSections(); } catch(_) {}
+      // scroll into view the clicked header element if available
+      try {
+        const el = event && (event as any).currentTarget ? (event as any).currentTarget as HTMLElement : null;
+        if (el && typeof el.scrollIntoView === 'function') {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      } catch (_) {}
+    } catch (e) { console.warn('toggleSection', e); }
+  }
+
+  private async loadUserResponsibleData() {
+    try {
+      if (!this.legacy || typeof (this.legacy as any).fetchUserProfile !== 'function') return;
+      const userProfile = await (this.legacy as any).fetchUserProfile();
+      if (!userProfile) return;
+
+      const hostEl = this.host?.nativeElement as HTMLElement;
+      const responsavelInput = hostEl.querySelector('#responsavelNR') as HTMLInputElement;
+      if (responsavelInput && userProfile.name) responsavelInput.value = userProfile.name;
+
+      const siglaInput = hostEl.querySelector('#responsavelSiglaNR') as HTMLInputElement;
+      if (siglaInput) {
+        const sigla = userProfile.councilAcronym || userProfile.siglaConselhoClasse || userProfile.conselhoSigla || userProfile.sigla || userProfile.conselho || userProfile.acronym || '';
+        if (sigla) siglaInput.value = sigla;
+      }
+
+      const registroInput = hostEl.querySelector('#responsavelRegistroNR') as HTMLInputElement;
+      if (registroInput) {
+        // múltiplas possibilidades de nomes de campo vindos do backend
+  const registro = userProfile.councilNumber || userProfile.registration || userProfile.registro || userProfile.registrationNumber || userProfile.crm || userProfile.crea || userProfile.conselhoClasse || userProfile.registration_id || userProfile.registrationId || userProfile.registroConselho || userProfile.registro_numero || userProfile.numeroRegistro || userProfile.registroProfissional || userProfile.registrationNumberConselho || '';
+        if (registro !== undefined && registro !== null && String(registro).trim() !== '') registroInput.value = String(registro);
+      }
+
+      const especialidadeInput = hostEl.querySelector('#responsavelEspecialidadeNR') as HTMLInputElement;
+      if (especialidadeInput) {
+        const especialidade = userProfile.specialty || userProfile.especialidade || userProfile.profession || userProfile.cargo || '';
+        if (especialidade) especialidadeInput.value = especialidade;
+      }
+    } catch (err) { console.warn('[ChecklistNR] loadUserResponsibleData error', err); }
   }
   
   saveChecklistLocally(payload: any) {
@@ -226,31 +293,45 @@ export class ChecklistNrComponent {
   
   openSignatureModal(e?: Event) {
     if (e) e.preventDefault();
-    // coletar cabeçalho e mapear a estrutura de seções/itens conforme DTO esperado
+    // coletar cabeçalho e mapear a estrutura no formato esperado pelo backend (SaveNrsReportRequestDTO)
     const data: any = {};
-    data.title = (document.getElementById('reportTitleNR') as HTMLInputElement)?.value || 'Checklist NR';
-    data.date = (document.getElementById('dataInspecaoNR') as HTMLInputElement)?.value || new Date().toISOString().substring(0,10);
-    data.notes = (document.getElementById('anotacoesNR') as HTMLTextAreaElement)?.value || '';
-    // header fields
-    data.company = (document.getElementById('empresaClienteNR') as HTMLSelectElement)?.value || '';
-    data.cnpj = (document.getElementById('empresaCnpjNR') as HTMLInputElement)?.value || '';
-    data.unit = (document.getElementById('empresaUnidadeNR') as HTMLSelectElement)?.value || '';
-    data.sector = (document.getElementById('empresaSetorNR') as HTMLSelectElement)?.value || '';
-    data.responsible = (document.getElementById('responsavelNR') as HTMLInputElement)?.value || '';
-    data.responsibleSigla = (document.getElementById('responsavelSiglaNR') as HTMLInputElement)?.value || '';
-    data.responsibleRegistro = (document.getElementById('responsavelRegistroNR') as HTMLInputElement)?.value || '';
-    data.location = (document.getElementById('localInspecaoNR') as HTMLInputElement)?.value || '';
+    const companyVal = (document.getElementById('empresaClienteNR') as HTMLSelectElement)?.value || '';
+    const unitVal = (document.getElementById('empresaUnidadeNR') as HTMLSelectElement)?.value || '';
+    const sectorVal = (document.getElementById('empresaSetorNR') as HTMLSelectElement)?.value || '';
 
-    // mapear para NrsSectionDTO-like
-    data.sections = this.sections.map((s: any) => ({
-      title: s.title,
-      items: s.items.map((it: any) => ({
-        key: it.key || null,
-        description: it.description,
-        status: it.status || null,
-        justification: it.justification || null
-      }))
-    }));
+    const title = (document.getElementById('reportTitleNR') as HTMLInputElement)?.value || 'Checklist NR';
+    const date = (document.getElementById('dataInspecaoNR') as HTMLInputElement)?.value || new Date().toISOString().substring(0,10);
+    const notes = (document.getElementById('anotacoesNR') as HTMLTextAreaElement)?.value || '';
+    const observations = (document.getElementById('observationsNR') as HTMLTextAreaElement)?.value || '';
+    const location = (document.getElementById('localInspecaoNR') as HTMLInputElement)?.value || '';
+    const responsavelSigla = (document.getElementById('responsavelSiglaNR') as HTMLInputElement)?.value || '';
+    const responsavelRegistro = (document.getElementById('responsavelRegistroNR') as HTMLInputElement)?.value || '';
+
+    data.companyId = companyVal ? parseInt(String(companyVal)) : null;
+    data.unitId = unitVal ? parseInt(String(unitVal)) : null;
+    data.sectorId = sectorVal ? parseInt(String(sectorVal)) : null;
+    data.title = title;
+    data.inspectionDate = date; // YYYY-MM-DD
+    data.local = location;
+    data.notes = notes;
+    data.observations = observations || null;
+    data.responsavelSigla = responsavelSigla;
+    data.responsavelRegistro = responsavelRegistro;
+    // default: if signatures will be captured, set to true later in final payload
+    data.useDigitalSignature = false;
+
+    // mapear seções para nrsSections esperado pelo backend
+    // Para envio ao backend: incluir somente itens marcados (status != null).
+    data.nrsSections = this.sections.map((s: any) => {
+      const validStatuses = ['CONFORME','NAO_CONFORME','NAO_APLICA'];
+      const items = (s.items || []).map((it: any) => {
+        const status = validStatuses.includes(it.status) ? it.status : null;
+        const justification = status === 'NAO_APLICA' ? (it.justification && String(it.justification).trim() !== '' ? it.justification : null) : null;
+        return { description: it.description, status, justification };
+      }).filter((it: any) => it.status !== null); // remover itens não marcados
+
+      return { title: s.title, items };
+    }).filter((sec: any) => Array.isArray(sec.items) && sec.items.length > 0); // remover seções sem itens marcados
 
     this.pendingPayload = data;
     // open shared signature modal
@@ -263,10 +344,33 @@ export class ChecklistNrComponent {
   }
   
   onSignaturesConfirmed(signs: any) {
-    // combinar assinaturas e enviar ao backend via ReportService no endpoint /inspection-reports/nrs
-    const finalPayload = Object.assign({}, this.pendingPayload || {});
-    finalPayload.signatures = signs;
-    // enviar
+    // montar payload final no formato do backend e enviar
+    const base = Object.assign({}, this.pendingPayload || {});
+    const finalPayload: any = {
+      companyId: base.companyId || null,
+      unitId: base.unitId || null,
+      sectorId: base.sectorId || null,
+      title: base.title || '',
+      inspectionDate: base.inspectionDate || null,
+      local: base.local || '',
+      notes: base.notes || null,
+      observations: base.observations || null,
+      responsavelSigla: base.responsavelSigla || '',
+      responsavelRegistro: base.responsavelRegistro || '',
+      useDigitalSignature: !!(signs && (signs.techSignature || signs.clientSignature)),
+      clientSignature: signs && signs.clientSignature ? {
+        signerName: signs.clientName || null,
+        imageBase64: signs.clientSignature,
+        latitude: signs.geolocation?.latitude ?? null,
+        longitude: signs.geolocation?.longitude ?? null
+      } : null,
+      technicianSignature: signs && signs.techSignature ? {
+        signerName: signs.techName || null,
+        imageBase64: signs.techSignature
+      } : null,
+      nrsSections: base.nrsSections || []
+    };
+
     (async () => {
       try {
         const resp = await this.report.postNrsReport(finalPayload);
