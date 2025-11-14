@@ -1,8 +1,9 @@
 import { Component, OnInit, inject, ElementRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgForOf, NgIf } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { LegacyService } from '../../../services/legacy.service';
+import { formatCNPJ } from '../../../utils/formatters';
 import { UiService } from '../../../services/ui.service';
 import { ReportService } from '../../../services/report.service';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -10,7 +11,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 @Component({
   standalone: true,
   selector: 'app-aep',
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, NgForOf, NgIf],
   templateUrl: './aep.component.html',
   styleUrls: ['./aep.component.css']
 })
@@ -283,8 +284,8 @@ export class AepComponent implements OnInit {
   }
 
   fillCompany(sel: any){
-    const cnpj = sel.cnpj || sel.CNPJ || sel.companyCnpj || '';
-    this.form.patchValue({ cnpj });
+  const cnpj = sel.cnpj || sel.CNPJ || sel.companyCnpj || '';
+  this.form.patchValue({ cnpj: formatCNPJ(cnpj) });
     this.units = Array.isArray(sel.units) ? sel.units : (sel.unidades || []);
     this.sectors = Array.isArray(sel.sectors) ? sel.sectors : (sel.setores || []);
     if (this.units.length) this.form.get('unit')?.enable(); else this.form.get('unit')?.disable();

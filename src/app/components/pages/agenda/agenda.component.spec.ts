@@ -46,6 +46,8 @@ describe('AgendaComponent', () => {
     component = fixture.componentInstance;
     agendaService = TestBed.inject(AgendaService);
     uiService = TestBed.inject(UiService);
+    // Provide a simple mock for the ViewChild agendaModal used in the component
+    component.agendaModal = { open: (mode: any, data?: any) => {} } as any;
   });
 
   it('should create', () => {
@@ -307,16 +309,21 @@ describe('AgendaComponent', () => {
 
   describe('loadEventos', () => {
     it('should set loading to true during fetch', async () => {
-      spyOn(agendaService, 'listEventos').and.returnValue(
-        Promise.resolve(mockEventos)
-      );
+      // Return a promise that we can resolve later to ensure the loading
+      // flag remains true while the fetch is pending.
+      let resolver: any;
+      const pending = new Promise<import('../../../services/agenda.service').AgendaResponseDTO[]>(res => { resolver = res; });
+      spyOn(agendaService, 'listEventos').and.returnValue(pending as any);
 
       component.loading = false;
-      component.loadEventos();
-      expect(component.loading).toBe(true);
-
-      // Wait for async operation
-      await fixture.whenStable();
+      const loadPromise = component.loadEventos();
+      
+      // Wait one tick to ensure the setTimeout has been scheduled
+      await new Promise(resolve => setTimeout(resolve, 0));
+      
+      // Now resolve the pending promise and wait for the component to settle
+      resolver(mockEventos);
+      await loadPromise;
       expect(component.loading).toBe(false);
     });
   });

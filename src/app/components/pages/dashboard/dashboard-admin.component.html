@@ -1,0 +1,123 @@
+<section class="dashboard-admin">
+  <header class="admin-header">
+    <h1 class="page-title">Dashboard do Administrador</h1>
+    <div class="admin-header-actions">
+      <button class="small-btn" type="button" (click)="loadAdminDashboard()">⟳ Atualizar</button>
+      <button class="small-btn" type="button" (click)="goTo('/reports')">⤓ Exportar</button>
+  </div>
+  </header>
+
+  <div class="admin-grid" aria-live="polite">
+      <!-- Left column: Title + Shortcuts -->
+      <div class="card action-card">
+        <div class="card-header"><h3>Atalhos Administrativos</h3></div>
+        <div class="actions-list">
+          <button class="btn-primary" type="button" (click)="goTo('/users')"><span class="btn-icon">👥</span><span class="btn-text">Gerenciar Usuários</span></button>
+          <button class="btn-primary" type="button" (click)="goTo('/companies')"><span class="btn-icon">🏢</span><span class="btn-text">Gerenciar Empresas</span></button>
+          <button class="btn-primary" type="button" (click)="goTo('/documents')"><span class="btn-icon">📄</span><span class="btn-text">Ver Todos os Documentos</span></button>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="card kpi-card">
+        <div class="card-header"><h3>Indicadores Gerais</h3></div>
+        <div class="kpi-grid mt-16">
+          <div class="kpi-item">
+            <div class="kpi-value">{{ adminStats?.usersActive || 0 }}</div>
+            <div class="kpi-label">Usuários Ativos</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-value">{{ adminStats?.companies || 0 }}</div>
+            <div class="kpi-label">Empresas Clientes</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-value">{{ adminStats?.totalDocuments || 0 }}</div>
+            <div class="kpi-label">Total de Documentos</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity (right column on desktop) -->
+      <div class="card recent-card">
+        <div class="card-header"><h3>Atividade Recente</h3></div>
+        <div class="recent-table mt-16">
+          <div class="recent-row header">
+            <div class="col type">Tipo</div>
+            <div class="col title">Documento</div>
+            <div class="col company">Empresa</div>
+            <div class="col company">Usuário</div>
+          </div>
+          <div *ngIf="recentAdminItems && recentAdminItems.length; else noRecentAdmin">
+            <div class="recent-row" *ngFor="let item of recentAdminItems">
+              <div class="col type">{{ item.type || '-' }}</div>
+              <div class="col title">{{ item.title }}</div>
+              <div class="col company">{{ item.company || '-' }}</div>
+              <div class="col company">{{ item.user || '-' }}</div>
+            </div>
+          </div>
+          <ng-template #noRecentAdmin>
+            <div class="muted">Nenhuma atividade recente encontrada.</div>
+          </ng-template>
+        </div>
+      </div>
+
+      <!-- Documents by user (wide) -->
+      <div class="card chart-card">
+        <div class="card-header"><h3>Documentos por Usuário</h3></div>
+        
+        <div class="doc-table-wrap mt-12">
+          <div class="chart-filters">
+            <label class="filter-label">Filtrar por Usuário:
+              <select [(ngModel)]="adminDocsFilterUser" (change)="loadAdminDocuments()">
+                <option value="all">Todos</option>
+                <option *ngFor="let u of adminDocsUsers" [value]="u.id">{{ u.name }}</option>
+              </select>
+            </label>
+            <label class="filter-label">Filtrar por Tipo:
+              <select [(ngModel)]="adminDocsFilterType" (change)="loadAdminDocuments()">
+                <option value="all">Todos</option>
+                <option value="VISITA">Visita</option>
+                <option value="AEP">AEP</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="doc-table">
+            <div class="doc-row header">
+              <div class="col name">Nome</div>
+              <div class="col doc">Documento</div>
+              <div class="col qty">Quantidade</div>
+            </div>
+
+            <div *ngIf="adminDocs && adminDocs.length; else noAdminDocs">
+              <div class="doc-row" *ngFor="let d of adminDocs">
+                <div class="col name">{{ d.userName || d.name || ('User ' + (d.userId||'')) }}</div>
+                <div class="col doc">{{ d.lastDocumentTitle || d.documentTitle || d.title || '-' }}</div>
+                <div class="col qty" *ngIf="(d.visits || d.aeps)">{{ (d.visits||0) + (d.aeps||0) }}</div>
+              </div>
+            </div>
+
+            <ng-template #noAdminDocs>
+              <div class="muted">Nenhum dado de documentos disponível.</div>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+
+      <!-- Team Agenda (wide) -->
+      <div class="card agenda-card">
+        <div class="card-header"><h3>Agenda da Equipe</h3></div>
+        <div class="agenda-list mt-16">
+          <div *ngIf="adminAgenda && adminAgenda.length; else noTeamAgenda">
+            <div class="agenda-item" *ngFor="let ev of adminAgenda">
+              <div class="agenda-date"><div class="dt-day">{{ ev.date.slice(8,10) }}</div><div class="dt-month">{{ ev.date.slice(5,7) }}</div></div>
+              <div class="agenda-body"><div class="agenda-title">{{ ev.title }}</div><div class="agenda-meta">{{ ev.date.slice(0,10) }} • <strong>{{ ev.responsibleName || '-' }}</strong></div></div>
+            </div>
+          </div>
+          <ng-template #noTeamAgenda>
+            <div class="muted">Nenhum compromisso da equipe encontrado.</div>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+  </section>

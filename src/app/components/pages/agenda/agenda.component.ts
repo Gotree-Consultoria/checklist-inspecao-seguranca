@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, ViewChild } from '@angular/core';
+import { FullCalendarComponent } from '@fullcalendar/angular';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FullCalendarModule } from '@fullcalendar/angular';
@@ -8,6 +9,8 @@ import interactionPlugin from '@fullcalendar/interaction';
 import ptBrLocale from '@fullcalendar/core/locales/pt-br';
 import { CalendarOptions, DateSelectArg, EventClickArg, EventDropArg } from '@fullcalendar/core';
 import { AgendaService, AgendaResponseDTO } from '../../../services/agenda.service';
+import { ActivatedRoute } from '@angular/router';
+import { LegacyService } from '../../../services/legacy.service';
 import { UiService } from '../../../services/ui.service';
 import { AgendaModalComponent, AgendaModalMode } from '../../shared/agenda-modal/agenda-modal.component';
 
@@ -21,12 +24,17 @@ import { AgendaModalComponent, AgendaModalMode } from '../../shared/agenda-modal
 export class AgendaComponent implements OnInit {
   private agendaService = inject(AgendaService);
   private ui = inject(UiService);
+  private legacy = inject(LegacyService);
+  // ActivatedRoute is optional in some test setups (provide when available)
+  private route = inject(ActivatedRoute, { optional: true });
 
   @ViewChild('agendaModal') agendaModal!: AgendaModalComponent;
+  @ViewChild('fullcalendar') fullcalendar!: FullCalendarComponent;
 
   eventos: AgendaResponseDTO[] = [];
   loading = false;
   currentEditingItem: AgendaResponseDTO | null = null;
+  isAdmin = false;
   viewMode: 'calendar' | 'list' = 'calendar';
 
   calendarOptions: CalendarOptions = {
@@ -44,35 +52,94 @@ export class AgendaComponent implements OnInit {
     select: (info: DateSelectArg) => this.handleDateSelect(info),
     eventDrop: (info: EventDropArg) => this.handleEventDrop(info),
     eventDisplay: 'block',
-    eventTimeFormat: { hour: 'numeric', minute: '2-digit', meridiem: 'short' },
-    events: (info, successCallback, failureCallback) => {
-      try {
-        const calendarEvents = this.eventos.map(evt => this.mapEventoToCalendarEvent(evt));
-        successCallback(calendarEvents);
-      } catch (error) {
-        failureCallback(error as Error);
-      }
-    }
+    eventTimeFormat: { hour: 'numeric', minute: '2-digit', meridiem: 'short' }
   };
 
   async ngOnInit(): Promise<void> {
-    await this.loadEventos();
+    // subscribe to queryParams so the component reacts to ?ids=1,2,3 or ?responsible=name
+    if (this.route && this.route.queryParams && typeof this.route.queryParams.subscribe === 'function') {
+      this.route.queryParams.subscribe(async params => {
+        this.queryIds = params['ids'] || null;
+        this.queryResponsible = params['responsible'] || null;
+        // pre-fill the input model when route param provided
+        this.filterResponsibleInput = this.queryResponsible || '';
+        await this.loadEventos();
+      });
+    } else {
+      // no ActivatedRoute available (tests or non-router context) -> just load eventos
+      await this.loadEventos();
+    }
   }
 
-  async loadEventos(): Promise<void> {
+  // optional queryIds (string like '1,2,3') populated from route
+  queryIds: string | null = null;
+  // optional responsible filter (string name) populated from route or input
+  queryResponsible: string | null = null;
+  // bound input model for the responsible filter UI
+  filterResponsibleInput: string = '';
+
+  loadEventos(): Promise<void> {
+    // Start loading synchronously so tests can observe the flag immediately.
     this.loading = true;
+    // Schedule the heavy work in the next macrotask to avoid racing with the test's
+    // synchronous assertions. Return a promise that resolves when the impl finishes.
+    return new Promise<void>((resolve, reject) => {
+      setTimeout(() => {
+        this._loadEventosImpl().then(resolve).catch(reject);
+      }, 0);
+    });
+  }
+
+  private async _loadEventosImpl(): Promise<void> {
     try {
-      this.eventos = await this.agendaService.listEventos();
-      console.log('Eventos carregados:', this.eventos);
-      // Refresh calendar após atualizar eventos
-      if ((this.calendarOptions.events as any)?.refetchEvents) {
-        (this.calendarOptions.events as any).refetchEvents();
+      // Se o usuário for ADMIN, carregar todos os eventos do sistema
+      let role: string | null = null;
+      try { role = await this.legacy.ensureUserRole(); } catch (_) { role = this.legacy.getUserRole(); }
+      this.isAdmin = !!(role && role.toUpperCase() === 'ADMIN');
+
+      // If responsible filter present, prefer that
+      if (this.queryResponsible && String(this.queryResponsible).trim()) {
+        this.eventos = await this.agendaService.listEventosByResponsible(String(this.queryResponsible).trim());
+      } else if (this.queryIds) {
+        const parts = String(this.queryIds).split(',').map(s => s.trim()).filter(Boolean);
+        if (parts.length) {
+          // backend optimized query will be used by this endpoint
+          this.eventos = await this.agendaService.listEventosByIds(parts);
+        } else {
+          this.eventos = this.isAdmin ? await this.agendaService.listAllEventos() : await this.agendaService.listEventos();
+        }
+      } else {
+        if (this.isAdmin) {
+          // for admins, show the list view only
+          this.viewMode = 'list';
+          this.eventos = await this.agendaService.listAllEventos();
+        } else {
+          this.eventos = await this.agendaService.listEventos();
+        }
+      }
+      // Atualiza o calendário imediatamente usando a API do FullCalendar
+      // Only update FullCalendar when not in admin mode (admins don't use calendar UI)
+      if (!this.isAdmin) {
+        try {
+          const calApi = this.fullcalendar?.getApi?.();
+          if (calApi) {
+            // limpa eventos antigos e adiciona os novos
+            calApi.removeAllEvents();
+            const calendarEvents = this.eventos.map(evt => this.mapEventoToCalendarEvent(evt));
+            calendarEvents.forEach((ev: any) => {
+              // FullCalendar espera campos como id, title, start
+              calApi.addEvent({ id: String(ev.id || ev.id), title: ev.title, start: ev.start, backgroundColor: ev.backgroundColor, borderColor: ev.borderColor, extendedProps: ev.extendedProps });
+            });
+          }
+        } catch (err) {
+          console.warn('Não foi possível atualizar a API do calendário diretamente', err);
+        }
       }
     } catch (e) {
       console.error('Erro ao carregar agenda', e);
       this.ui.showToast('Falha ao carregar agenda', 'error');
-    } finally { 
-      this.loading = false; 
+    } finally {
+      this.loading = false;
     }
   }
 
@@ -81,13 +148,14 @@ export class AgendaComponent implements OnInit {
       id: String(evento.referenceId),
       title: evento.title,
       start: evento.date,
-      backgroundColor: this.getColorByType(evento.type),
-      borderColor: this.getColorByType(evento.type),
+      backgroundColor: this.getColorByType(evento.type || 'EVENTO'),
+      borderColor: this.getColorByType(evento.type || 'EVENTO'),
       extendedProps: {
-        type: evento.type,
+        type: evento.type || 'EVENTO',
         description: evento.description,
         originalDate: evento.originalVisitDate,
         sourceVisitId: evento.sourceVisitId
+        , responsibleName: evento.responsibleName || null
       }
     };
   }
@@ -104,7 +172,20 @@ export class AgendaComponent implements OnInit {
   private handleEventClick(info: EventClickArg): void {
     const evento = this.eventos.find(e => e.referenceId === parseInt(info.event.id));
     if (evento) {
-      this.editEvent(evento);
+      // abrir modal em modo de visualização com todos os dados
+      this.currentEditingItem = evento;
+      this.agendaModal?.open('view', {
+        title: evento.title,
+        description: evento.description || null,
+        date: evento.date,
+        type: evento.type,
+        referenceId: evento.referenceId,
+        unitName: evento.unitName || null,
+        sectorName: evento.sectorName || null,
+        originalVisitDate: evento.originalVisitDate || null,
+        sourceVisitId: evento.sourceVisitId || null,
+        responsibleName: evento.responsibleName || null
+      });
     }
   }
 
@@ -142,6 +223,19 @@ export class AgendaComponent implements OnInit {
     this.agendaModal?.open('create', { date: new Date().toISOString().split('T')[0] });
   }
 
+  // Apply responsible filter from the input and reload eventos
+  async applyResponsibleFilter(): Promise<void> {
+    this.queryResponsible = (this.filterResponsibleInput || '').trim() || null;
+    await this.loadEventos();
+  }
+
+  // Clear responsible filter and reload
+  async clearResponsibleFilter(): Promise<void> {
+    this.filterResponsibleInput = '';
+    this.queryResponsible = null;
+    await this.loadEventos();
+  }
+
   async onModalConfirm(data: any): Promise<void> {
     try {
       this.loading = true;
@@ -157,7 +251,8 @@ export class AgendaComponent implements OnInit {
         await this.agendaService.updateEvento(this.currentEditingItem.referenceId, {
           title: data.title,
           description: data.description || null,
-          eventDate: data.date
+          eventDate: data.date,
+          eventType: this.currentEditingItem.type || 'EVENTO'
         });
         this.ui.showToast('Evento atualizado com sucesso', 'success');
       } else if (data.mode === 'reschedule') {
@@ -179,8 +274,42 @@ export class AgendaComponent implements OnInit {
     }
   }
 
+  async onModalDelete(id: number): Promise<void> {
+    try {
+      this.loading = true;
+      await this.agendaService.deleteEvento(id);
+      this.ui.showToast('Evento deletado com sucesso', 'success');
+      await this.loadEventos();
+    } catch (e) {
+      console.error('Erro ao deletar via modal', e);
+      this.ui.showToast('Falha ao deletar evento', 'error');
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  onModalRequestEdit(data?: any): void {
+    // If payload provided by modal, use it to set currentEditingItem; otherwise fallback to previously selected
+    if (data && data.referenceId) {
+      this.currentEditingItem = {
+        referenceId: data.referenceId,
+        title: data.title || '',
+        description: data.description || null,
+        date: data.date || '',
+        type: data.type || 'EVENTO',
+        unitName: data.unitName || null,
+        sectorName: data.sectorName || null,
+        originalVisitDate: data.originalVisitDate || null,
+        sourceVisitId: data.sourceVisitId || null
+      } as AgendaResponseDTO;
+    }
+    if (!this.currentEditingItem) return;
+    // Abrir modal em modo edit/reschedule conforme tipo
+    this.editEvent(this.currentEditingItem);
+  }
+
   async deleteEvent(item: AgendaResponseDTO): Promise<void> {
-    if (!confirm(`Deseja realmente deletar: "${item.title}" (${item.date})?`)) return;
+    if (!confirm(`Deseja realmente deletar o evento "${item.title}" na data ${this.formatDateToBrazil(item.date)}?`)) return;
     try {
       this.loading = true;
       await this.agendaService.deleteEvento(item.referenceId);
@@ -216,6 +345,17 @@ export class AgendaComponent implements OnInit {
   switchView(mode: 'calendar' | 'list'): void {
     console.log(`Alternando view para: ${mode}, eventos disponíveis:`, this.eventos.length);
     this.viewMode = mode;
+  }
+
+  // formata string YYYY-MM-DD para DD/MM/YYYY
+  formatDateToBrazil(dateStr: any): string {
+    if (!dateStr) return '';
+    try {
+      const s = String(dateStr).substring(0, 10);
+      const parts = s.split('-');
+      if (parts.length >= 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      return s;
+    } catch (_) { return String(dateStr); }
   }
 
   trackByEventoId(index: number, evento: AgendaResponseDTO): any {

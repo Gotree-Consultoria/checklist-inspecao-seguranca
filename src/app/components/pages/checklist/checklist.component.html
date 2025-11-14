@@ -1,0 +1,193 @@
+<section class="checklist-page page">
+  <div class="container">
+  <h1 class="page-title">Checklist de Riscos Ocupacionais</h1>
+
+    <fieldset class="aep-header">
+      <legend>Dados da Inspeção</legend>
+      <div class="fields">
+        <div class="field-row">
+          <label for="aepCompany" class="field-label">Empresa Cliente:</label>
+          <div class="field-input">
+            <div class="inline-controls">
+              <select id="aepCompany" class="form-select" [(ngModel)]="company" (change)="onCompanyChange(company)" title="Empresa">
+                <option value="">{{ loadingCompanies ? 'Carregando...' : 'Selecione...' }}</option>
+                <option *ngFor="let c of companies" [value]="c.id || c.name" [attr.data-cnpj]="c.cnpj">{{ c.name }}</option>
+              </select>
+              <!-- actions moved below the risk table/above signature button -->
+            </div>
+          </div>
+        </div>
+
+        <!-- função: o dropdown foi movido para ficar abaixo do botão 'Adicionar função' -->
+
+        <div class="field-row half cnpj-row">
+          <label for="aepCnpj" class="field-label">CNPJ:</label>
+          <div class="field-input"><input id="aepCnpj" class="form-control" title="CNPJ da empresa" [value]="formatCnpj(cnpj)" readonly /></div>
+        </div>
+
+        <div class="field-row">
+          <label for="aepUnidade" class="field-label">Unidade (opcional):</label>
+          <div class="field-input">
+            <select id="aepUnidade" class="form-select" title="Unidade (opcional)" [(ngModel)]="unidade">
+              <option value="">{{ units.length ? 'Selecione a unidade...' : 'Nenhuma unidade disponível' }}</option>
+              <option *ngFor="let u of units" [value]="u.id || u.name || u">{{ u.name || u }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <label for="aepSetor" class="field-label">Setor (opcional):</label>
+          <div class="field-input">
+            <select id="aepSetor" class="form-select" title="Setor (opcional)" [(ngModel)]="setor">
+              <option value="">{{ sectors.length ? 'Selecione o setor...' : 'Nenhum setor disponível' }}</option>
+              <option *ngFor="let s of sectors" [value]="s.id || s.name || s">{{ s.name || s }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field-row date-row">
+          <label for="aepDate" class="field-label">Data da Inspeção:</label>
+            <div class="field-input"><input id="aepDate" class="form-control" [(ngModel)]="date" type="date" title="Data" /></div>
+        </div>
+
+        <div class="field-row">
+          <label for="checklistTitle" class="field-label">Título do Relatório (opcional):</label>
+          <div class="field-input"><input id="checklistTitle" class="form-control" [(ngModel)]="title" type="text" placeholder="Ex: Inspeção ABC - Setor X" title="Título do relatório" /></div>
+        </div>
+        
+      </div>
+    </fieldset>
+
+    <fieldset class="aep-header">
+    <legend>Dados do Avaliador</legend>
+    <div class="fields">
+        <div class="field-row">
+          <label for="aepEvaluator" class="field-label">Avaliador:</label>
+          <div class="field-input"><input id="aepEvaluator" class="form-control" title="Nome do avaliador" [(ngModel)]="evaluator" placeholder="Nome do avaliador" /></div>
+        </div>
+
+        <div class="field-row">
+          <label for="aepSigla" class="field-label">Sigla do Conselho:</label>
+          <div class="field-input"><input id="aepSigla" class="form-control" [(ngModel)]="sigla" title="Sigla do Conselho" placeholder="Sigla (ex: TST)" /></div>
+        </div>
+
+        <div class="field-row">
+          <label for="aepRegistro" class="field-label">Registro no Conselho:</label>
+          <div class="field-input"><input id="aepRegistro" class="form-control" [(ngModel)]="registro" title="Registro" placeholder="Número do registro" /></div>
+        </div>
+
+        <div class="field-row">
+          <label for="aepEspecialidade" class="field-label">Especialidade:</label>
+          <div class="field-input"><input id="aepEspecialidade" class="form-control" [(ngModel)]="especialidade" title="Especialidade" placeholder="Ex: Técnico de Segurança do Trabalho" /></div>
+        </div>
+
+      </div>
+    </fieldset>
+
+    <div *ngIf="showRiskTable" class="checklist-table">
+  <div class="selected-func" *ngIf="selectedFunction">Função selecionada: {{ selectedFunction }}</div>
+      <div class="table-wrapper">
+        <table class="aep-table compact">
+          <thead>
+            <tr>
+              <th class="col-sel">Sel</th>
+              <th class="col-risk">RISCO</th>
+              <th>FATOR DE RISCO</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let it of items; let i = index">
+              <td class="chk">
+                <span class="chk-num">{{ it.code }}</span>
+                <input type="checkbox" [id]="'chk_'+i" [checked]="it.checked" title="Selecionar fator de risco {{it.code}}" aria-label="Selecionar fator de risco {{it.code}}" (change)="toggle(it,$event)" />
+              </td>
+              <td class="tipo">{{ it.risco }}</td>
+              <td class="fator"><label [for]="'chk_'+i">{{ it.fator }}</label></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="actions mt-16">
+      <div class="function-actions">
+        <button type="button" class="btn-primary" (click)="showFunctionSelector = !showFunctionSelector">Adicionar Função ao Relatório</button>
+      </div>
+
+      <!-- Evaluated functions list (each function has its own checklist) -->
+      <div class="evaluated-list mt-12" *ngIf="evaluatedFunctions.length">
+        <div *ngFor="let ef of evaluatedFunctions; index as idx" class="evaluated-card card mb-8">
+          <div class="card-header">
+            <h4>{{ ef.functionName }}</h4>
+            <div class="card-actions">
+              <button class="btn-ghost" type="button" (click)="ef.expanded = !ef.expanded" [attr.aria-expanded]="ef.expanded" [attr.title]="ef.expanded ? 'Fechar lista de riscos' : 'Abrir lista de riscos'">
+                <span class="btn-ico">{{ ef.expanded ? '▴' : '▾' }}</span>
+                <span class="btn-label">{{ ef.expanded ? 'Fechar' : 'Abrir' }}</span>
+              </button>
+              <button class="btn-danger" type="button" (click)="confirmRemove(idx)" title="Remover função do relatório">Remover</button>
+            </div>
+          </div>
+          <div class="card-body" *ngIf="ef.expanded">
+            <div class="risk-groups">
+              <div *ngFor="let g of riskGroups" class="risk-group">
+                <div class="group-title">{{ g.key }}</div>
+                <div class="group-list">
+                  <label *ngFor="let it of g.value; trackBy: trackByRisk" class="risk-item">
+                    <input type="checkbox" [checked]="ef.selectedRiskCodes.includes(it.code)" (change)="toggleRisk(ef, it.code, $event)" />
+                    <span class="risk-code">{{ it.code }}</span>
+                    <span class="risk-factor">{{ it.fator }}</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Botão replicado: permite adicionar outra função logo abaixo da tabela desta função avaliada -->
+          <div class="card-footer" *ngIf="ef.expanded">
+            <button type="button" class="btn-primary btn-add-below" (click)="showFunctionSelector = true">Adicionar Função ao Relatório</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Function selector dropdown - aparece DEPOIS das funções já adicionadas -->
+      <div *ngIf="showFunctionSelector" class="function-selector">
+        <label class="sr-only">Função</label>
+        <div class="selector-row">
+          <select class="form-select" title="Função" [(ngModel)]="selectedFunction">
+            <option value="">Selecione a função...</option>
+            <option *ngFor="let f of jobRoles.length ? jobRoles : companyFunctions" [value]="f.name || f">{{ f.name || f }}</option>
+          </select>
+          <button type="button" class="btn-primary btn-confirm" (click)="addFunctionToReport()">Adicionar</button>
+          <button type="button" class="btn-link" (click)="showNewRoleInput = !showNewRoleInput">(+ Nova Função)</button>
+        </div>
+        <div *ngIf="showNewRoleInput" class="new-role-row mt-8">
+          <input class="form-control" placeholder="Nome da nova função" [(ngModel)]="newRoleName" (keyup.enter)="createJobRole()" (keyup.esc)="showNewRoleInput=false; newRoleName=''" />
+          <div class="new-role-actions">
+            <button class="btn-primary" type="button" (click)="createJobRole()">Salvar</button>
+            <button class="btn-cancel" type="button" aria-label="Cancelar" title="Cancelar" (click)="showNewRoleInput=false; newRoleName=''">×</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="signature-area">
+        <button class="btn-primary" type="button" (click)="finalizeReport()">Finalizar Relatório</button>
+      </div>
+    </div>
+
+    <!-- Modal de assinatura: modo somente técnico (carrega automaticamente o nome do técnico logado) -->
+    <app-signature-modal #sigModal (confirmSignatures)="onTechSignature($event)" [techOnly]="true"></app-signature-modal>
+
+    <!-- Confirmação inline ao finalizar relatório -->
+    <div *ngIf="showFinalizeConfirm" class="overlay">
+      <div class="confirm-card">
+        <h3>Deseja assinar digitalmente este documento?</h3>
+        <p>Este checklist pode ser salvo sem assinatura para uso em campo.</p>
+        <p><strong>⚠️ Importante:</strong> Após assinado digitalmente, este documento <strong>não poderá ser editado</strong> e será considerado finalizado.</p>
+        <div class="confirm-actions">
+          <button type="button" class="btn-primary" (click)="onConfirmSign()">Sim, Assinar</button>
+          <button type="button" class="btn-ghost" (click)="onConfirmNoSign()">Não, Salvar sem Assinar</button>
+          <button type="button" class="btn-link close-x" (click)="showFinalizeConfirm=false" aria-label="Fechar">×</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,18 +1,30 @@
 import { Injectable, inject } from '@angular/core';
 import { LegacyService } from './legacy.service';
 
+/**
+ * Interface que representa a resposta da API de agenda.
+ * Contém informações sobre eventos, visitas e visitas reagendadas.
+ */
 export interface AgendaResponseDTO {
   title: string;
   date: string;
-  type: 'EVENTO' | 'VISITA' | 'VISITA_REAGENDADA';
+  // type pode ser null vindo do backend, tratar como 'EVENTO' por padrão no frontend
+  type: 'EVENTO' | 'VISITA' | 'VISITA_REAGENDADA' | null;
   referenceId: number;
   description?: string | null;
   unitName?: string | null;
   sectorName?: string | null;
   originalVisitDate?: string | null;
   sourceVisitId?: number | null;
+  // nome do usuário responsável pelo evento (presente no endpoint admin)
+  responsibleName?: string | null;
 }
 
+/**
+ * Serviço responsável por gerenciar operações relacionadas à agenda de eventos.
+ * Fornece métodos para criar, atualizar, excluir e consultar eventos da agenda.
+ * Sincronizado com o AgendaController do backend.
+ */
 @Injectable({ providedIn: 'root' })
 export class AgendaService {
   private legacy = inject(LegacyService);
@@ -25,44 +37,151 @@ export class AgendaService {
     return { 'Content-Type': 'application/json', ...this.legacy.authHeaders() } as Record<string,string>;
   }
 
+  /**
+   * Retorna todos os eventos da agenda do usuário autenticado.
+   * 
+   * @returns Promise contendo lista de AgendaResponseDTO
+   * @throws Error se a requisição falhar
+   */
   async listEventos(): Promise<AgendaResponseDTO[]> {
     const url = `${this.baseUrl()}/eventos`;
     const resp = await fetch(url, { headers: this.legacy.authHeaders() });
-    if (!resp.ok) throw new Error('Falha ao listar eventos');
+    if (!resp.ok) {
+      const errorText = await resp.text();
+      throw new Error(`Falha ao listar eventos: ${errorText}`);
+    }
     return resp.json();
   }
 
+  /**
+   * Cria um novo evento na agenda.
+   * 
+   * @param payload Objeto com title, description e eventDate
+   * @returns Promise contendo o AgendaResponseDTO do evento criado
+   * @throws Error se a requisição falhar
+   */
   async createEvento(payload: { title: string; description?: string | null; eventDate: string; }): Promise<AgendaResponseDTO> {
     const url = `${this.baseUrl()}/eventos`;
-    const resp = await fetch(url, { method: 'POST', headers: this.headersJson(), body: JSON.stringify(payload) });
-    if (!resp.ok) throw new Error('Falha ao criar evento');
+    const resp = await fetch(url, { 
+      method: 'POST', 
+      headers: this.headersJson(), 
+      body: JSON.stringify(payload) 
+    });
+    if (!resp.ok) {
+      const errorText = await resp.text();
+      throw new Error(`Falha ao criar evento: ${errorText}`);
+    }
     return resp.json();
   }
 
-  async updateEvento(id: number | string, payload: { title: string; description?: string | null; eventDate: string; }): Promise<AgendaResponseDTO> {
+  /**
+   * Atualiza um evento existente na agenda.
+   * 
+   * @param id Identificador do evento (AgendaEvent ID)
+   * @param payload Objeto com title, description, eventDate e eventType
+   * @returns Promise contendo o AgendaResponseDTO do evento atualizado
+   * @throws Error se a requisição falhar
+   */
+  async updateEvento(id: number | string, payload: { title: string; description?: string | null; eventDate: string; eventType: string; }): Promise<AgendaResponseDTO> {
     const url = `${this.baseUrl()}/eventos/${id}`;
-    const resp = await fetch(url, { method: 'PUT', headers: this.headersJson(), body: JSON.stringify(payload) });
-    if (!resp.ok) throw new Error('Falha ao atualizar evento');
+    const resp = await fetch(url, { 
+      method: 'PUT', 
+      headers: this.headersJson(), 
+      body: JSON.stringify(payload) 
+    });
+    if (!resp.ok) {
+      const errorText = await resp.text();
+      throw new Error(`Falha ao atualizar evento: ${errorText}`);
+    }
     return resp.json();
   }
 
+  /**
+   * Reagenda uma visita técnica, convertendo-a em um evento de agenda.
+   * 
+   * @param visitId Identificador da visita técnica original (TechnicalVisit ID)
+   * @param payload Objeto com newDate e reason
+   * @returns Promise contendo o AgendaResponseDTO do evento reagendado
+   * @throws Error se a requisição falhar
+   */
   async rescheduleVisit(visitId: number | string, payload: { newDate: string; reason?: string | null; }): Promise<AgendaResponseDTO> {
     const url = `${this.baseUrl()}/visitas/${visitId}/reagendar`;
-    const resp = await fetch(url, { method: 'PUT', headers: this.headersJson(), body: JSON.stringify(payload) });
-    if (!resp.ok) throw new Error('Falha ao reagendar visita');
+    const resp = await fetch(url, { 
+      method: 'PUT', 
+      headers: this.headersJson(), 
+      body: JSON.stringify(payload) 
+    });
+    if (!resp.ok) {
+      const errorText = await resp.text();
+      throw new Error(`Falha ao reagendar visita: ${errorText}`);
+    }
     return resp.json();
   }
 
+  /**
+   * Remove um evento da agenda.
+   * 
+   * @param id Identificador do evento a ser removido (AgendaEvent ID)
+   * @returns Promise vazia (HTTP 204 No Content)
+   * @throws Error se a requisição falhar
+   */
   async deleteEvento(id: number | string): Promise<void> {
     const url = `${this.baseUrl()}/eventos/${id}`;
-    const resp = await fetch(url, { method: 'DELETE', headers: this.legacy.authHeaders() });
-    if (resp.status !== 204 && !resp.ok) throw new Error('Falha ao deletar evento');
+    const resp = await fetch(url, { 
+      method: 'DELETE', 
+      headers: this.legacy.authHeaders() 
+    });
+    if (resp.status !== 204 && !resp.ok) {
+      const errorText = await resp.text();
+      throw new Error(`Falha ao deletar evento: ${errorText}`);
+    }
   }
 
+  /**
+   * Retorna todos os eventos da agenda do sistema (acesso administrativo).
+   * Requer role ADMIN.
+   * 
+   * @returns Promise contendo lista completa de AgendaResponseDTO
+   * @throws Error se a requisição falhar ou sem permissão ADMIN
+   */
   async listAllEventos(): Promise<AgendaResponseDTO[]> {
     const url = `${this.baseUrl()}/eventos/all`;
     const resp = await fetch(url, { headers: this.legacy.authHeaders() });
-    if (!resp.ok) throw new Error('Falha ao listar todos os eventos');
+    if (!resp.ok) {
+      const errorText = await resp.text();
+      throw new Error(`Falha ao listar todos os eventos: ${errorText}`);
+    }
+    return resp.json();
+  }
+
+  /**
+   * Lista eventos filtrados por uma lista de IDs (melhor performance no backend quando aplicável).
+   * Exemplo: GET /api/agenda/eventos?ids=1,2,3
+   */
+  async listEventosByIds(ids: Array<number | string>): Promise<AgendaResponseDTO[]> {
+    if (!ids || !ids.length) return [];
+    const q = ids.map(String).join(',');
+    const url = `${this.baseUrl()}/eventos?ids=${encodeURIComponent(q)}`;
+    const resp = await fetch(url, { headers: this.legacy.authHeaders() });
+    if (!resp.ok) {
+      const errorText = await resp.text();
+      throw new Error(`Falha ao listar eventos filtrados: ${errorText}`);
+    }
+    return resp.json();
+  }
+
+  /**
+   * Lista eventos filtrados pelo nome do responsável (search por responsibleName).
+   * Exemplo: GET /api/agenda/eventos?responsible=Nome%20do%20Usuario
+   */
+  async listEventosByResponsible(responsible: string): Promise<AgendaResponseDTO[]> {
+    if (!responsible || !String(responsible).trim()) return [];
+    const url = `${this.baseUrl()}/eventos?responsible=${encodeURIComponent(String(responsible).trim())}`;
+    const resp = await fetch(url, { headers: this.legacy.authHeaders() });
+    if (!resp.ok) {
+      const errorText = await resp.text();
+      throw new Error(`Falha ao listar eventos por responsável: ${errorText}`);
+    }
     return resp.json();
   }
 }

@@ -1,0 +1,211 @@
+/* Prevent scroll-into-view on checkbox interactions */
+html { scroll-behavior: auto; }
+input[type="checkbox"] { scroll-margin: 0; scroll-margin-top: 0; scroll-margin-bottom: 0; }
+label { scroll-margin: 0; }
+
+/* Basic styles for checklist page - reuse existing form styles */
+.checklist-page .container { padding-bottom:36px; }
+.aep-header { background: transparent; border: none; border-top: 1px solid #ddd; border-radius: 0; padding: 14px; margin-bottom: 18px; }
+.aep-header .fields { display:flex; flex-wrap:wrap; gap:12px; }
+.aep-header .field-row { display:flex; gap:8px; align-items:center; width:100%; }
+.aep-header .field-label { width:160px; font-weight:600; font-size:0.92rem; }
+.aep-header .field-input { flex: 1; }
+.form-control { padding:6px 8px; border-radius:6px; border:1px solid rgba(230,238,252,0.9); font-size:0.92rem; }
+
+/* Styled select to match form-control and show a custom arrow */
+.form-select {
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	width: 100%;
+	padding: 6px 36px 6px 8px; /* leave space for arrow */
+	border-radius: 6px;
+	border: 1px solid rgba(230,238,252,0.9);
+	background-color: #fff;
+	background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 20 20' fill='none'><path d='M6 7l4 4 4-4' stroke='%23818A91' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+	background-repeat: no-repeat;
+	background-position: right 10px center;
+	font-size: 0.92rem;
+	color: #0f172a;
+}
+
+.form-select:focus {
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+	border-color: rgba(37,99,235,0.8);
+}
+
+/* Make native select arrow hidden on some browsers */
+select::-ms-expand { display: none; }
+
+/* Padronizar larguras dos inputs no cabeçalho (exceto input[type=date]) */
+.aep-header .field-input > .form-control:not([type="date"]),
+.aep-header .field-input > .form-select {
+	box-sizing: border-box;
+	width: 100%;
+	max-width: 420px; /* largura padrão para inputs e selects */
+}
+
+/* Não alterar a largura do input date — manter comportamento nativo */
+.aep-header .field-input > .form-control[type="date"] {
+	max-width: none;
+}
+/* allow certain rows to take half width (two columns) */
+.aep-header .field-row.half {
+	width: calc(50% - 12px);
+}
+
+/* align CNPJ label width with other labels so the input aligns with other fields */
+.aep-header .field-row.half.cnpj-row .field-label {
+	width: 160px;
+}
+/* Date should appear as a full-width row under CNPJ */
+.aep-header .field-row.date-row {
+  width: 100%;
+}
+
+/* ensure consistent label width for CNPJ on repeated rule */
+.aep-header .field-row.half.cnpj-row .field-label {
+	width: 160px;
+}
+
+/* visual separator between groups */
+.section-separator {
+	width: 100%;
+	border-top: 1px dashed rgba(15,23,42,0.06);
+	margin: 10px 0 6px 0;
+}
+.checklist-table { margin-top:12px; }
+.aep-table { width:100%; border-collapse:separate; border-spacing:0; font-size:0.88rem; border-radius:12px; overflow:hidden; background:#fff; box-shadow:0 10px 30px rgba(2,6,23,0.06); }
+.aep-table th, .aep-table td { padding:10px 12px; border-bottom:1px solid rgba(15,23,42,0.04); text-align:left; vertical-align:middle; }
+.aep-table thead th { background:#f8fbff; font-weight:700; color:#0f172a; font-size:0.92rem; text-transform:uppercase; letter-spacing:0.02em; }
+.aep-table tbody tr { background: transparent; transition: background 120ms ease, transform 90ms ease; }
+.aep-table tbody tr:hover { background: linear-gradient(180deg, #fbfdff, #ffffff); transform: translateY(-2px); }
+.aep-table tbody tr:last-child td { border-bottom: none; }
+.aep-table .col-sel { width:64px; }
+.aep-table .col-risk { width:150px; font-weight:700; }
+.aep-table .fator label { color:#374151; font-size:0.88rem; line-height:1.3; }
+.aep-table .fator { color:#374151; }
+.chk { display:flex; align-items:center; gap:6px; }
+.chk-num { display:inline-block; width:28px; text-align:center; font-weight:700; color:#0f172a; font-size:0.86rem; }
+.chk input[type="checkbox"] { width:16px; height:16px; }
+.actions { margin-top:14px; }
+.btn-primary { background:linear-gradient(90deg,#2563EB,#60A5FA); color:#fff; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-size:0.95rem; }
+
+/* secondary button for small inline actions */
+.btn-secondary {
+	background: #e5e7eb;
+	color: #0f172a;
+	border: none;
+	padding: 6px 8px;
+	border-radius: 6px;
+	margin-left: 8px;
+	cursor: pointer;
+}
+
+.btn-confirm { margin-left: 8px; }
+
+/* compact table variant */
+.aep-table.compact th, .aep-table.compact td { padding:6px 8px; font-size:0.82rem; }
+.aep-table.compact { box-shadow: none; border-radius:8px; }
+
+.selected-func { margin: 8px 0; font-weight: 600; }
+
+/* inline controls for company select + actions */
+.inline-controls { display:flex; gap:8px; align-items:center; }
+.inline-controls .form-select { flex: 1 1 auto; }
+.inline-actions { display:flex; gap:8px; align-items:center; }
+
+/* function-actions block (placed above the signature button) */
+.function-actions { display:flex; gap:8px; align-items:center; margin-bottom:12px; }
+/* Garantir espaçamento consistente entre o bloco de ações (Adicionar função) e o botão Finalizar Relatório */
+.actions .signature-area { margin-top:24px; }
+
+/* function selector block shown below the Add Function button */
+.function-selector { margin-top:8px; margin-bottom:12px; }
+.function-selector .selector-row { display:flex; gap:8px; align-items:center; }
+
+/* subtle link-like action used for (+ Nova Função) */
+.btn-link {
+	background: transparent;
+	border: none;
+	color: #2563EB;
+	font-weight: 600;
+	padding: 6px 8px;
+	cursor: pointer;
+}
+.btn-link:hover { text-decoration: underline; }
+
+/* new-role inline input row */
+.new-role-row { display:flex; gap:8px; align-items:center; }
+.new-role-row .form-control { flex: 1 1 auto; max-width: 520px; }
+.new-role-actions { display:flex; gap:8px; align-items:center; }
+.btn-cancel { background: transparent; border: none; font-size: 1.2rem; line-height: 1; padding: 6px 10px; cursor: pointer; color: #6b7280; border-radius:6px; }
+.btn-cancel:hover { background: rgba(15,23,42,0.04); color: #111827; }
+
+/* --- Risk groups visual improvements --- */
+.risk-groups { display:block; margin-top:8px; }
+.risk-group { margin-bottom:12px; border-radius:8px; padding:8px; background: linear-gradient(180deg,#ffffff,#fbfdff); border:1px solid rgba(15,23,42,0.04); }
+.group-title { font-weight:700; margin-bottom:6px; }
+.group-list { display:grid; grid-template-columns: repeat(2, minmax(250px, 1fr)); gap:10px; }
+.risk-item { display:flex; align-items:flex-start; gap:8px; padding:6px 8px; border-radius:6px; background:transparent; box-sizing:border-box; }
+.risk-item input { margin-top:4px; cursor: pointer; }
+.risk-item input:focus { outline: none; }
+.risk-item input:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
+.risk-code { font-weight:700; background:#eef2ff; color:#1e293b; padding:4px 6px; border-radius:6px; font-size:0.78rem; min-width:34px; text-align:center; }
+.risk-factor { color:#374151; font-size:0.88rem; line-height:1.3; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; }
+
+@media (max-width: 1000px) { .group-list { grid-template-columns: repeat(2, minmax(160px,1fr)); } }
+@media (max-width: 620px) { .group-list { grid-template-columns: 1fr; } }
+
+/* sticky header for main risk table */
+.aep-table thead th { position: sticky; top: 0; z-index: 2; }
+
+/* checkbox larger and aligned */
+.chk input[type="checkbox"] { width:18px; height:18px; }
+
+/* small visual polish for risk table rows */
+.aep-table tbody tr { transition: background 120ms ease, transform 90ms ease; }
+.aep-table tbody tr:hover { background: linear-gradient(180deg, #ffffff, #fbfdff); transform: translateY(-1px); }
+
+/* card action buttons */
+.card-actions { display:flex; gap:8px; align-items:center; }
+.btn-ghost { background: transparent; border: 1px solid rgba(15,23,42,0.06); color: #0f172a; padding:6px 8px; border-radius:6px; cursor:pointer; display:inline-flex; gap:6px; align-items:center; }
+.btn-ghost:hover { background: rgba(2,6,23,0.03); }
+.btn-ico { font-size:0.86rem; opacity:0.9; }
+.btn-label { font-weight:600; font-size:0.86rem; }
+.btn-danger { background:#ef4444; color:#fff; border:none; padding:6px 10px; border-radius:6px; cursor:pointer; font-weight:700; }
+.btn-danger:hover { background:#dc2626; }
+
+/* Page title styling: centered, green and slightly smaller per design */
+.page-title {
+	font-size: 1.375rem;
+	color: var(--verde-escuro);
+	text-align: center;
+	margin-bottom: 18px;
+	font-weight: 700;
+}
+
+.aep-header legend {
+	color: #166534; /* verde escuro para legend/header */
+	font-weight: 600;
+}
+
+@media (max-width: 720px) {
+ 	.aep-table th, .aep-table td { padding:8px 8px; font-size:0.82rem; }
+ 	.aep-header .field-label { width:120px; font-size:0.9rem; }
+ 	.aep-header .field-input { flex: 1 1 100%; }
+ 	.aep-header .field-row.half { width: 100%; }
+ 	.chk-num { width:24px; font-size:0.82rem; }
+}
+
+/* Inline confirmation overlay used when finalizing the report */
+.overlay { position: fixed; inset: 0; display:flex; align-items:center; justify-content:center; background: rgba(2,6,23,0.45); z-index: 1200; }
+.confirm-card { background: #fff; padding:18px; border-radius:10px; max-width:520px; width: 92%; box-shadow: 0 14px 40px rgba(2,6,23,0.25); }
+.confirm-card h3 { margin:0 0 8px 0; font-size:1.05rem; }
+.confirm-card p { margin:0 0 12px 0; color:#475569; }
+.confirm-card p:last-of-type { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 10px 12px; border-radius: 6px; margin: 12px 0; color: #92400e; }
+.confirm-actions { display:flex; gap:8px; align-items:center; }
+.confirm-actions .btn-primary { min-width:148px; }
+.confirm-actions .btn-ghost { min-width:180px; }
+.confirm-actions .close-x { margin-left:auto; font-size:1.4rem; line-height:1; padding:4px 8px; }

@@ -1,4 +1,4 @@
-import { Component, OnInit, ElementRef, ViewChild, inject, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild, inject, Output, EventEmitter, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SignatureService } from '../../../services/signature.service';
@@ -13,11 +13,12 @@ import { LegacyService } from '../../../services/legacy.service';
     <div class="modal-overlay" [class.hidden-modal]="!isOpen">
       <div class="modal">
         <div class="modal-header">
-          <h3>Assinaturas</h3>
+          <h3>{{ techOnly ? 'Assinatura - Técnico' : 'Assinaturas' }}</h3>
           <button type="button" class="close-btn" (click)="cancel()" aria-label="Fechar">&times;</button>
         </div>
         <div class="modal-body">
-          <p>Por favor, colete a assinatura do Técnico e do Cliente.</p>
+          <p *ngIf="!techOnly">Por favor, colete a assinatura do Técnico e do Cliente.</p>
+          <p *ngIf="techOnly">Por favor, colete a assinatura do Técnico.</p>
 
           <div class="sign-block">
             <h4>Técnico</h4>
@@ -42,9 +43,9 @@ import { LegacyService } from '../../../services/legacy.service';
             </div>
           </div>
 
-          <hr />
+          <hr *ngIf="!techOnly" />
 
-          <div class="sign-block">
+          <div class="sign-block" *ngIf="!techOnly">
             <h4>Cliente</h4>
             <div class="fg">
               <label for="clientName">Nome do Responsável pela Empresa</label>
@@ -241,6 +242,7 @@ export class SignatureModalComponent implements OnInit {
   techName = '';
   clientName = '';
   geolocation: { latitude: number | null; longitude: number | null } | null = null;
+  @Input() techOnly: boolean = false;
 
   private signatureService = inject(SignatureService);
   private ui = inject(UiService);
@@ -315,13 +317,18 @@ export class SignatureModalComponent implements OnInit {
   }
 
   async open() {
+    // Carregar o nome do técnico primeiro, antes de abrir o modal
+    try {
+      await this.loadTechnicianName();
+    } catch (_) {}
+    
     this.isOpen = true;
-    // Aguardar que a view seja renderizada e carregar o nome do técnico automaticamente
+    
+    // Aguardar que a view seja renderizada e inicializar os pads
     setTimeout(async () => {
       try {
-        await this.loadTechnicianName();
+        this.initSignaturePads();
       } catch (_) {}
-      this.initSignaturePads();
       // tentar obter geolocalização do dispositivo (se permitido pelo usuário)
       try {
         if (navigator && typeof navigator.geolocation !== 'undefined' && navigator.geolocation.getCurrentPosition) {
@@ -348,24 +355,41 @@ export class SignatureModalComponent implements OnInit {
 
   private async loadTechnicianName(): Promise<void> {
     try {
-      const me = await this.legacy.fetchUserProfile().catch(() => null) || null;
-      if (!me) return;
+      const me = await this.legacy.fetchUserProfile();
+      console.log('[SignatureModal] Perfil do usuário carregado:', me);
+      
+      if (!me) {
+        console.warn('[SignatureModal] Perfil do usuário é vazio');
+        return;
+      }
+      
       const name = me.name || me.fullName || me.nome || me.usuario || '';
-      if (name) this.techName = String(name).trim();
+      if (name) {
+        this.techName = String(name).trim();
+        console.log('[SignatureModal] Nome do técnico carregado:', this.techName);
+      } else {
+        console.warn('[SignatureModal] Nenhum nome encontrado no perfil');
+      }
     } catch (e) {
+      console.error('[SignatureModal] Erro ao carregar nome do técnico:', e);
       // ignore failures to avoid blocking modal
     }
   }
 
   private async initSignaturePads() {
     try {
+      const techEl = this.techCanvas && this.techCanvas.nativeElement ? this.techCanvas.nativeElement : document.createElement('canvas');
+      const clientEl = (this.clientCanvas && this.clientCanvas.nativeElement) ? this.clientCanvas.nativeElement : document.createElement('canvas');
+      // garantir dimensões mínimas para o canvas de fallback
+      if (!clientEl.width) { clientEl.width = 600; clientEl.height = 150; }
       const pads = await this.signatureService.initSignaturePads(
-        this.techCanvas.nativeElement,
-        this.clientCanvas.nativeElement,
+        techEl,
+        clientEl,
         this.signatureService.getDefaultPadOptions()
       );
       this.techPad = pads.tech;
-      this.clientPad = pads.client;
+      // se modo somente técnico, manter clientPad como null para evitar validações e uso
+      this.clientPad = this.techOnly ? null : pads.client;
     } catch (err) {
       console.error('Erro ao inicializar signature pads:', err);
       this.ui.showToast('Erro ao carregar canvas de assinatura', 'error', 5000);
@@ -393,28 +417,30 @@ export class SignatureModalComponent implements OnInit {
       this.ui.showToast('Por favor, preencha o nome do Técnico', 'warning', 3000);
       return;
     }
-    if (!this.clientName.trim()) {
-      this.ui.showToast('Por favor, preencha o nome do Cliente', 'warning', 3000);
-      return;
-    }
     if (!this.techPad || this.techPad.isEmpty()) {
       this.ui.showToast('Por favor, colete a assinatura do Técnico', 'warning', 3000);
       return;
     }
-    if (!this.clientPad || this.clientPad.isEmpty()) {
-      this.ui.showToast('Por favor, colete a assinatura do Cliente', 'warning', 3000);
-      return;
+    if (!this.techOnly) {
+      if (!this.clientName.trim()) {
+        this.ui.showToast('Por favor, preencha o nome do Cliente', 'warning', 3000);
+        return;
+      }
+      if (!this.clientPad || this.clientPad.isEmpty()) {
+        this.ui.showToast('Por favor, colete a assinatura do Cliente', 'warning', 3000);
+        return;
+      }
     }
 
-    // Emitir evento com as assinaturas (usar canvas recortado/redimensionado para remover margens transparentes)
-    const techDataUrl = this.techCanvas && this.techCanvas.nativeElement ? this.exportCroppedDataUrl(this.techCanvas.nativeElement) : (this.techPad && typeof this.techPad.toDataURL === 'function' ? this.techPad.toDataURL() : '');
-    const clientDataUrl = this.clientCanvas && this.clientCanvas.nativeElement ? this.exportCroppedDataUrl(this.clientCanvas.nativeElement) : (this.clientPad && typeof this.clientPad.toDataURL === 'function' ? this.clientPad.toDataURL() : '');
+    // Emitir evento com as assinaturas - PRIORIDADE AO SIGNATURE PAD
+    const techDataUrl = (this.techPad && typeof this.techPad.toDataURL === 'function') ? this.techPad.toDataURL() : '';
+    const clientDataUrl = (!this.techOnly && this.clientPad && typeof this.clientPad.toDataURL === 'function') ? this.clientPad.toDataURL() : '';
 
     this.confirmSignatures.emit({
       techName: this.techName.trim(),
       techSignature: techDataUrl,
-      clientName: this.clientName.trim(),
-      clientSignature: clientDataUrl,
+      clientName: this.techOnly ? '' : this.clientName.trim(),
+      clientSignature: this.techOnly ? '' : clientDataUrl,
       geolocation: this.geolocation || null
     });
 

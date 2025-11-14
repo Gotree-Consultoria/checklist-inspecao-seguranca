@@ -6,17 +6,18 @@
 
 .agenda-header { 
   display: flex; 
-  justify-content: space-between; 
+  justify-content: center; 
   align-items: center; 
-  margin-bottom: 20px;
+  margin-bottom: 8px;
   flex-wrap: wrap;
   gap: 12px;
 }
 
 .agenda-header h2 {
   margin: 0;
-  font-size: 24px;
-  color: #0b3a80;
+  font-size: 1.375rem;
+  color: var(--verde-escuro);
+  font-weight: 700;
 }
 
 .header-actions {
@@ -24,6 +25,22 @@
   gap: 12px;
   align-items: center;
   flex-wrap: wrap;
+}
+
+/* filtro por responsável (input + botões) */
+.filter-responsible { display:flex; gap:8px; align-items:center; margin-right:8px; }
+.filter-responsible .search-box { display:flex; align-items:center; background:#fff; border:1px solid #e6eef7; padding:6px 8px; border-radius:8px; }
+.filter-responsible .search-icon { margin-right:8px; color:#6b7280; font-size:14px; }
+.filter-responsible .search-input { border: none; outline: none; padding:6px 4px; min-width:200px; }
+.btn-filter { background: linear-gradient(90deg,#2563EB,#60A5FA); color:#fff; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; }
+.btn-filter:disabled { opacity:0.6; cursor:not-allowed; }
+.btn-clear { background: transparent; border:1px solid #e6eef7; color:#374151; padding:8px 12px; border-radius:8px; cursor:pointer; }
+.btn-clear:disabled { opacity:0.5; cursor:not-allowed; }
+
+@media (max-width: 720px) {
+  .filter-responsible { width:100%; gap:8px; }
+  .filter-responsible .search-input { min-width: 120px; flex:1; }
+  .btn-filter, .btn-clear { flex: none; }
 }
 
 .view-tabs {
@@ -245,6 +262,31 @@
   align-items: flex-end;
 }
 
+/* Icon button styles */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  transition: all 0.2s ease;
+}
+
+.icon-btn:hover {
+  background: #f3f4f6;
+}
+
+.icon-svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
 .btn-edit,
 .btn-delete {
   padding: 8px 12px;
@@ -255,29 +297,8 @@
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
+  display: none; /* Hidden - using icon-btn instead */
 }
-
-.btn-edit {
-  background: #e3f2fd;
-  color: #1b6ef6;
-}
-
-.btn-edit:hover {
-  background: #bbdefb;
-  color: #1a62d8;
-}
-
-.btn-delete {
-  background: #ffebee;
-  color: #c62828;
-}
-
-.btn-delete:hover {
-  background: #ffcdd2;
-  color: #b71c1c;
-}
-
-/* Responsivo */
 @media (max-width: 768px) {
   .agenda-header {
     flex-direction: column;
@@ -310,9 +331,8 @@
     width: 100%;
   }
   
-  .btn-edit,
-  .btn-delete {
-    flex: 1;
+  .icon-btn {
+    flex: 0 0 auto;
   }
 }
 

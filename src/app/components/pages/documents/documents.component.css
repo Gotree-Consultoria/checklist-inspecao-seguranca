@@ -3,7 +3,7 @@
 
 /* Header */
 .documents-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-.page-title { margin: 0; font-size: 1.5rem; color: var(--verde-escuro); }
+.page-title { margin: 0; font-size: 1.5rem; color: var(--verde-escuro); text-align: center; }
 .page-subtitle { margin: 4px 0 0 0; font-size: 0.9rem; color: var(--cinza-escuro); }
 .header-actions .btn-small { padding: 6px 10px; border-radius: 6px; cursor: pointer; }
 .header-actions .btn-small:hover { opacity: 0.8; }
@@ -17,7 +17,109 @@
 .filter-label { font-weight: 600; color: var(--cinza-escuro); margin-bottom: 6px; }
 .filter-input, .filter-select { padding: 8px 10px; border: 1px solid var(--cinza-claro); border-radius: 6px; font-size: 0.95rem; }
 .filter-actions { display: flex; gap: 8px; align-items: center; }
-/* Botões do filtro usam estilos globais - remover duplicação */
+
+/* Pagination Section */
+.pagination-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--cinza-claro);
+  margin-top: 12px;
+}
+
+.pagination-info {
+  font-size: 0.9rem;
+  color: var(--cinza-escuro);
+  font-weight: 500;
+}
+
+.pagination-controls {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.page-size-selector {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.page-size-selector .filter-label {
+  margin-bottom: 0;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.page-size-selector .filter-select {
+  width: 80px;
+  padding: 6px 8px;
+  font-size: 0.9rem;
+}
+
+.page-navigation {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.page-numbers {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.btn-pagination {
+  padding: 8px 12px;
+  border: 1px solid var(--cinza-claro);
+  border-radius: 6px;
+  background-color: var(--branco);
+  color: var(--verde-escuro);
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-pagination:hover:not(:disabled) {
+  background-color: var(--verde-claro);
+  border-color: var(--verde-escuro);
+}
+
+.btn-pagination:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  color: var(--cinza-escuro);
+}
+
+.btn-page {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--cinza-claro);
+  border-radius: 4px;
+  background-color: var(--branco);
+  color: var(--cinza-escuro);
+  font-weight: 500;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-page:hover {
+  border-color: var(--verde-escuro);
+  color: var(--verde-escuro);
+}
+
+.btn-page.active {
+  background-color: var(--verde-escuro);
+  color: var(--branco);
+  border-color: var(--verde-escuro);
+}
+
 
 .documents-table-container { overflow-x: auto; background-color: var(--branco); border-radius: var(--border-radius-md); box-shadow: var(--shadow-sm); overflow-y: visible; }
 .documents-info { padding: 12px 16px; background-color: #f7faf7; border-bottom: 1px solid #eee; font-size: 0.9rem; color: #6b7280; font-weight: 500; }
@@ -29,43 +131,66 @@
 .documents-table-container a { color: var(--vermelho-coral); text-decoration: none; font-weight: 600; transition: color var(--transition-fast); }
 .documents-table-container a:hover { color: var(--verde-escuro); text-decoration: underline; }
 
-/* Actions popup - estilos melhorados */
-.actions-toggle { background: transparent; border: 1px solid rgba(0,0,0,0.06); padding: 6px 8px; border-radius: 6px; cursor: pointer; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; min-width: 32px; height: 32px; }
+/* Page title - centered at the top */
+.page-title {
+  text-align: center;
+  margin-bottom: 16px;
+}
 
-/* Popup flutuante fora da tabela */
-.actions-popup-container { 
-  position: fixed; 
-  background: var(--branco); 
-  border: 1px solid var(--cinza-claro); 
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); 
-  border-radius: 8px; 
-  padding: 8px; 
-  display: flex; 
-  flex-direction: column; 
-  gap: 0; 
-  z-index: 2000; 
-  min-width: 180px; 
-  overflow: visible;
-  pointer-events: auto;
-  opacity: 1;
+/* Actions cell with icons */
+.actions-cell {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
 }
-.actions-popup-container button { 
+
+/* Actions header - centered (especificidade maior para sobrescrever regras genéricas) */
+.documents-table-container thead th.actions-header {
+  text-align: center;
+}
+
+/* Actions toggle (3 dots button - removed, but keep for reference) */
+.actions-toggle { 
   background: transparent; 
-  border: none; 
-  text-align: left; 
-  padding: 10px 12px; 
+  border: 1px solid rgba(0,0,0,0.06); 
+  padding: 6px 8px; 
+  border-radius: 6px; 
   cursor: pointer; 
-  width: 100%; 
-  font-weight: 500; 
-  color: #374151; 
-  transition: all 0.15s; 
-  font-size: 0.9rem;
-  outline: none;
+  font-weight: 700; 
+  display: none; 
+  align-items: center; 
+  justify-content: center; 
+  min-width: 32px; 
+  height: 32px; 
 }
-.actions-popup-container button:first-child { border-radius: 4px 4px 0 0; }
-.actions-popup-container button:last-child { border-radius: 0 0 4px 4px; }
-.actions-popup-container button:hover { background: #f3f4f6; color: #1f2937; }
-.actions-popup-container button:active { background: #e5e7eb; }
+
+/* Popup flutuante (deprecated - removed) */
+.actions-popup-container { 
+  display: none;
+}
+
+/* Icon-only button used in actions popup */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 6px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+.icon-btn:hover { background: #f3f4f6; }
+.icon-svg { display: block; width: 18px; height: 18px; color: #374151; }
+
+/* Signed/immutable document styles */
+.doc-row.signed { opacity: 0.75; background: rgba(248, 250, 252, 0.5); }
+.signed-badge { display: inline-block; margin-left: 6px; font-size: 0.75rem; padding: 2px 4px; background: #fef3c7; color: #92400e; border-radius: 3px; font-weight: 500; }
+.actions-toggle:disabled { opacity: 0.5; cursor: not-allowed; color: rgba(0, 0, 0, 0.4); }
+.btn-disabled { opacity: 0.5; cursor: not-allowed !important; color: rgba(0, 0, 0, 0.4) !important; background: #f3f4f6 !important; }
 
 /* Responsividade */
 @media (max-width: 768px) {
@@ -73,5 +198,38 @@
   .filter-group.small { width: 100%; }
   .filter-group.search-group { width: 100%; }
   .filter-actions { width: 100%; display:flex; justify-content: flex-end; }
+  .pagination-section {
+    flex-direction: column;
+  }
+  .pagination-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .page-size-selector {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .page-size-selector .filter-select {
+    width: 100%;
+  }
+  .page-navigation {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .btn-pagination {
+    width: 100%;
+  }
+  .page-numbers {
+    justify-content: center;
+    width: 100%;
+  }
   .actions-popup { position: fixed; right: 8px !important; left: 8px !important; min-width: auto; }
 }
+
+/* PDF Modal Overlay styles */
+.pdf-modal-overlay { position:fixed; inset:0; background:rgba(2,6,23,0.45); display:flex; align-items:center; justify-content:center; z-index:120; }
+.pdf-modal { background:#fff; width:90%; max-width:980px; border-radius:10px; box-shadow:0 12px 40px rgba(2,6,23,0.4); overflow:hidden; }
+.pdf-modal-header { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid #eef3f8; }
+.pdf-modal-body { padding:12px; }
+.pdf-modal .btn-close { background:#f1f5f9; border:none; padding:6px 10px; border-radius:8px; cursor:pointer; }

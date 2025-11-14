@@ -26,8 +26,17 @@ export class ReportService {
       if (payloadForLogging.technicianSignature?.signatureImage) {
         payloadForLogging.technicianSignature.signatureImage = `[BASE64 - ${payloadForLogging.technicianSignature.signatureImage.length} chars]`;
       }
+      if (payloadForLogging.technicianSignatureImageBase64) {
+        payloadForLogging.technicianSignatureImageBase64 = `[BASE64 - ${payloadForLogging.technicianSignatureImageBase64.length} chars]`;
+      }
       
-      console.log('[ReportService] 📤 Enviando para /inspection-reports');
+      console.log('[ReportService] 📤 Enviando para /risk-checklist');
+      console.log('[ReportService] 🔍 Payload recebido no postRiskChecklist:', {
+        hasTechnicianSignature: !!payload.technicianSignatureImageBase64,
+        signatureLength: payload.technicianSignatureImageBase64?.length || 0,
+        signatureStarts: payload.technicianSignatureImageBase64?.substring(0, 50),
+        technicianName: payload.technicianName
+      });
       console.log('[ReportService] 🔍 Validando e limpando IDs aninhados...');
       this.validatePayloadIds(payload);
       
@@ -170,13 +179,11 @@ export class ReportService {
     Object.keys(obj).forEach(key => {
       // Se for o campo 'id' e for null/undefined, não incluir
       if (key === 'id' && (obj[key] === null || obj[key] === undefined)) {
-        console.log(`[ReportService] 🗑️ Removendo campo 'id' nulo`);
         return; // Pula este campo
       }
       
       // Se for 'undefined', pular (não enviar)
       if (obj[key] === undefined) {
-        console.log(`[ReportService] 🗑️ Removendo campo '${key}' (undefined)`);
         return;
       }
       
@@ -234,7 +241,24 @@ export class ReportService {
       }
       
       const data = await resp.json();
-      return data;
+      // Normalize response shape to ensure frontend fields are consistent with examples
+      try {
+        const list = Array.isArray(data) ? data : (data ? [data] : []);
+        const normalized = list.map((it: any) => {
+          const id = it.id || it.reportId || it.documentId || it.report_id || '';
+          const documentType = it.documentType || it.type || it.reportType || it.document_type || '';
+          const title = it.title || it.name || it.reportTitle || '';
+          const clientName = it.clientName || it.companyName || it.company || it.client || '';
+          const creationDate = it.creationDate || it.createdAt || it.inspectionDate || it.date || '';
+          const signed = (typeof it.signed === 'boolean') ? it.signed : (it.isSigned === true || it.signed === 'true');
+          return { id, documentType, title, clientName, creationDate, signed };
+        });
+        return normalized.slice(0, Number(limit) || 10);
+      } catch (mapErr) {
+        // If normalization fails, return raw data as fallback
+        console.warn('[ReportService] ⚠️ Falha ao normalizar /documents/latest response', mapErr);
+        return data;
+      }
     } catch (err) {
       console.error('[ReportService] Erro ao buscar documentos:', err);
       throw err;
@@ -261,6 +285,160 @@ export class ReportService {
       return data;
     } catch (err) {
       console.error('[ReportService] Erro ao buscar empresas:', err);
+      throw err;
+    }
+  }
+
+  // Job roles endpoints
+  async fetchJobRoles(companyId: any) {
+    if (!companyId) return [];
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const headers: any = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const resp = await fetch(`http://localhost:8081/job-roles/company/${encodeURIComponent(String(companyId))}`, { headers, method: 'GET' });
+      if (!resp.ok) throw new Error(`Status ${resp.status}: ${resp.statusText}`);
+      return await resp.json();
+    } catch (err) {
+      console.error('[ReportService] Erro ao buscar job roles:', err);
+      throw err;
+    }
+  }
+
+  async postJobRole(payload: { name: string; companyId: number }) {
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const headers: any = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const resp = await fetch('http://localhost:8081/job-roles', { headers, method: 'POST', body: JSON.stringify(payload) });
+      if (!resp.ok) {
+        let err = `Status ${resp.status}: ${resp.statusText}`;
+        try { const ct = resp.headers.get('content-type') || ''; if (ct.includes('application/json')) { const b = await resp.json(); err += ` | ${JSON.stringify(b)}`; } } catch(_){}
+        throw new Error(err);
+      }
+      return await resp.json();
+    } catch (err) {
+      console.error('[ReportService] Erro ao criar job role:', err);
+      throw err;
+    }
+  }
+
+  // Save risk checklist (final report)
+  async postRiskChecklist(payload: any) {
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const headers: any = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      
+      // 🗑️ IMPORTANTE: Limpar IDs nulos (igual ao PUT)
+      const cleanedPayload = this.removeNullIds(payload);
+      
+      const jsonPayload = JSON.stringify(cleanedPayload);
+      const resp = await fetch('http://localhost:8081/risk-checklist', { headers, method: 'POST', body: jsonPayload });
+      if (!resp.ok) {
+        let err = `Status ${resp.status}: ${resp.statusText}`;
+        try { const ct = resp.headers.get('content-type') || ''; if (ct.includes('application/json')) { const b = await resp.json(); err += ` | ${JSON.stringify(b)}`; } else { const t = await resp.text(); err += ` | ${t}`; } } catch(_){}
+        throw new Error(err);
+      }
+      return await resp.json();
+    } catch (err) {
+      console.error('[ReportService] Erro ao postar risk-checklist:', err);
+      throw err;
+    }
+  }
+
+  // Update risk checklist (edit)
+  async putRiskChecklist(id: any, payload: any) {
+    if (!id) throw new Error('id é necessário para atualizar risk-checklist');
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const headers: any = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      
+      // 🔍 DEBUG: Log do payload ANTES da limpeza
+      console.log('[ReportService] 📋 PUT payload (antes limpeza):', {
+        hasTechnicianSignature: !!payload.technicianSignatureImageBase64,
+        signatureLength: payload.technicianSignatureImageBase64?.length || 0,
+        technicianName: payload.technicianName,
+        functionCount: payload.functions?.length || 0,
+        checklistId: id
+      });
+      
+      // 🗑️ Limpar IDs nulos
+      const cleanedPayload = this.removeNullIds(payload);
+      
+      // 🔍 DEBUG: Log do payload DEPOIS da limpeza
+      console.log('[ReportService] 📋 PUT payload (depois limpeza):', {
+        hasTechnicianSignature: !!cleanedPayload.technicianSignatureImageBase64,
+        signatureLength: cleanedPayload.technicianSignatureImageBase64?.length || 0,
+        technicianName: cleanedPayload.technicianName,
+        functionCount: cleanedPayload.functions?.length || 0
+      });
+      
+      const jsonPayload = JSON.stringify(cleanedPayload);
+      console.log('[ReportService] 📤 Enviando PUT para /risk-checklist/:id, tamanho:', jsonPayload.length, 'bytes');
+      
+      const resp = await fetch(`http://localhost:8081/risk-checklist/${encodeURIComponent(String(id))}`, { headers, method: 'PUT', body: jsonPayload });
+      if (!resp.ok) {
+        let err = `Status ${resp.status}: ${resp.statusText}`;
+        try { const ct = resp.headers.get('content-type') || ''; if (ct.includes('application/json')) { const b = await resp.json(); err += ` | ${JSON.stringify(b)}`; } else { const t = await resp.text(); err += ` | ${t}`; } } catch(_){}
+        throw new Error(err);
+      }
+      return await resp.json();
+    } catch (err) {
+      console.error('[ReportService] Erro ao atualizar risk-checklist:', err);
+      throw err;
+    }
+  }
+
+  // Get risk checklist (fetch for edit)
+  async getRiskChecklist(id: any) {
+    if (!id) throw new Error('id é necessário para obter risk-checklist');
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const headers: any = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      
+      console.log('[ReportService] getRiskChecklist - tentando obter ID:', id);
+      
+      // Tentar obter diretamente via /risk-checklist/:id
+      try {
+        console.log('[ReportService] Tentando GET /risk-checklist/' + id);
+        const resp = await fetch(`http://localhost:8081/risk-checklist/${id}`, { headers, method: 'GET' });
+        if (resp.ok) {
+          const data = await resp.json();
+          console.log('[ReportService] ✅ Sucesso com /risk-checklist/:id', data);
+          return data;
+        } else {
+          console.warn('[ReportService] GET /risk-checklist/:id retornou status', resp.status);
+        }
+      } catch (e) {
+        console.warn('[ReportService] /risk-checklist/:id erro:', e);
+      }
+
+      // Se não conseguir via /risk-checklist/:id, buscar na listagem de documentos
+      console.log('[ReportService] Tentando GET /documents');
+      const resp = await fetch(`http://localhost:8081/documents`, { headers, method: 'GET' });
+      if (!resp.ok) {
+        throw new Error(`Status ${resp.status}: ${resp.statusText}`);
+      }
+      
+      const documents = await resp.json();
+      console.log('[ReportService] Documentos obtidos:', documents);
+      
+      const document = Array.isArray(documents) 
+        ? documents.find(d => String(d.id || d.reportId) === String(id))
+        : (String(documents.id || documents.reportId) === String(id) ? documents : null);
+      
+      console.log('[ReportService] Documento encontrado:', document);
+      
+      if (!document) {
+        throw new Error(`Documento com ID ${id} não encontrado`);
+      }
+      
+      return document;
+    } catch (err) {
+      console.error('[ReportService] Erro ao obter risk-checklist:', err);
       throw err;
     }
   }

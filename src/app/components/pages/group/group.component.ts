@@ -4,11 +4,12 @@ import { Router } from '@angular/router';
 import { UiService } from '../../../services/ui.service';
 import { ReportService } from '../../../services/report.service';
 import { LegacyService } from '../../../services/legacy.service';
+import { SafeUrlPipe } from '../../../pipes/safe-url.pipe';
 
 @Component({
   standalone: true,
   selector: 'app-group',
-  imports: [CommonModule, NgIf, NgForOf],
+  imports: [CommonModule, NgIf, NgForOf, SafeUrlPipe],
   templateUrl: './group.component.html',
   styleUrls: ['./group.component.css']
 })
@@ -20,6 +21,9 @@ export class GroupComponent implements OnInit {
   loadingUpcoming = false;
   upcomingPageIndex = 0;
   upcomingPageSize = 5; // mostrar 5 por página
+  // Modal para visualizar PDFs
+  pdfModalOpen = false;
+  pdfBlobUrl: string | null = null;
 
   private ui = inject(UiService);
   private report = inject(ReportService);
@@ -84,8 +88,8 @@ export class GroupComponent implements OnInit {
       // ordenar por data asc
       future.sort((a,b) => (a.date || '').localeCompare(b.date || ''));
 
-      // armazenar todos e inicializar paginação
-      this.upcomingEventsAll = future;
+      // armazenar apenas os 5 primeiros eventos
+      this.upcomingEventsAll = future.slice(0, limit);
       this.upcomingPageIndex = 0;
       this.upcomingPageSize = limit;
     } catch (err) {
@@ -174,13 +178,28 @@ export class GroupComponent implements OnInit {
       const resp = await fetch(`${this.legacy.apiBaseUrl}/documents/${encodeURIComponent(typeSlug)}/${encodeURIComponent(id)}/pdf`, { headers: this.legacy.authHeaders() });
       if (!resp.ok) throw new Error('Falha ao obter PDF');
       const blob = await resp.blob();
-      const url = window.URL.createObjectURL(blob);
-      window.open(url, '_blank');
-      setTimeout(()=>window.URL.revokeObjectURL(url), 5000);
+      const blobUrl = window.URL.createObjectURL(blob);
+      // Abrir o PDF em modal na mesma página (iframe no componente)
+      this.pdfBlobUrl = blobUrl;
+      this.pdfModalOpen = true;
+      // Revogar URL após algum tempo para liberar memória
+      setTimeout(() => {
+        try { window.URL.revokeObjectURL(blobUrl); } catch(_) {}
+      }, 5000);
     } catch (e: any) {
       console.warn('viewDoc failed', e);
       this.ui.showToast(e?.message || 'Não foi possível carregar PDF para visualização.', 'error');
     }
+  }
+
+  closePdfModal() {
+    try {
+      if (this.pdfBlobUrl) {
+        window.URL.revokeObjectURL(this.pdfBlobUrl);
+      }
+    } catch (_) {}
+    this.pdfBlobUrl = null;
+    this.pdfModalOpen = false;
   }
 
   documentTypeToSlug(type: string): string {
@@ -188,6 +207,7 @@ export class GroupComponent implements OnInit {
     const raw = String(type || '');
     const normalized = raw.normalize ? raw.normalize('NFD').replace(/\p{Diacritic}/gu, '') : raw;
     const up = normalized.toUpperCase();
+    if (up.includes('RISK') || up.includes('RISCO')) return 'risk';
     if (up.includes('CHECKLIST') || up.includes('INSPECAO') || up.includes('INSPEÇÃO') || up.includes('INSPECC')) return 'checklist';
     if (up.includes('RELATORIO') || up.includes('RELAT') || (up.includes('VISITA') && up.includes('RELAT'))) return 'visit';
     if (up.includes('VISITA') && !up.includes('CHECK')) return 'visit';

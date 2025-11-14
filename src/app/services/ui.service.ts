@@ -12,16 +12,27 @@ export class UiService {
     // Simple toast fallback — replace with a global component later
     const div = document.createElement('div');
     div.textContent = message;
-  div.style.position = 'fixed';
-  div.style.right = '16px';
-  // posicionar acima do footer fixo (footer tem height:40px e z-index:99999)
-  div.style.bottom = '56px';
-  div.style.background = 'rgba(0,0,0,0.8)';
-  div.style.color = 'white';
-  div.style.padding = '8px 12px';
-  div.style.borderRadius = '6px';
-  // garantir que o toast fique acima do footer (z-index maior que 99999)
-  div.style.zIndex = '100000';
+    // place toast centered at top, below navbar area
+    div.style.position = 'fixed';
+  div.style.left = '50%';
+  div.style.top = '72px';
+  div.style.transform = 'translateX(-50%)';
+  // let the background size to fit the text while capping maximum width
+  div.style.display = 'inline-block';
+  div.style.maxWidth = '92%';
+  div.style.minWidth = '120px';
+  div.style.boxSizing = 'border-box';
+    // smaller, less intrusive visual
+    div.style.background = 'rgba(0,0,0,0.75)';
+    div.style.color = 'white';
+  div.style.padding = '6px 10px';
+    div.style.borderRadius = '6px';
+    div.style.fontSize = '0.92rem';
+    div.style.lineHeight = '1.2';
+    div.style.textAlign = 'center';
+    div.style.zIndex = '120000';
+    div.setAttribute('role', 'status');
+    div.setAttribute('aria-live', 'polite');
     document.body.appendChild(div);
     setTimeout(() => div.remove(), duration);
   }

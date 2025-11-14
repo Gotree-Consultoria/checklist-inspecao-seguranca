@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, inject, ElementRef, ViewChild } from '@an
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LegacyService } from '../../../services/legacy.service';
+import { formatCNPJ } from '../../../utils/formatters';
 import { UiService } from '../../../services/ui.service';
 import { ReportService } from '../../../services/report.service';
 import { SignatureService } from '../../../services/signature.service';
@@ -426,7 +427,7 @@ export class ReportComponent implements OnInit, OnDestroy {
         const cnpjInput = this.host.nativeElement.querySelector('#empresaCnpj') as HTMLInputElement;
         if (cnpjInput) {
           const cnpjValue = selectedCompany.cnpj || selectedCompany.documentNumber || selectedCompany.document || selectedCompany.cpfCnpj || '';
-          cnpjInput.value = cnpjValue || '';
+          try { cnpjInput.value = formatCNPJ(cnpjValue) || ''; } catch { cnpjInput.value = cnpjValue || ''; }
           console.log('[Report] CNPJ preenchido:', cnpjValue);
         }
 

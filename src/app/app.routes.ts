@@ -7,6 +7,7 @@ import { AdminComponent } from './components/pages/admin/admin.component';
 import { AepComponent } from './components/pages/aep/aep.component';
 import { AgendaComponent } from './components/pages/agenda/agenda.component';
 import { GroupComponent } from './components/pages/group/group.component';
+import { ChecklistComponent } from './components/pages/checklist/checklist.component';
 import { DocumentsComponent } from './components/pages/documents/documents.component';
 import { ProfileComponent } from './components/pages/profile/profile.component';
 import { ChangePasswordComponent } from './components/pages/change-password/change-password.component';
@@ -26,6 +27,8 @@ export const routes: Routes = [
 	// rotas forms/change-password removidas temporariamente até migração completa
 	{ path: 'admin', component: AdminComponent, canActivate: [AdminGuard] },
 	{ path: 'aep', component: AepComponent },
+	{ path: 'checklist', component: ChecklistComponent },
+	{ path: 'checklist/edit/:id', component: ChecklistComponent },
 	{ path: 'change-password', component: ChangePasswordComponent },
 	{ path: '**', redirectTo: '' }
 ];

@@ -29,7 +29,7 @@ describe('AgendaService', () => {
         }
       ];
 
-      spyOn(global, 'fetch' as any).and.returnValue(
+  spyOn(globalThis, 'fetch' as any).and.returnValue(
         Promise.resolve({
           ok: true,
           json: () => Promise.resolve(mockData)
@@ -38,14 +38,14 @@ describe('AgendaService', () => {
 
       const result = await service.listEventos();
       expect(result).toEqual(mockData);
-      expect(global.fetch).toHaveBeenCalledWith(
+  expect((globalThis as any).fetch).toHaveBeenCalledWith(
         jasmine.stringContaining('/api/agenda/eventos'),
         jasmine.any(Object)
       );
     });
 
     it('should throw error on fetch failure', async () => {
-      spyOn(global, 'fetch' as any).and.returnValue(
+  spyOn(globalThis, 'fetch' as any).and.returnValue(
         Promise.resolve({
           ok: false,
           status: 401,
@@ -76,7 +76,7 @@ describe('AgendaService', () => {
         referenceId: 1
       };
 
-      spyOn(global, 'fetch' as any).and.returnValue(
+  spyOn(globalThis, 'fetch' as any).and.returnValue(
         Promise.resolve({
           ok: true,
           json: () => Promise.resolve(mockResponse)
@@ -85,7 +85,7 @@ describe('AgendaService', () => {
 
       const result = await service.createEvento(payload);
       expect(result).toEqual(mockResponse);
-      expect(global.fetch).toHaveBeenCalledWith(
+  expect((globalThis as any).fetch).toHaveBeenCalledWith(
         jasmine.stringContaining('/api/agenda/eventos'),
         jasmine.objectContaining({ method: 'POST' })
       );
@@ -106,7 +106,7 @@ describe('AgendaService', () => {
         referenceId: id
       };
 
-      spyOn(global, 'fetch' as any).and.returnValue(
+  spyOn(globalThis, 'fetch' as any).and.returnValue(
         Promise.resolve({
           ok: true,
           json: () => Promise.resolve(mockResponse)
@@ -115,7 +115,7 @@ describe('AgendaService', () => {
 
       const result = await service.updateEvento(id, payload);
       expect(result).toEqual(mockResponse);
-      expect(global.fetch).toHaveBeenCalledWith(
+      expect((globalThis as any).fetch).toHaveBeenCalledWith(
         jasmine.stringContaining(`/api/agenda/eventos/${id}`),
         jasmine.objectContaining({ method: 'PUT' })
       );
@@ -138,7 +138,7 @@ describe('AgendaService', () => {
         originalVisitDate: '2025-11-15'
       };
 
-      spyOn(global, 'fetch' as any).and.returnValue(
+  spyOn(globalThis, 'fetch' as any).and.returnValue(
         Promise.resolve({
           ok: true,
           json: () => Promise.resolve(mockResponse)
@@ -148,7 +148,7 @@ describe('AgendaService', () => {
       const result = await service.rescheduleVisit(visitId, payload);
       expect(result.type).toBe('VISITA_REAGENDADA');
       expect(result.date).toBe(payload.newDate);
-      expect(global.fetch).toHaveBeenCalledWith(
+  expect((globalThis as any).fetch).toHaveBeenCalledWith(
         jasmine.stringContaining(`/api/agenda/visitas/${visitId}/reagendar`),
         jasmine.objectContaining({ method: 'PUT' })
       );
@@ -159,7 +159,7 @@ describe('AgendaService', () => {
     it('should delete evento successfully', async () => {
       const id = 123;
 
-      spyOn(global, 'fetch' as any).and.returnValue(
+  spyOn(globalThis, 'fetch' as any).and.returnValue(
         Promise.resolve({
           status: 204,
           ok: true
@@ -167,7 +167,7 @@ describe('AgendaService', () => {
       );
 
       await service.deleteEvento(id);
-      expect(global.fetch).toHaveBeenCalledWith(
+      expect((globalThis as any).fetch).toHaveBeenCalledWith(
         jasmine.stringContaining(`/api/agenda/eventos/${id}`),
         jasmine.objectContaining({ method: 'DELETE' })
       );
@@ -185,7 +185,7 @@ describe('AgendaService', () => {
         }
       ];
 
-      spyOn(global, 'fetch' as any).and.returnValue(
+  spyOn(globalThis, 'fetch' as any).and.returnValue(
         Promise.resolve({
           ok: true,
           json: () => Promise.resolve(mockData)
@@ -194,7 +194,7 @@ describe('AgendaService', () => {
 
       const result = await service.listAllEventos();
       expect(result).toEqual(mockData);
-      expect(global.fetch).toHaveBeenCalledWith(
+  expect((globalThis as any).fetch).toHaveBeenCalledWith(
         jasmine.stringContaining('/api/agenda/eventos/all'),
         jasmine.any(Object)
       );
