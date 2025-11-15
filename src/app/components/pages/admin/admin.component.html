@@ -1,100 +1,377 @@
 <div class="page admin-page">
-  <div *ngIf="accessDenied" class="container">
-    <h1>Acesso Negado</h1>
-    <p>Você não possui permissão para acessar este painel.</p>
+  <div *ngIf="accessDenied" class="access-denied">
+    <div class="denied-container">
+      <div class="denied-icon">🔒</div>
+      <h1>Acesso Negado</h1>
+      <p>Você não possui permissão para acessar este painel.</p>
+    </div>
   </div>
 
-  <div *ngIf="!accessDenied" class="container">
-    <h2>Administração</h2>
-
-    <section class="card users-card">
-      <h3>Usuários</h3>
-      <div *ngIf="loadingUsers">Carregando...</div>
-      <div *ngIf="!loadingUsers && (!users || users.length===0)">Nenhum usuário.</div>
-      <table *ngIf="users && users.length" class="users-table">
-        <thead>
-          <tr><th>Nome</th><th>Email</th><th>Role</th><th>Sigla</th><th>Conselho</th><th>Especialidade</th><th>Ações</th></tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let u of users">
-            <td>{{u.name}}</td>
-            <td>{{u.email}}</td>
-            <td><span class="badge-role" [class.admin]="u.role==='ADMIN'">{{u.role}}</span></td>
-            <td>{{u.siglaConselhoClasse || u.councilAcronym}}</td>
-            <td>{{u.conselhoClasse || u.councilNumber}}</td>
-            <td>{{u.especialidade || u.specialty}}</td>
-            <td>
-              <button class="btn btn-compact btn-danger" *ngIf="(u.role||'').toUpperCase()!=='ADMIN'" (click)="deleteUser(u.id)">Excluir</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="card form-card">
-        <h4>Criar usuário</h4>
-        <form (ngSubmit)="submitCreateUser()" [formGroup]="userForm">
-          <div class="row"><label>Nome *</label><input title="Nome" placeholder="Nome completo" formControlName="name" /></div>
-          <div class="row"><label>Email *</label><input title="Email" placeholder="email@exemplo.com" formControlName="email" type="email" /></div>
-          <div class="row"><label>Senha *</label><input title="Senha" placeholder="Senha" formControlName="password" type="password" /></div>
-          <div class="row"><label>Data Nasc *</label><input title="Data de Nascimento" placeholder="dd/mm/aaaa" formControlName="birthDate" type="date" /></div>
-          <div class="row"><label>Telefone *</label><input title="Telefone" placeholder="(00) 00000-0000" formControlName="phone" /></div>
-          <div class="row"><label>CPF *</label><input title="CPF" placeholder="000.000.000-00" formControlName="cpf" /></div>
-          <div class="row"><label>Role</label>
-            <select title="Role" formControlName="role"><option value="USER">USER</option><option value="ADMIN">ADMIN</option></select>
-          </div>
-          <div class="row"><label>Sigla Conselho</label><input title="Sigla do Conselho" placeholder="CRMV, OAB..." formControlName="councilAcronym" /></div>
-          <div class="row"><label>Conselho Nº</label><input title="Número do Conselho" placeholder="Número do conselho" formControlName="councilNumber" /></div>
-          <div class="row"><label>Especialidade</label><input title="Especialidade" placeholder="Ex: cardiologia" formControlName="specialty" /></div>
-          <div class="row actions"><button type="submit">Salvar Usuário</button></div>
-          <div class="msg" *ngIf="userFormMsg">{{userFormMsg}}</div>
-        </form>
+  <div *ngIf="!accessDenied" class="admin-container">
+    <!-- Header -->
+    <div class="admin-header">
+      <div class="header-content">
+        <h1>Painel Administrativo</h1>
+        <p class="subtitle">Gerencie usuários e empresas do sistema</p>
       </div>
-    </section>
+    </div>
 
-    <section class="card companies-card">
-      <h3>Empresas</h3>
-      <div *ngIf="loadingCompanies">Carregando...</div>
-      <div *ngIf="!loadingCompanies && (!companies || companies.length===0)">Nenhuma empresa.</div>
-      <ul *ngIf="companies && companies.length" class="company-list">
-        <li *ngFor="let c of companies">{{c.name}} - {{c.cnpj}}</li>
-      </ul>
-
-      <div class="card form-card">
-        <h4>Criar empresa</h4>
-        <form (ngSubmit)="submitCreateCompany()" [formGroup]="companyForm">
-          <div class="row"><label>Nome *</label><input title="Nome da Empresa" placeholder="Razão social" formControlName="companyName" /></div>
-          <div class="row"><label>CNPJ *</label><input title="CNPJ" placeholder="00.000.000/0000-00" formControlName="companyCnpj" /></div>
-
-          <div class="row dynamic">
-            <label>Unidades</label>
-            <div *ngFor="let u of dynamicUnits; let i = index" class="unit-row">
-              <span>{{u.name}} ({{u.cnpj}})</span>
-              <button type="button" (click)="removeUnit(i)">Remover</button>
-            </div>
-            <div class="add-unit">
-              <input #unitName placeholder="Nome da unidade" />
-              <input #unitCnpj placeholder="CNPJ" />
-              <button type="button" (click)="addUnit(unitName, unitCnpj)">Adicionar Unidade</button>
+    <!-- Conteúdo -->
+    <div class="admin-content">
+      <!-- Seção de Usuários -->
+      <section class="admin-section users-section">
+        <div class="section-header">
+          <div class="section-title-wrapper">
+            <div class="section-icon">👥</div>
+            <div>
+              <h2>Usuários</h2>
+              <p class="section-subtitle">Gerenciar usuários do sistema</p>
             </div>
           </div>
+          <div class="user-count" *ngIf="users && users.length">{{users.length}} usuário(s)</div>
+        </div>
 
-          <div class="row dynamic">
-            <label>Setores</label>
-            <div *ngFor="let s of dynamicSectors; let i=index" class="sector-row">
-              <span>{{s.name}}</span>
-              <button type="button" (click)="removeSector(i)">Remover</button>
-            </div>
-            <div class="add-sector">
-              <input #sectorName placeholder="Nome do setor" />
-              <button type="button" (click)="addSector(sectorName)">Adicionar Setor</button>
-            </div>
+        <!-- Tabela de Usuários -->
+        <div class="section-body">
+          <div *ngIf="loadingUsers" class="loading-state">
+            <div class="spinner"></div>
+            <p>Carregando usuários...</p>
+          </div>
+          <div *ngIf="!loadingUsers && (!users || users.length===0)" class="empty-state">
+            <div class="empty-icon">📭</div>
+            <p>Nenhum usuário encontrado</p>
           </div>
 
-          <div class="row actions"><button type="submit">Salvar Empresa</button></div>
-          <div class="msg" *ngIf="companyFormMsg">{{companyFormMsg}}</div>
-        </form>
+          <div *ngIf="users && users.length" class="table-wrapper">
+            <table class="users-table">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Email</th>
+                  <th>Perfil</th>
+                  <th>Conselho</th>
+                  <th>Contato</th>
+                  <th class="actions-col">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let u of users" class="user-row">
+                  <td class="user-name">{{u.name}}</td>
+                  <td class="user-email">{{u.email}}</td>
+                  <td>
+                    <span class="badge" [class.badge-admin]="u.role==='ADMIN'" [class.badge-user]="u.role==='USER'">
+                      {{u.role || 'USER'}}
+                    </span>
+                  </td>
+                  <td class="council-info">
+                    <span *ngIf="u.siglaConselhoClasse || u.councilAcronym" class="council-text">
+                      {{u.siglaConselhoClasse || u.councilAcronym}} - {{u.conselhoClasse || u.councilNumber}}
+                    </span>
+                    <span *ngIf="!(u.siglaConselhoClasse || u.councilAcronym)" class="text-muted">-</span>
+                  </td>
+                  <td class="phone-info">{{u.phone || '-'}}</td>
+                  <td class="actions-col">
+                    <button class="btn-action btn-edit" (click)="openEditUserModal(u)" title="Editar usuário">
+                      ✏️
+                    </button>
+                    <button class="btn-action btn-delete" *ngIf="(u.role||'').toUpperCase()!=='ADMIN'" (click)="deleteUser(u.id)" title="Excluir usuário">
+                      🗑️
+                    </button>
+                    <span class="protected" *ngIf="(u.role||'').toUpperCase()==='ADMIN'" title="Usuário administrador">🔒</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Formulário de Criação -->
+        <div class="form-section">
+          <div class="form-header">
+            <h3>➕ Novo Usuário</h3>
+          </div>
+          <form (ngSubmit)="submitCreateUser()" [formGroup]="userForm" class="form-grid">
+            <div class="form-group">
+              <label>Nome *</label>
+              <input placeholder="Nome completo" formControlName="name" />
+            </div>
+            <div class="form-group">
+              <label>Email *</label>
+              <input placeholder="email@exemplo.com" formControlName="email" type="email" />
+            </div>
+            <div class="form-group">
+              <label>Senha *</label>
+              <input placeholder="Mínimo 8 caracteres" formControlName="password" type="password" />
+            </div>
+            <div class="form-group">
+              <label>Data de Nascimento *</label>
+              <input formControlName="birthDate" type="date" title="Data de nascimento" />
+            </div>
+            <div class="form-group">
+              <label>Telefone *</label>
+              <input placeholder="(00) 00000-0000" formControlName="phone" />
+            </div>
+            <div class="form-group">
+              <label>CPF *</label>
+              <input placeholder="000.000.000-00" formControlName="cpf" />
+            </div>
+            <div class="form-group">
+              <label>Perfil</label>
+              <select formControlName="role" title="Perfil do usuário">
+                <option value="USER">Usuário</option>
+                <option value="ADMIN">Administrador</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Sigla Conselho</label>
+              <input placeholder="CRMV, OAB, etc..." formControlName="councilAcronym" />
+            </div>
+            <div class="form-group">
+              <label>Número Conselho</label>
+              <input placeholder="Número do conselho" formControlName="councilNumber" />
+            </div>
+            <div class="form-group">
+              <label>Especialidade</label>
+              <input placeholder="Ex: cardiologia" formControlName="specialty" />
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">💾 Salvar Usuário</button>
+            </div>
+            <div class="form-message" *ngIf="userFormMsg" [class.success]="userFormMsg.includes('sucesso')">{{userFormMsg}}</div>
+          </form>
+        </div>
+      </section>
+
+      <!-- Seção de Empresas -->
+      <section class="admin-section companies-section">
+        <div class="section-header">
+          <div class="section-title-wrapper">
+            <div class="section-icon">🏢</div>
+            <div>
+              <h2>Empresas</h2>
+              <p class="section-subtitle">Gerenciar empresas cadastradas</p>
+            </div>
+          </div>
+          <div class="company-count" *ngIf="companies && companies.length">{{companies.length}} empresa(s)</div>
+        </div>
+
+        <!-- Lista de Empresas -->
+        <div class="section-body">
+          <div *ngIf="loadingCompanies" class="loading-state">
+            <div class="spinner"></div>
+            <p>Carregando empresas...</p>
+          </div>
+          <div *ngIf="!loadingCompanies && (!companies || companies.length===0)" class="empty-state">
+            <div class="empty-icon">📭</div>
+            <p>Nenhuma empresa encontrada</p>
+          </div>
+          <div *ngIf="companies && companies.length" class="companies-table-wrapper">
+            <table class="companies-table">
+              <thead>
+                <tr>
+                  <th>Empresa</th>
+                  <th>CNPJ</th>
+                  <th>Unidades</th>
+                  <th>Setores</th>
+                  <th class="actions-col">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let c of companies" class="company-row">
+                  <td class="company-name-cell">{{c.name}}</td>
+                  <td class="company-cnpj-cell">{{c.cnpj | cnpjFormat}}</td>
+                  <td class="company-units-cell">📦 {{(c.units || []).length}}</td>
+                  <td class="company-sectors-cell">🏷️ {{(c.sectors || []).length}}</td>
+                  <td class="actions-col">
+                    <button type="button" class="btn-action btn-edit" (click)="openEditCompanyModal(c)" title="Editar">✏️</button>
+                    <button type="button" class="btn-action btn-delete" (click)="deleteCompany(c.id)" title="Excluir">🗑️</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Formulário de Criação -->
+        <div class="form-section">
+          <div class="form-header">
+            <h3>➕ Nova Empresa</h3>
+          </div>
+          <form (ngSubmit)="submitCreateCompany()" [formGroup]="companyForm" class="form-grid">
+            <div class="form-group full-width">
+              <label>Nome da Empresa *</label>
+              <input placeholder="Razão social" formControlName="companyName" />
+            </div>
+            <div class="form-group full-width">
+              <label>CNPJ *</label>
+              <input placeholder="00.000.000/0000-00" formControlName="companyCnpj" />
+            </div>
+
+            <!-- Unidades -->
+            <div class="form-group full-width">
+              <label class="dynamic-label">🏭 Unidades</label>
+              <div class="dynamic-items">
+                <div *ngFor="let u of dynamicUnits; let i = index" class="dynamic-item">
+                  <span class="item-name">{{u.name}}</span>
+                  <span class="item-detail" *ngIf="u.cnpj">{{u.cnpj | cnpjFormat}}</span>
+                  <span class="item-detail text-muted" *ngIf="!u.cnpj">(sem CNPJ)</span>
+                  <button type="button" class="btn-remove" (click)="removeUnit(i)" title="Remover">✕</button>
+                </div>
+              </div>
+              <div class="add-dynamic">
+                <input #unitName placeholder="Nome da unidade" class="dynamic-input" />
+                <input #unitCnpj placeholder="CNPJ (opcional)" class="dynamic-input" />
+                <button type="button" class="btn btn-secondary" (click)="addUnit(unitName, unitCnpj)">+ Adicionar</button>
+              </div>
+            </div>
+
+            <!-- Setores -->
+            <div class="form-group full-width">
+              <label class="dynamic-label">🏷️ Setores</label>
+              <div class="dynamic-items">
+                <div *ngFor="let s of dynamicSectors; let i=index" class="dynamic-item">
+                  <span class="item-name">{{s}}</span>
+                  <button type="button" class="btn-remove" (click)="removeSector(i)" title="Remover">✕</button>
+                </div>
+              </div>
+              <div class="add-dynamic">
+                <input #sectorName placeholder="Nome do setor" class="dynamic-input full-width" />
+                <button type="button" class="btn btn-secondary" (click)="addSector(sectorName)">+ Adicionar</button>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">💾 Salvar Empresa</button>
+            </div>
+            <div class="form-message" *ngIf="companyFormMsg" [class.success]="companyFormMsg.includes('sucesso')">{{companyFormMsg}}</div>
+          </form>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Edição de Usuário -->
+<div class="modal-overlay" *ngIf="showEditUserModal" (click)="closeEditUserModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Editar Usuário</h2>
+      <button class="modal-close" type="button" (click)="closeEditUserModal()" title="Fechar modal">✕</button>
+    </div>
+
+    <form (ngSubmit)="submitEditUser()" [formGroup]="editUserForm" class="form-grid">
+      <div class="form-group full-width">
+        <label>Nome *</label>
+        <input placeholder="Nome completo" formControlName="name" />
       </div>
-    </section>
+      <div class="form-group full-width">
+        <label>Email *</label>
+        <input placeholder="email@exemplo.com" formControlName="email" type="email" />
+      </div>
+      <div class="form-group">
+        <label>Telefone</label>
+        <input placeholder="(11) 99999-9999" formControlName="phone" />
+      </div>
+      <div class="form-group">
+        <label>CPF</label>
+        <input placeholder="000.000.000-00" formControlName="cpf" />
+      </div>
+      <div class="form-group">
+        <label>Sigla Conselho</label>
+        <input placeholder="CRM, CREA, etc" formControlName="siglaConselhoClasse" />
+      </div>
+      <div class="form-group">
+        <label>Conselho Classe</label>
+        <input placeholder="Conselho Regional" formControlName="conselhoClasse" />
+      </div>
+      <div class="form-group full-width">
+        <label>Especialidade</label>
+        <input placeholder="Especialidade profissional" formControlName="especialidade" />
+      </div>
 
+      <div class="form-actions">
+        <button type="button" class="btn btn-cancel" (click)="closeEditUserModal()">Cancelar</button>
+        <button type="submit" class="btn btn-primary">💾 Salvar Alterações</button>
+      </div>
+      <div class="form-message" *ngIf="editUserFormMsg" [class.success]="editUserFormMsg.includes('sucesso')">{{editUserFormMsg}}</div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal de Edição de Empresa -->
+<div class="modal-overlay" *ngIf="showEditCompanyModal" (click)="closeEditCompanyModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Editar Empresa</h2>
+      <button class="modal-close" type="button" (click)="closeEditCompanyModal()" title="Fechar modal">✕</button>
+    </div>
+
+    <form (ngSubmit)="submitEditCompany()" [formGroup]="editCompanyForm" class="form-grid">
+      <div class="form-group full-width">
+        <label>Nome da Empresa *</label>
+        <input placeholder="Razão social" formControlName="companyName" />
+      </div>
+      <div class="form-group full-width">
+        <label>CNPJ *</label>
+        <input placeholder="00.000.000/0000-00" formControlName="companyCnpj" />
+      </div>
+
+<!-- Modal de Edição de Empresa -->
+<div class="modal-overlay" *ngIf="showEditCompanyModal" (click)="closeEditCompanyModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Editar Empresa</h2>
+      <button class="modal-close" type="button" (click)="closeEditCompanyModal()" title="Fechar modal">✕</button>
+    </div>
+
+    <form (ngSubmit)="submitEditCompany()" [formGroup]="editCompanyForm" class="form-grid">
+      <div class="form-group full-width">
+        <label>Nome da Empresa *</label>
+        <input placeholder="Razão social" formControlName="companyName" />
+      </div>
+      <div class="form-group full-width">
+        <label>CNPJ *</label>
+        <input placeholder="00.000.000/0000-00" formControlName="companyCnpj" />
+      </div>
+
+      <!-- Unidades -->
+      <div class="form-group full-width">
+        <label class="dynamic-label">🏭 Unidades</label>
+        <div class="dynamic-items">
+          <div *ngFor="let u of dynamicUnits; let i = index" class="dynamic-item">
+            <span class="item-name">{{u.name}}</span>
+            <span class="item-detail" *ngIf="u.cnpj">{{u.cnpj | cnpjFormat}}</span>
+            <span class="item-detail text-muted" *ngIf="!u.cnpj">(sem CNPJ)</span>
+            <button type="button" class="btn-remove" (click)="removeUnitWithDelete(i)" title="Remover">✕</button>
+          </div>
+        </div>
+        <div class="add-dynamic">
+          <input #unitName placeholder="Nome da unidade" class="dynamic-input" />
+          <input #unitCnpj placeholder="CNPJ" class="dynamic-input" />
+          <button type="button" class="btn btn-secondary" (click)="addUnit(unitName, unitCnpj)">+ Adicionar</button>
+        </div>
+      </div>
+
+      <!-- Setores -->
+      <div class="form-group full-width">
+        <label class="dynamic-label">🏷️ Setores</label>
+        <div class="dynamic-items">
+          <div *ngFor="let s of dynamicSectors; let i=index" class="dynamic-item">
+            <span class="item-name">{{s}}</span>
+            <button type="button" class="btn-remove" (click)="removeSectorWithDelete(i)" title="Remover">✕</button>
+          </div>
+        </div>
+        <div class="add-dynamic">
+          <input #sectorName placeholder="Nome do setor" class="dynamic-input full-width" />
+          <button type="button" class="btn btn-secondary" (click)="addSector(sectorName)">+ Adicionar</button>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-cancel" (click)="closeEditCompanyModal()">Cancelar</button>
+        <button type="submit" class="btn btn-primary">💾 Salvar Alterações</button>
+      </div>
+      <div class="form-message" *ngIf="editCompanyFormMsg" [class.success]="editCompanyFormMsg.includes('sucesso')">{{editCompanyFormMsg}}</div>
+    </form>
   </div>
 </div>

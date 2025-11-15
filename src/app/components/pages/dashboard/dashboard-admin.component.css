@@ -3,7 +3,129 @@
 .dashboard-admin *, .dashboard-admin *:before, .dashboard-admin *:after { box-sizing: inherit; }
 .admin-header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
 .admin-header .page-title { margin:0; font-size:1.8rem; }
-.admin-header-actions { display:flex; gap:8px; align-items:center; }
+.admin-header-actions { display:flex; gap:12px; align-items:center; flex-wrap: wrap; }
+
+/* Estilos dos botões do header */
+.header-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.header-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  transition: left 0.3s ease;
+  z-index: 0;
+}
+
+.header-btn:hover::before {
+  left: 100%;
+}
+
+.header-btn .btn-icon {
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+
+.header-btn .btn-label {
+  position: relative;
+  z-index: 1;
+}
+
+/* Botão Atualizar (Refresh) */
+.header-btn-refresh {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.header-btn-refresh:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4);
+}
+
+.header-btn-refresh:active {
+  transform: translateY(0);
+}
+
+.header-btn-refresh .btn-icon {
+  animation: none;
+}
+
+.header-btn-refresh:hover .btn-icon {
+  animation: spin-smooth 0.6s ease-in-out;
+}
+
+@keyframes spin-smooth {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Botão Exportar */
+.header-btn-export {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.header-btn-export:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(16, 185, 129, 0.4);
+}
+
+.header-btn-export:active {
+  transform: translateY(0);
+}
+
+.header-btn-export .btn-icon {
+  animation: none;
+}
+
+.header-btn-export:hover .btn-icon {
+  animation: slide-down 0.4s ease-in-out;
+}
+
+@keyframes slide-down {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(4px); }
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .header-btn {
+    padding: 10px 16px;
+    font-size: 13px;
+    gap: 6px;
+  }
+  
+  .header-btn .btn-icon {
+    font-size: 16px;
+  }
+  
+  .header-btn .btn-label {
+    display: none;
+  }
+}
+
 .admin-grid { display:grid; gap:18px; align-items:start; width:100%; box-sizing:border-box; }
 .admin-grid { grid-auto-rows: minmax(120px, auto); }
 

@@ -2,9 +2,15 @@
   <header class="admin-header">
     <h1 class="page-title">Dashboard do Administrador</h1>
     <div class="admin-header-actions">
-      <button class="small-btn" type="button" (click)="loadAdminDashboard()">⟳ Atualizar</button>
-      <button class="small-btn" type="button" (click)="goTo('/reports')">⤓ Exportar</button>
-  </div>
+      <button class="header-btn header-btn-refresh" type="button" (click)="loadAdminDashboard()" title="Atualizar dados do dashboard">
+        <span class="btn-icon">🔄</span>
+        <span class="btn-label">Atualizar</span>
+      </button>
+      <button class="header-btn header-btn-export" type="button" (click)="goTo('/reports')" title="Ir para relatórios e exportar">
+        <span class="btn-icon">📥</span>
+        <span class="btn-label">Exportar</span>
+      </button>
+    </div>
   </header>
 
   <div class="admin-grid" aria-live="polite">

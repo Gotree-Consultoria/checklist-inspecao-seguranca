@@ -5,33 +5,44 @@
         <div class="meta-top">
           <div>
             <h2 class="profile-name">{{ profile?.name || '-' }}</h2>
-            <div class="profile-role">{{ profile?.role || profile?.funcao || '-' }}</div>
+            <div class="profile-role">{{ profile?.role === 'ADMIN' ? 'Administrador' : 'Usuário' }}</div>
           </div>
         </div>
-        <p class="profile-bio" *ngIf="profile?.bio">{{ profile?.bio }}</p>
       </div>
     </div>
 
     <div class="profile-details">
       <div class="info-grid">
         <div class="info-card">
-          <div class="info-label">Conselho / Registro</div>
-          <div class="info-value">{{ profile?.conselhoClasse || profile?.registro || '-' }}</div>
+          <div class="info-label">👤 Perfil</div>
+          <div class="info-value">{{ profile?.role === 'ADMIN' ? 'Administrador' : 'Usuário' }}</div>
         </div>
         <div class="info-card">
-          <div class="info-label">Email</div>
+          <div class="info-label">📧 Email</div>
           <div class="info-value">{{ profile?.email || '-' }}</div>
         </div>
         <div class="info-card">
-          <div class="info-label">Telefone</div>
+          <div class="info-label">📱 Telefone</div>
           <div class="info-value">{{ profile?.phone || profile?.telefone || '-' }}</div>
         </div>
         <div class="info-card">
-          <div class="info-label">CPF</div>
+          <div class="info-label">🆔 CPF</div>
           <div class="info-value">{{ profile?.cpf || '-' }}</div>
         </div>
         <div class="info-card">
-          <div class="info-label">Data de Nascimento</div>
+          <div class="info-label">🎓 Sigla Conselho</div>
+          <div class="info-value">{{ profile?.siglaConselhoClasse || '-' }}</div>
+        </div>
+        <div class="info-card">
+          <div class="info-label">📜 Conselho / Registro</div>
+          <div class="info-value">{{ profile?.conselhoClasse || profile?.registro || '-' }}</div>
+        </div>
+        <div class="info-card">
+          <div class="info-label">💼 Especialidade</div>
+          <div class="info-value">{{ profile?.especialidade || '-' }}</div>
+        </div>
+        <div class="info-card">
+          <div class="info-label">🎂 Data de Nascimento</div>
           <div class="info-value">{{ formatDate(profile?.birthDate || profile?.dataNascimento) }}</div>
         </div>
       </div>

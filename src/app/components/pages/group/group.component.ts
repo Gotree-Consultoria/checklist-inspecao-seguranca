@@ -24,6 +24,8 @@ export class GroupComponent implements OnInit {
   // Modal para visualizar PDFs
   pdfModalOpen = false;
   pdfBlobUrl: string | null = null;
+  // Perfil do usuário logado
+  userProfile: any = null;
 
   private ui = inject(UiService);
   private report = inject(ReportService);
@@ -32,14 +34,24 @@ export class GroupComponent implements OnInit {
 
   ngOnInit(): void {
     // Não injetamos estilos legacy automaticamente — a UI foi migrada.
+    // Carregar perfil do usuário
+    this.loadUserProfile();
     // Carregar histórico com pequeno delay para garantir que o token foi salvo
     setTimeout(() => {
       try { this.loadHistory(); } catch (e) { console.warn('loadHistory init failed', e); }
     }, 100);
-    // carregar próximos eventos da agenda
+    // carregar próximos eventos da agenda (somente para usuários não-admin)
     setTimeout(() => {
-      try { this.loadUpcomingEvents(); } catch (e) { console.warn('loadUpcomingEvents init failed', e); }
+      try { if (this.userProfile?.role !== 'ADMIN') this.loadUpcomingEvents(); } catch (e) { console.warn('loadUpcomingEvents init failed', e); }
     }, 120);
+  }
+
+  async loadUserProfile() {
+    try {
+      this.userProfile = await this.legacy.fetchUserProfile();
+    } catch (e) {
+      console.warn('loadUserProfile error', e);
+    }
   }
 
   async loadHistory(limit = 10) {
