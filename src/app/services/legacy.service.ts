@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class LegacyService {
-  apiBaseUrl = '';
+  apiBaseUrl = 'environment.apiBaseUrl';
 
   constructor() {
     if (typeof window !== 'undefined') {
