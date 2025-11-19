@@ -159,7 +159,7 @@ export class AdminComponent implements OnInit {
     try {
       const resp = await fetch(`${this.legacy.apiBaseUrl}/users/${this.editingUserId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', ...this.legacy.authHeaders() },
+        headers: { ...this.legacy.authHeaders() },
         body: JSON.stringify(payload)
       });
       const txt = await resp.text().catch(() => '');
@@ -211,7 +211,7 @@ export class AdminComponent implements OnInit {
       const submitBtn = null; // kept for parity (no direct DOM manipulation)
       const resp = await fetch(`${this.legacy.apiBaseUrl}/users/insert`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...this.legacy.authHeaders() },
+        headers: { ...this.legacy.authHeaders() },
         body: JSON.stringify(payload)
       });
       const respText = await resp.text().catch(() => '');
@@ -395,7 +395,7 @@ export class AdminComponent implements OnInit {
     try {
       const resp = await fetch(`${this.legacy.apiBaseUrl}/companies`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...this.legacy.authHeaders() },
+        headers: { ...this.legacy.authHeaders() },
         body: JSON.stringify(payload)
       });
       const txt = await resp.text().catch(()=>'');
@@ -497,7 +497,7 @@ export class AdminComponent implements OnInit {
     try {
       const resp = await fetch(`${this.legacy.apiBaseUrl}/companies/${this.editingCompanyId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', ...this.legacy.authHeaders() },
+        headers: { ...this.legacy.authHeaders() },
         body: JSON.stringify(payload)
       });
       const txt = await resp.text().catch(()=>'');

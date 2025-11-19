@@ -1,11 +1,12 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { LegacyService } from './legacy.service';
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class ReportService {
-  constructor(private legacy: LegacyService) {}
+  private legacy = inject(LegacyService);
 
-  // JSON endpoints (use ApiService which returns parsed JSON via HttpClient)
   async postInspectionReport(payload: any) {
     try {
       const token = localStorage.getItem('jwtToken');
@@ -49,7 +50,7 @@ export class ReportService {
       console.log('[ReportService] � Estrutura do payload:', Object.keys(payload));
       console.log('[ReportService] 📊 Tamanho:', jsonPayload.length, 'bytes');
       
-      const resp = await fetch('http://localhost:8081/inspection-reports', { 
+      const resp = await fetch(`${this.legacy.apiBaseUrl}/inspection-reports`, { 
         headers,
         method: 'POST',
         body: jsonPayload  // Usando cleanedPayload (sem IDs nulos)
@@ -108,7 +109,7 @@ export class ReportService {
       this.validatePayloadIds(payload);
       const cleanedPayload = this.removeNullIds(payload);
 
-      const resp = await fetch('http://localhost:8081/inspection-reports/nrs', {
+      const resp = await fetch(`${this.legacy.apiBaseUrl}/inspection-reports/nrs`, {
         headers,
         method: 'POST',
         body: JSON.stringify(cleanedPayload)
@@ -205,7 +206,7 @@ export class ReportService {
       if (token) headers['Authorization'] = `Bearer ${token}`;
       
       const qs = new URLSearchParams(params as any).toString();
-      const url = 'http://localhost:8081/documents' + (qs ? ('?' + qs) : '');
+      const url = `${this.legacy.apiBaseUrl}/documents` + (qs ? ('?' + qs) : '');
       
       const resp = await fetch(url, { 
         headers,
@@ -231,7 +232,7 @@ export class ReportService {
       if (token) headers['Authorization'] = `Bearer ${token}`;
       
       // Usar fetch diretamente para evitar problemas com HttpClient
-      const resp = await fetch('http://localhost:8081/documents/latest', { 
+      const resp = await fetch(`${this.legacy.apiBaseUrl}/documents/latest`, { 
         headers,
         method: 'GET'
       });
@@ -272,7 +273,7 @@ export class ReportService {
       if (token) headers['Authorization'] = `Bearer ${token}`;
       
       // Usar fetch diretamente para evitar problemas com HttpClient
-      const resp = await fetch('http://localhost:8081/companies', { 
+      const resp = await fetch(`${this.legacy.apiBaseUrl}/companies`, { 
         headers,
         method: 'GET'
       });
@@ -296,7 +297,7 @@ export class ReportService {
       const token = localStorage.getItem('jwtToken');
       const headers: any = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      const resp = await fetch(`http://localhost:8081/job-roles/company/${encodeURIComponent(String(companyId))}`, { headers, method: 'GET' });
+      const resp = await fetch(`${this.legacy.apiBaseUrl}/job-roles/company/${encodeURIComponent(String(companyId))}`, { headers, method: 'GET' });
       if (!resp.ok) throw new Error(`Status ${resp.status}: ${resp.statusText}`);
       return await resp.json();
     } catch (err) {
@@ -310,7 +311,7 @@ export class ReportService {
       const token = localStorage.getItem('jwtToken');
       const headers: any = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      const resp = await fetch('http://localhost:8081/job-roles', { headers, method: 'POST', body: JSON.stringify(payload) });
+      const resp = await fetch(`${this.legacy.apiBaseUrl}/job-roles`, { headers, method: 'POST', body: JSON.stringify(payload) });
       if (!resp.ok) {
         let err = `Status ${resp.status}: ${resp.statusText}`;
         try { const ct = resp.headers.get('content-type') || ''; if (ct.includes('application/json')) { const b = await resp.json(); err += ` | ${JSON.stringify(b)}`; } } catch(_){}
@@ -334,7 +335,7 @@ export class ReportService {
       const cleanedPayload = this.removeNullIds(payload);
       
       const jsonPayload = JSON.stringify(cleanedPayload);
-      const resp = await fetch('http://localhost:8081/risk-checklist', { headers, method: 'POST', body: jsonPayload });
+      const resp = await fetch(`${this.legacy.apiBaseUrl}/risk-checklist`, { headers, method: 'POST', body: jsonPayload });
       if (!resp.ok) {
         let err = `Status ${resp.status}: ${resp.statusText}`;
         try { const ct = resp.headers.get('content-type') || ''; if (ct.includes('application/json')) { const b = await resp.json(); err += ` | ${JSON.stringify(b)}`; } else { const t = await resp.text(); err += ` | ${t}`; } } catch(_){}
@@ -378,7 +379,7 @@ export class ReportService {
       const jsonPayload = JSON.stringify(cleanedPayload);
       console.log('[ReportService] 📤 Enviando PUT para /risk-checklist/:id, tamanho:', jsonPayload.length, 'bytes');
       
-      const resp = await fetch(`http://localhost:8081/risk-checklist/${encodeURIComponent(String(id))}`, { headers, method: 'PUT', body: jsonPayload });
+      const resp = await fetch(`${this.legacy.apiBaseUrl}/risk-checklist/${encodeURIComponent(String(id))}`, { headers, method: 'PUT', body: jsonPayload });
       if (!resp.ok) {
         let err = `Status ${resp.status}: ${resp.statusText}`;
         try { const ct = resp.headers.get('content-type') || ''; if (ct.includes('application/json')) { const b = await resp.json(); err += ` | ${JSON.stringify(b)}`; } else { const t = await resp.text(); err += ` | ${t}`; } } catch(_){}
@@ -404,7 +405,7 @@ export class ReportService {
       // Tentar obter diretamente via /risk-checklist/:id
       try {
         console.log('[ReportService] Tentando GET /risk-checklist/' + id);
-        const resp = await fetch(`http://localhost:8081/risk-checklist/${id}`, { headers, method: 'GET' });
+        const resp = await fetch(`${this.legacy.apiBaseUrl}/risk-checklist/${id}`, { headers, method: 'GET' });
         if (resp.ok) {
           const data = await resp.json();
           console.log('[ReportService] ✅ Sucesso com /risk-checklist/:id', data);
@@ -418,7 +419,7 @@ export class ReportService {
 
       // Se não conseguir via /risk-checklist/:id, buscar na listagem de documentos
       console.log('[ReportService] Tentando GET /documents');
-      const resp = await fetch(`http://localhost:8081/documents`, { headers, method: 'GET' });
+      const resp = await fetch(`${this.legacy.apiBaseUrl}/documents`, { headers, method: 'GET' });
       if (!resp.ok) {
         throw new Error(`Status ${resp.status}: ${resp.statusText}`);
       }
@@ -448,7 +449,7 @@ export class ReportService {
       const token = localStorage.getItem('jwtToken');
       const headers: any = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      const resp = await fetch('http://localhost:8081/physiotherapists', { headers, method: 'GET' });
+      const resp = await fetch(`${this.legacy.apiBaseUrl}/physiotherapists`, { headers, method: 'GET' });
       if (!resp.ok) throw new Error(`Status ${resp.status}: ${resp.statusText}`);
       const data = await resp.json();
       return data;
@@ -464,7 +465,7 @@ export class ReportService {
       const token = localStorage.getItem('jwtToken');
       const headers: any = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      const base = this.getBase() || 'http://localhost:8081';
+      const base = this.getBase() || `${this.legacy.apiBaseUrl}`;
       const resp = await fetch(`${base}/api/agenda/eventos`, { headers, method: 'GET' });
       if (!resp.ok) throw new Error(`Status ${resp.status}: ${resp.statusText}`);
       return await resp.json();
@@ -479,7 +480,7 @@ export class ReportService {
       const token = localStorage.getItem('jwtToken');
       const headers: any = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      const base = this.getBase() || 'http://localhost:8081';
+      const base = this.getBase() || `${this.legacy.apiBaseUrl}`;
       const resp = await fetch(`${base}/api/agenda/eventos`, { headers, method: 'POST', body: JSON.stringify(payload) });
       if (!resp.ok) {
         let errorDetails = `Status ${resp.status}: ${resp.statusText}`;
@@ -505,7 +506,7 @@ export class ReportService {
         crefito: payload?.crefito || payload?.CREFITO || ''
       };
 
-      const resp = await fetch('http://localhost:8081/physiotherapists', { 
+      const resp = await fetch(`${this.legacy.apiBaseUrl}/physiotherapists`, { 
         headers,
         method: 'POST',
         body: JSON.stringify(bodyPayload)
@@ -540,7 +541,7 @@ export class ReportService {
       const token = localStorage.getItem('jwtToken');
       const headers: any = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
-  const base = this.getBase() || 'http://localhost:8081';
+  const base = this.getBase() || `${this.legacy.apiBaseUrl}`;
   const resp = await fetch(`${base}/aep-reports`, { headers, method: 'POST', body: JSON.stringify(payload) });
       if (!resp.ok) {
         let errorDetails = `Status ${resp.status}: ${resp.statusText}`;
@@ -557,7 +558,7 @@ export class ReportService {
       const token = localStorage.getItem('jwtToken');
       const headers: any = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
-  const base = this.getBase() || 'http://localhost:8081';
+  const base = this.getBase() || `${this.legacy.apiBaseUrl}`;
   const resp = await fetch(`${base}/aep-reports/${encodeURIComponent(String(id))}`, { headers, method: 'PUT', body: JSON.stringify(payload) });
       if (!resp.ok) {
         let errorDetails = `Status ${resp.status}: ${resp.statusText}`;
@@ -574,7 +575,7 @@ export class ReportService {
       const token = localStorage.getItem('jwtToken');
       const headers: any = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      const base = this.getBase() || 'http://localhost:8081';
+      const base = this.getBase() || `${this.legacy.apiBaseUrl}`;
       const resp = await fetch(`${base}/aep-reports/${encodeURIComponent(String(id))}`, { headers, method: 'GET' });
       if (!resp.ok) {
         let errorDetails = `Status ${resp.status}: ${resp.statusText}`;
@@ -593,7 +594,7 @@ export class ReportService {
       };
       if (token) headers['Authorization'] = `Bearer ${token}`;
       
-      const resp = await fetch('http://localhost:8081/companies', { 
+      const resp = await fetch(`${this.legacy.apiBaseUrl}/companies`, { 
         headers,
         method: 'POST',
         body: JSON.stringify(payload)
@@ -619,7 +620,7 @@ export class ReportService {
       };
       if (token) headers['Authorization'] = `Bearer ${token}`;
       
-      const resp = await fetch('http://localhost:8081/technical-visits', { 
+      const resp = await fetch(`${this.legacy.apiBaseUrl}/technical-visits`, { 
         headers,
         method: 'POST',
         body: JSON.stringify(payload)

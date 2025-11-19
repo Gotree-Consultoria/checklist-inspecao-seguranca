@@ -1,24 +1,28 @@
 import { Injectable } from '@angular/core';
+import { environment } from '../../environments/environment.prod';
 
 @Injectable({ providedIn: 'root' })
 export class LegacyService {
-  apiBaseUrl = 'environment.apiBaseUrl';
+  apiBaseUrl = environment.apiBaseUrl;  // ✅ Pega do environment
 
   constructor() {
     if (typeof window !== 'undefined') {
       if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         this.apiBaseUrl = 'http://localhost:8081';
-      } else {
-        this.apiBaseUrl = '';
       }
+      // Em produção, mantém o apiBaseUrl do environment (/api)
     }
   }
 
   authHeaders() {
-    const token = localStorage.getItem('jwtToken');
-    // garantir tipo HeadersInit e evitar propriedades undefined
-    if (token) return { Authorization: `Bearer ${token}` } as Record<string,string>;
-    return {} as Record<string,string>;
+    return {
+      'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
+      'Content-Type': 'application/json'
+    };
+  }
+
+  getBase() {
+    return this.apiBaseUrl;  // ✅ Usa o environment
   }
 
   decodeJwt(token: string | null) {

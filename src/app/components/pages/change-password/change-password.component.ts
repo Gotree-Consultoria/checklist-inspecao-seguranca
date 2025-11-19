@@ -117,7 +117,7 @@ export class ChangePasswordComponent implements OnInit {
       let resp: Response | null = null;
       for (const url of urls) {
         try {
-          resp = await fetch(url, { method: 'PUT', headers: { 'Content-Type':'application/json', ...this.legacy.authHeaders() }, body: JSON.stringify(payload) });
+          resp = await fetch(url, { method: 'PUT', headers: { ...this.legacy.authHeaders() }, body: JSON.stringify(payload) });
           if (resp.status !== 404) break;
         } catch (e) { throw e; }
       }

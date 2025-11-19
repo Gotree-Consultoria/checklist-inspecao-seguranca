@@ -255,7 +255,10 @@ export class AepComponent implements OnInit {
       // acrescentar à lista e selecionar
       this.physiotherapists = [ ...(this.physiotherapists || []), created ];
       const id = created.id || created._id || created.ID || created.idPhysio || '';
-  this.form.patchValue({ fisioterapeutaId: id, fisioterapeutaNome: created.name || name });
+      // validar que os controles existem antes de patchValue
+      if (this.form && this.form.get('fisioterapeutaId') && this.form.get('fisioterapeutaNome')) {
+        this.form.patchValue({ fisioterapeutaId: id, fisioterapeutaNome: created.name || name });
+      }
       this.creatingPhysio = false;
       this.newPhysioName = '';
       this.newPhysioCrefito = '';
@@ -301,6 +304,11 @@ export class AepComponent implements OnInit {
   submit(){
     if (this.form.invalid) { this.msg = 'Preencha os campos obrigatórios.'; return; }
     const v = this.form.getRawValue();
+
+    // Validar campos críticos
+    if (!v.company) { this.msg = 'Empresa é obrigatória.'; return; }
+    if (!v.funcao) { this.msg = 'Função avaliada é obrigatória.'; return; }
+    if (!v.evaluator) { this.msg = 'Avaliador é obrigatório.'; return; }
 
     // Varre o DOM do componente para coletar descrições dos riscos marcados
     let selectedRiskDescriptions: string[] = [];

@@ -34,7 +34,7 @@ export class AgendaService {
   }
 
   private headersJson(): Record<string,string> {
-    return { 'Content-Type': 'application/json', ...this.legacy.authHeaders() } as Record<string,string>;
+    return { ...this.legacy.authHeaders() } as Record<string,string>;
   }
 
   /**
