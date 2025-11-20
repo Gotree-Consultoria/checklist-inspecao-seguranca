@@ -143,8 +143,8 @@ export class ReportService {
     
     // Verificar se há campo 'id' com valor null
     if (obj.hasOwnProperty('id')) {
-      if (obj.id === null || obj.id === undefined) {
-        console.warn(`[ReportService] ⚠️ Campo 'id' é nulo em: ${path || 'raiz'}`);
+      if (obj.id === null || obj.id === undefined || obj.id === 0) {
+        console.warn(`[ReportService] ⚠️ Campo 'id' é nulo ou zero em: ${path || 'raiz'}`);
       } else {
         console.log(`[ReportService] ✅ Campo 'id' encontrado em ${path}: ${obj.id}`);
       }
@@ -175,11 +175,11 @@ export class ReportService {
       return obj.map(item => this.removeNullIds(item, depth + 1));
     }
     
-    // Se for objeto, criar cópia sem campos 'id' nulos e 'undefined'
+    // Se for objeto, criar cópia sem campos 'id' nulos, undefined ou zero
     const cleaned: any = {};
     Object.keys(obj).forEach(key => {
       // Se for o campo 'id' e for null/undefined, não incluir
-      if (key === 'id' && (obj[key] === null || obj[key] === undefined)) {
+      if (key === 'id' && (obj[key] === null || obj[key] === undefined || obj[key] === 0)) {
         return; // Pula este campo
       }
       
@@ -499,9 +499,8 @@ export class ReportService {
       const token = localStorage.getItem('jwtToken');
       const headers: any = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      // Garantir o formato exigido pelo backend: { id: 0, name: "", crefito: "" }
-      const bodyPayload = {
-        id: 0,
+      // Enviar apenas os campos necessários (não enviar `id` para evitar conflitos no backend)
+      const bodyPayload: any = {
         name: payload?.name || payload?.nome || '',
         crefito: payload?.crefito || payload?.CREFITO || ''
       };

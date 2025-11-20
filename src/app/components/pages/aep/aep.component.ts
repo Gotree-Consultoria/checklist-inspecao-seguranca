@@ -305,6 +305,8 @@ export class AepComponent implements OnInit {
     if (this.form.invalid) { this.msg = 'Preencha os campos obrigatórios.'; return; }
     const v = this.form.getRawValue();
 
+    console.log('Form values:', v); // ← DEBUG
+
     // Validar campos críticos
     if (!v.company) { this.msg = 'Empresa é obrigatória.'; return; }
     if (!v.funcao) { this.msg = 'Função avaliada é obrigatória.'; return; }
@@ -334,31 +336,25 @@ export class AepComponent implements OnInit {
       companyId: Number(v.company) || null,
       evaluationDate: v.date || '',
       evaluatedFunction: v.funcao || '',
-      // enviar as descrições dos riscos marcados (até definirmos ids)
       selectedRiskIds: selectedRiskDescriptions || [],
       physiotherapistId: Number(v.fisioterapeutaId) || null
     };
 
-    // Se houver id, atualizar via PUT, caso contrário criar via POST
+    console.log('Payload enviado:', aepPayload); // ← DEBUG
+
     (async () => {
       try {
         if (v.id) {
+          console.log('Atualizando AEP ID:', v.id); // ← DEBUG
           const updated = await this.report.putAepReport(v.id, aepPayload);
-          this.ui.showToast('AEP atualizada com sucesso.', 'success');
-          // atualizar rascunho local com id
-          localStorage.setItem('aepDraft', JSON.stringify({ ...aepPayload, id: updated.id || v.id }));
-          this.msg = 'AEP atualizada no servidor.';
+          console.log('Resposta PUT:', updated); // ← DEBUG
         } else {
+          console.log('Criando nova AEP'); // ← DEBUG
           const created = await this.report.postAepReport(aepPayload);
-          this.ui.showToast('AEP criada com sucesso.', 'success');
-          localStorage.setItem('aepDraft', JSON.stringify({ ...aepPayload, id: created.id || created.reportId || '' }));
-          this.msg = 'AEP criada no servidor.';
+          console.log('Resposta POST:', created); // ← DEBUG
         }
       } catch (err:any) {
-        // fallback: salvar localmente e mostrar erro
-        localStorage.setItem('aepDraft', JSON.stringify(aepPayload));
-        this.msg = 'Erro ao salvar no servidor — rascunho salvo localmente.';
-        this.ui.showToast(err?.message || 'Erro ao enviar AEP', 'error');
+        console.error('Erro ao salvar:', err); // ← DEBUG
       }
     })();
   }

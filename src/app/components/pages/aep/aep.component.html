@@ -116,13 +116,13 @@
             <div class="field-row">
               <label class="field-label">Novo Fisioterapeuta:</label>
               <div class="field-input">
-                <input class="form-control" [(ngModel)]="newPhysioName" name="newPhysioName" placeholder="Nome" />
+                <input class="form-control" [(ngModel)]="newPhysioName" [ngModelOptions]="{standalone: true}" placeholder="Nome" />
               </div>
             </div>
             <div class="field-row">
               <label class="field-label">CREFITO:</label>
               <div class="field-input">
-                <input class="form-control" [(ngModel)]="newPhysioCrefito" name="newPhysioCrefito" placeholder="CREFITO" />
+                <input class="form-control" [(ngModel)]="newPhysioCrefito" [ngModelOptions]="{standalone: true}" placeholder="CREFITO" />
               </div>
             </div>
             <div class="field-row">
