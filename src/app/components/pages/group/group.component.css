@@ -58,11 +58,36 @@ section.group-page .action-buttons { margin-bottom: 44px !important; }
 	.action-btn { flex: 1 1 220px; min-width: 160px; }
 }
 
-/* Small screens / mobile: show two buttons per row */
+/* Small screens / mobile: show two buttons per row with icon centered and text below */
 @media (max-width:640px){
-	.action-buttons { justify-content: space-between; }
-	.action-btn { flex: 0 0 calc(50% - 9px); max-width: calc(50% - 9px); padding:10px 12px; box-sizing:border-box; min-height: 64px; }
-	.action-btn .text { align-items: flex-start; }
+	.action-buttons { justify-content: space-between; gap:12px; padding: 0 6px; }
+	.action-btn {
+		flex: 0 0 calc(50% - 9px);
+		max-width: calc(50% - 9px);
+		padding:12px 10px;
+		box-sizing:border-box;
+		min-height: 86px;
+		display:flex;
+		flex-direction:column;
+		align-items:center;
+		justify-content:center;
+		text-align:center;
+		gap:8px;
+		border-radius:10px;
+	}
+	.action-btn .icon { font-size:1.9rem; line-height:1; }
+	.action-btn .text { align-items:center; }
+	.action-btn strong { display:block; font-size:0.95rem; }
+	.action-btn small { display:block; font-size:0.72rem; }
+
+	/* touch affordance: make full-tap area and subtle hover on capable devices */
+	.action-btn { -webkit-tap-highlight-color: rgba(0,0,0,0); }
+	@media (hover: hover) and (pointer: fine) {
+		.action-btn:hover { transform: translateY(-6px); box-shadow: 0 10px 22px rgba(15,23,42,0.12); }
+	}
+
+	/* ensure icon buttons inside table keep small style */
+	.icon-btn { width:36px; height:36px; }
 }
 
 .history-section { padding: var(--spacing-md); background-color: #ffffff; border-radius: 12px; box-shadow: var(--shadow-sm); border: 1px solid rgba(0,0,0,0.03); margin-top: 18px; }
