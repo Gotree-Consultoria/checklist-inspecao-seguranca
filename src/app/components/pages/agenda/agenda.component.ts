@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ViewChild } from '@angular/core';
+import { Component, OnInit, inject, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
 import { FullCalendarComponent } from '@fullcalendar/angular';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -21,7 +21,7 @@ import { AgendaModalComponent, AgendaModalMode } from '../../shared/agenda-modal
   templateUrl: './agenda.component.html',
   styleUrls: ['./agenda.component.css']
 })
-export class AgendaComponent implements OnInit {
+export class AgendaComponent implements OnInit, AfterViewInit, OnDestroy {
   private agendaService = inject(AgendaService);
   private ui = inject(UiService);
   private legacy = inject(LegacyService);
@@ -53,6 +53,16 @@ export class AgendaComponent implements OnInit {
     eventDrop: (info: EventDropArg) => this.handleEventDrop(info),
     eventDisplay: 'block',
     eventTimeFormat: { hour: 'numeric', minute: '2-digit', meridiem: 'short' }
+    ,
+    // garantir que após cada view ser montada a toolbar seja verificada/ajustada
+    viewDidMount: () => {
+      // small async tick to let FullCalendar finish any inline style adjustments
+      setTimeout(() => this.adjustToolbarLayout?.(), 0);
+    },
+    // quando a janela for redimensionada, reajustar
+    windowResize: () => {
+      this.adjustToolbarLayout?.();
+    }
   };
 
   async ngOnInit(): Promise<void> {
@@ -68,6 +78,78 @@ export class AgendaComponent implements OnInit {
     } else {
       // no ActivatedRoute available (tests or non-router context) -> just load eventos
       await this.loadEventos();
+    }
+  }
+
+  ngAfterViewInit(): void {
+    // Ajuste inicial e listener de resize para manter toolbar empilhada em telas pequenas
+    this.adjustToolbarLayout();
+    this._resizeHandler = () => this.adjustToolbarLayout();
+    window.addEventListener('resize', this._resizeHandler);
+  }
+
+  ngOnDestroy(): void {
+    if (this._resizeHandler) window.removeEventListener('resize', this._resizeHandler);
+  }
+
+  // referência ao handler para remover no destroy
+  private _resizeHandler: any = null;
+
+  /**
+   * Força o empilhamento da toolbar do FullCalendar em telas pequenas.
+   * Remove estilos inline que o FullCalendar às vezes aplica e adiciona
+   * a classe `fc-toolbar-stacked` no container para regras CSS específicas.
+   */
+  private adjustToolbarLayout(): void {
+    try {
+      const container = document.querySelector('.calendar-container');
+      if (!container) return;
+      const toolbar = container.querySelector('.fc-toolbar') as HTMLElement | null;
+      const shouldStack = window.innerWidth <= 480;
+      if (shouldStack) {
+        container.classList.add('fc-toolbar-stacked');
+      } else {
+        container.classList.remove('fc-toolbar-stacked');
+      }
+
+      if (toolbar) {
+        // remover propriedades que podem estar em linha e forçar layout responsivo
+        toolbar.style.removeProperty('position');
+        toolbar.style.removeProperty('left');
+        toolbar.style.removeProperty('right');
+        toolbar.style.removeProperty('top');
+        toolbar.style.removeProperty('transform');
+        toolbar.style.width = '';
+
+        // também limpar nos filhos imediatos (left/center/right) pois FullCalendar pode aplicar position absolut
+        const children = Array.from(toolbar.querySelectorAll<HTMLElement>('*'));
+        children.forEach(ch => {
+          ch.style.removeProperty('position');
+          ch.style.removeProperty('left');
+          ch.style.removeProperty('right');
+          ch.style.removeProperty('top');
+          ch.style.removeProperty('transform');
+          ch.style.removeProperty('width');
+        });
+        // Ajuste direto no(s) título(s) do toolbar para garantir redução em telas pequenas
+        const titles = Array.from(container.querySelectorAll<HTMLElement>('.fc-toolbar-title, h2[id^="fc-dom-"]'));
+        titles.forEach(t => {
+          if (shouldStack) {
+            t.style.fontSize = '0.85rem';
+            t.style.lineHeight = '1';
+            t.style.maxHeight = '3.6rem';
+            t.style.overflow = 'hidden';
+          } else {
+            t.style.removeProperty('font-size');
+            t.style.removeProperty('line-height');
+            t.style.removeProperty('max-height');
+            t.style.removeProperty('overflow');
+          }
+        });
+      }
+    } catch (e) {
+      // Não quebrar a aplicação por causa de ajustes de layout
+      // console.debug('adjustToolbarLayout falhou', e);
     }
   }
 

@@ -238,7 +238,8 @@ describe('AgendaComponent', () => {
         {
           title: data.title,
           description: data.description || null,
-          eventDate: data.date
+          eventDate: data.date,
+          eventType: 'EVENTO'
         }
       );
       expect(uiService.showToast).toHaveBeenCalledWith(
