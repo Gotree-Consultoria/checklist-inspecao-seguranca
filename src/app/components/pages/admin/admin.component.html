@@ -77,6 +77,9 @@
                     <button class="btn-action btn-delete" *ngIf="(u.role||'').toUpperCase()!=='ADMIN'" (click)="deleteUser(u.id)" title="Excluir usuário">
                       🗑️
                     </button>
+                    <button class="btn-action btn-reset" *ngIf="(u.role||'').toUpperCase()!=='ADMIN'" (click)="resetUserPassword(u.id)" title="Resetar senha">
+                      🔑
+                    </button>
                     <span class="protected" *ngIf="(u.role||'').toUpperCase()==='ADMIN'" title="Usuário administrador">🔒</span>
                   </td>
                 </tr>

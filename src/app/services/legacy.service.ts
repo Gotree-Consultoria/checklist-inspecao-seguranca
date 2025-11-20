@@ -8,7 +8,7 @@ export class LegacyService {
   constructor() {
     if (typeof window !== 'undefined') {
       if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        this.apiBaseUrl = 'http://localhost:8081';
+        this.apiBaseUrl = 'http://localhost:8081';  // ⚠️ Sobrescreve para desenvolvimento local
       }
       // Em produção, mantém o apiBaseUrl do environment (/api)
     }

@@ -118,6 +118,34 @@ export class AdminComponent implements OnInit {
     }
   }
 
+  async resetUserPassword(userId: string) {
+    if (!userId) return;
+    const me = (window as any).__cachedUserMe;
+    if (me && me.id && String(me.id) === String(userId)) {
+      this.ui.showToast('Você não pode resetar a sua própria senha por aqui.', 'error');
+      return;
+    }
+    const proceed = window.confirm('Deseja realmente resetar a senha deste usuário?');
+    if (!proceed) return;
+    try {
+      const resp = await fetch(`${this.legacy.apiBaseUrl}/users/admin/reset-password/${encodeURIComponent(userId)}`, {
+        method: 'PUT',
+        headers: this.legacy.authHeaders()
+      });
+      const txt = await resp.text().catch(() => '');
+      if (!resp.ok) {
+        let serverMsg = txt || `Erro ao resetar senha (status ${resp.status})`;
+        try { const parsed = JSON.parse(txt); serverMsg = parsed.message || parsed.error || serverMsg; } catch(e) {}
+        this.ui.showToast(serverMsg, 'error');
+        throw new Error(serverMsg);
+      }
+      this.ui.showToast('Senha resetada com sucesso', 'success');
+      this.loadUsers();
+    } catch (e: any) {
+      this.ui.showToast(e?.message || 'Erro ao resetar senha', 'error');
+    }
+  }
+
   openEditUserModal(user: any) {
     this.editingUserId = user.id;
     this.editUserForm.patchValue({
