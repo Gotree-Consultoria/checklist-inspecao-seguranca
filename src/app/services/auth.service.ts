@@ -13,6 +13,13 @@ export class AuthService {
         this.http.post<any>('/auth/login', { email, password })
       );
       console.log('[AuthService] Resposta do login:', response);
+
+      if (response && response.token) {
+                // O AuthInterceptor e o logout esperam a chave 'jwtToken'
+                localStorage.setItem('jwtToken', response.token); 
+                localStorage.setItem('userRole', response.role); 
+            }
+
       return response;
     } catch (err) {
       console.error('[AuthService] Erro no login:', err);
