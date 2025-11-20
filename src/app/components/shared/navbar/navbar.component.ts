@@ -12,19 +12,62 @@ import { LegacyService } from '../../../services/legacy.service';
     <div class="nav-left">
   <div class="brand" aria-label="Aplicação"></div>
 
-      <!-- hamburger visível em mobile -->
-      <button class="hamburger" aria-label="Abrir menu" (click)="toggleNav($event)">
-        <span class="bar"></span>
-        <span class="bar"></span>
-        <span class="bar"></span>
-      </button>
+      <!-- menu sempre horizontal; hamburger removido -->
 
       <ul class="nav-links">
-        <li><a href="#" (click)="navigate('group', $event)" data-nav="group">Início</a></li>
-        <li><a href="#" (click)="navigate('dashboard', $event)" data-nav="dashboard">Dashboard</a></li>
-        <li><a href="#" (click)="navigate('agenda', $event)" data-nav="agenda">Agenda</a></li>
-        <li><a href="#" (click)="navigate('documents', $event)" data-nav="documents">Documentos</a></li>
-        <li class="admin-only" *ngIf="isAdmin"><a href="#" (click)="navigate('admin', $event)" data-nav="admin">Administrador</a></li>
+        <li>
+          <a href="#" (click)="navigate('group', $event)" data-nav="group" aria-label="Início">
+            <!-- home icon (roof + square) -->
+            <svg class="nav-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M3 11.5L12 4l9 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <rect x="6" y="11.5" width="12" height="8" rx="1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <span class="nav-text">Início</span>
+          </a>
+        </li>
+        <li>
+          <a href="#" (click)="navigate('dashboard', $event)" data-nav="dashboard" aria-label="Dashboard">
+            <!-- bars chart -->
+            <svg class="nav-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect x="3" y="10" width="3" height="9" rx="0.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <rect x="9" y="6" width="3" height="13" rx="0.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <rect x="15" y="3" width="3" height="16" rx="0.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <span class="nav-text">Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a href="#" (click)="navigate('agenda', $event)" data-nav="agenda" aria-label="Agenda">
+            <!-- calendar with rounded corners and two dots -->
+            <svg class="nav-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M16 2v4M8 2v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <circle cx="8.5" cy="12.5" r="0.8" fill="currentColor" />
+              <circle cx="15.5" cy="12.5" r="0.8" fill="currentColor" />
+            </svg>
+            <span class="nav-text">Agenda</span>
+          </a>
+        </li>
+        <li>
+          <a href="#" (click)="navigate('documents', $event)" data-nav="documents" aria-label="Documentos">
+            <!-- sheet with folded corner -->
+            <svg class="nav-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M14 3v6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <span class="nav-text">Documentos</span>
+          </a>
+        </li>
+        <li class="admin-only" *ngIf="isAdmin">
+          <a href="#" (click)="navigate('admin', $event)" data-nav="admin" aria-label="Administrador">
+            <!-- gear with 6 teeth (simplified) -->
+            <svg class="nav-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06A2 2 0 0 1 2.28 16.9l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09c.66 0 1.22-.4 1.51-1a1.65 1.65 0 0 0-.33-1.82L4.3 4.28A2 2 0 0 1 7.13 1.45l.06.06c.59.59 1.53.59 2.12 0 .59-.59.59-1.53 0-2.12L9.88.39A2 2 0 0 1 12 3.21l.06-.06c.59-.59 1.53-.59 2.12 0 .59.59.59 1.53 0 2.12l.06.06a2 2 0 0 1 2.83 2.83l-.06.06c-.59.59-.59 1.53 0 2.12.59.59 1.53.59 2.12 0l.06-.06A2 2 0 0 1 22 8.87l-.06.06c-.59.59-.59 1.53 0 2.12.59.59 1.53.59 2.12 0l.06-.06A2 2 0 0 1 19.4 15z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <span class="nav-text">Administrador</span>
+          </a>
+        </li>
       </ul>
     </div>
     <div class="nav-right">
@@ -44,7 +87,7 @@ import { LegacyService } from '../../../services/legacy.service';
       </div>
     </div>
   </nav>
-  <div class="nav-backdrop" [class.show]="navOpen" (click)="toggleNav($event)"></div>
+  <div class="nav-backdrop" [class.show]="navOpen" (click)="toggleNav($event)" *ngIf="false"></div>
   `,
   styleUrls: ['./navbar.component.css']
 })

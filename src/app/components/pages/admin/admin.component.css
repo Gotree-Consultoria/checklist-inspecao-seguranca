@@ -380,6 +380,12 @@
   transform: scale(1.1);
 }
 
+/* Estilo hover para o botão de reset (🔑) - mesmo comportamento de escala e destaque */
+.btn-reset:hover {
+  background: #fff3cd; /* tom suave amarelo */
+  transform: scale(1.1);
+}
+
 /* Legacy - manter para compatibilidade */
 .company-list {
   display: none;
