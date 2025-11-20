@@ -7,14 +7,9 @@
     <div *ngIf="!isAdmin">
     <h1 class="page-title">Dashboard do Usuário</h1>
 
-    <!-- Dynamic, draggable dashboard cards -->
+    <!-- Dynamic, draggable dashboard cards (fixed size, no resize) -->
     <div class="dashboard-grid" (dragover)="onDragOver($event)" (click)="clearSelection()">
    <div *ngFor="let card of cardOrder; let i = index" class="card-wrapper"
-     [style.gridColumn]="'span ' + getGridSpan(card)"
-     [class.span-1]="getGridSpan(card) === 1"
-     [class.span-2]="getGridSpan(card) === 2"
-     [class.span-3]="getGridSpan(card) === 3"
-     [class.span-4]="getGridSpan(card) === 4"
      draggable="true" (click)="onCardClick(i, $event)"
      (touchstart)="onTouchStart($event, i)" (touchmove)="onTouchMove($event)" (touchend)="onTouchEnd($event)"
      (dragstart)="onDragStart($event, i)" (dragover)="onDragOver($event)" (drop)="onDropNative($event,i)"
@@ -23,17 +18,18 @@
         <ng-container [ngSwitch]="card">
           <!-- Actions card -->
           <div *ngSwitchCase="'actions'" class="card action-card">
-            <h3>Ações Rápidas <button class="size-btn" type="button" (click)="cycleSize('actions',$event)">▤</button></h3>
+            <h3>Ações Rápidas</h3>
             <div class="actions-list">
-            <button class="btn-primary" type="button" (click)="goTo('/visits/new')"><span class="btn-icon">➕</span><span class="btn-text">Visita</span></button>
-            <button class="btn-primary" type="button" (click)="goTo('/aep/new')"><span class="btn-icon">➕</span><span class="btn-text">AEP</span></button>
+            <button class="btn-primary" type="button" (click)="goTo('/report')"><span class="btn-icon">📝</span><span class="btn-text">Visita</span></button>
+            <button class="btn-primary" type="button" (click)="goTo('/aep')"><span class="btn-icon">🛡️</span><span class="btn-text">AEP</span></button>
+            <button class="btn-primary" type="button" (click)="goTo('/checklist')"><span class="btn-icon">✅</span><span class="btn-text">Check-List</span></button>
             <button class="btn-primary" type="button" (click)="goTo('/agenda')"><span class="btn-icon">➕</span><span class="btn-text">Evento</span></button>
             </div>
           </div>
 
           <!-- KPIs card -->
           <div *ngSwitchCase="'kpis'" class="card kpi-card">
-            <h3>Meus Indicadores (KPIs) <button class="size-btn" type="button" (click)="cycleSize('kpis',$event)">▤</button></h3>
+            <h3>Meus Indicadores (KPIs)</h3>
             <div class="kpi-grid">
               <div class="kpi-item">
                 <div class="kpi-value">{{ kpis.totalVisits }}</div>
@@ -56,7 +52,7 @@
 
           <!-- Top companies card -->
           <div *ngSwitchCase="'topCompanies'" class="card list-card">
-            <h3>Top 5 Empresas <button class="size-btn" type="button" (click)="cycleSize('topCompanies',$event)">▤</button></h3>
+            <h3>Top 5 Empresas</h3>
             <div class="companies-list">
               <div *ngIf="topCompanies && topCompanies.length > 0; else noCompanies">
                 <div class="company-item" *ngFor="let c of topCompanies; let idx = index">
@@ -75,7 +71,7 @@
 
           <!-- Agenda card -->
           <div *ngSwitchCase="'agenda'" class="card agenda-card">
-            <h3>Minha Agenda (próximos 5) <button class="size-btn" type="button" (click)="cycleSize('agenda',$event)">▤</button></h3>
+            <h3>Minha Agenda (próximos 5)</h3>
             <div class="agenda-list">
               <div *ngIf="myAgenda && myAgenda.length > 0; else noAgenda">
                 <div class="agenda-item" *ngFor="let ev of myAgenda" [ngClass]="{ 'visita': ev.type === 'VISITA' }">
@@ -99,7 +95,7 @@
 
           <!-- Recent card -->
           <div *ngSwitchCase="'recent'" class="card recent-card">
-            <h3>Inspeções Recentes <button class="size-btn" type="button" (click)="cycleSize('recent',$event)">▤</button></h3>
+            <h3>Inspeções Recentes</h3>
             <!-- keep the existing recent-table markup inside the card -->
             <div class="recent-table">
               <div class="recent-row header">

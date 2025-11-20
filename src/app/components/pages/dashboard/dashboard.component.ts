@@ -44,11 +44,11 @@ export class DashboardComponent implements OnInit {
   pdfBlobUrl: string | null = null;
 
   // card order for drag-drop (persisted per user via localStorage)
-  cardOrder: string[] = ['actions','kpis','topCompanies','agenda','recent'];
+  cardOrder: string[] = ['kpis','actions','topCompanies','agenda','recent'];
   // edit mode helps mobile users reposition via tap-to-pick/place
   editLayoutMode = false;
   selectedCardIndex: number | null = null;
-  // card size map: 1 => 1/4, 2 => 2/4, 3 => 3/4, 4 => full width
+  // card size map: DISABLED - all cards now fixed size
   cardSizes: Record<string, number> = { actions: 1, kpis: 1, topCompanies: 1, agenda: 1, recent: 1 };
   // touch-longpress helpers
   private touchTimer: any = null;
@@ -281,22 +281,11 @@ export class DashboardComponent implements OnInit {
     this.selectedCardIndex = null;
   }
 
-  // cycle size for a given card: 1->2->3->4->1
-  cycleSize(cardId: string, evt?: Event) {
-    if (evt) { evt.stopPropagation(); evt.preventDefault(); }
-    const cur = this.cardSizes[cardId] || 1;
-    const next = cur >= 4 ? 1 : cur + 1;
-    this.cardSizes[cardId] = next;
-    this.saveLayout();
-  }
+  // DISABLED: cycle size for a given card (all cards now fixed size)
+  // cycleSize(cardId: string, evt?: Event) { }
 
-  // return CSS grid span for a card (1..4)
-  getGridSpan(cardId: string): number {
-    try {
-      const span = Number(this.cardSizes[cardId] || 1);
-      return Math.min(4, Math.max(1, isNaN(span) ? 1 : span));
-    } catch (_) { return 1; }
-  }
+  // DISABLED: return CSS grid span for a card (all cards now fixed at span 1)
+  // getGridSpan(cardId: string): number { return 1; }
 
   clearSelection() {
     this.selectedCardIndex = null;
