@@ -5,11 +5,6 @@
 .admin-header .page-title { text-align: center; margin: 0 0 calc(var(--spacing-lg, 32px)); font-size: 1.6rem; color: var(--verde-escuro, #1a7a5e); font-weight: 600; width: 100%; }
 .admin-header-actions { display:flex; gap:12px; align-items:center; flex-wrap: wrap; }
 
-/* Ensure header actions don't get cut: allow horizontal scroll instead of wrapping/cutting */
-.admin-header { overflow-x: visible; }
-.admin-header-actions { flex-wrap: wrap; overflow-x: visible; }
-.admin-header-actions .header-btn { flex: 0 0 auto; white-space: normal; }
-
 /* Estilos dos botões do header */
 .header-btn {
   display: inline-flex;
@@ -136,21 +131,11 @@
 
 /* Desktop: explicit 3-column layout with areas for stable alignment */
 @media (min-width: 961px) {
-  /* Layout for large screens:
-     - First row: two equal columns (Atalhos | Indicadores)
-     - Second row: Documentos por Usuário spans full width
-     - Third row: Atividade Recente spans full width (requested)
-     - Fourth row: agenda (can occupy full row or adapt below as needed)
-     This ensures the recent card doesn't get squeezed on the right and occupies its own line. */
   .admin-grid {
     grid-template-columns: repeat(2, minmax(320px, 1fr));
-    grid-template-areas:
-      "actions kpis"
-      "docs docs"
-      "recent recent"
-      "agenda agenda";
+    grid-template-areas: "actions kpis" "docs docs" "recent recent" "agenda agenda";
     gap: 24px;
-    align-items: stretch; /* make cards in the same row match heights */
+    align-items: stretch;
   }
   .action-card { grid-area: actions; }
   .kpi-card { grid-area: kpis; }
@@ -161,7 +146,6 @@
 
 /* Tablet / small desktop: two columns */
 @media (min-width: 720px) and (max-width: 960px) {
-  /* Tablet/small desktop: two columns, make recent occupy full width below docs */
   .admin-grid { grid-template-columns: 1fr 1fr; grid-template-areas: "actions kpis" "docs docs" "recent recent" "agenda agenda"; }
   .action-card { grid-area: actions; }
   .kpi-card { grid-area: kpis; }
@@ -184,7 +168,6 @@
 .dashboard-admin .agenda-list { display:flex; flex-direction:column; gap:12px; }
 .dashboard-admin .agenda-item { display:flex; gap:12px; align-items:flex-start; padding:14px; border-radius:10px; background:linear-gradient(180deg,#fff,#fbfdff); }
 .dashboard-admin .agenda-date { width:56px; height:56px; background:#0ea5a0; color:#fff; border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:800; }
-.dashboard-admin .recent-table { border-radius:8px; padding:0; background:linear-gradient(180deg,#fff,#fbfdff); box-shadow:0 8px 18px rgba(2,6,23,0.04); overflow:hidden; }
 .dashboard-admin .recent-table { border-radius:8px; padding:12px; background:linear-gradient(180deg,#fff,#fbfdff); box-shadow:0 8px 18px rgba(2,6,23,0.04); overflow:hidden; }
 .dashboard-admin .recent-row { display:flex; gap:12px; align-items:center; padding:12px 8px; border-bottom:1px solid #f1f5f9; flex-wrap: nowrap; overflow-x: auto; }
 .dashboard-admin .recent-row.header { background:transparent; font-weight:700; color:rgba(0,0,0,0.65); padding-bottom:8px; margin-bottom:6px; border-bottom:1px solid rgba(241,245,249,0.9); }
@@ -273,27 +256,6 @@
     flex: none !important;
     min-width: unset !important;
     max-width: unset !important;
-  }
-
-  .dashboard-admin .recent-row .col.type {
-    flex: none !important;
-    min-width: unset !important;
-    max-width: unset !important;
-  }
-
-  .dashboard-admin .recent-row .col.title {
-    flex: none !important;
-    min-width: unset !important;
-  }
-
-  .dashboard-admin .recent-row .col.company {
-    flex: none !important;
-    min-width: unset !important;
-  }
-
-  .dashboard-admin .recent-row .col.user {
-    flex: none !important;
-    min-width: unset !important;
   }
 
   .dashboard-admin .recent-row .col::before {
@@ -406,10 +368,6 @@
 .dashboard-admin .chart-card .doc-row .col.doc { flex: 3 1 0; min-width:220px; color:rgba(0,0,0,0.75); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .dashboard-admin .chart-card .doc-row .col.qty { flex: 0 0 80px; text-align:right; color:rgba(0,0,0,0.6); }
 .dashboard-admin .chart-card .muted { color:rgba(0,0,0,0.45); }
-
-/* Allow horizontal scrolling for document rows and ensure column layout doesn't break
-  on narrow viewports: columns keep min-width and parent scrolls horizontally. */
-/* doc-table and doc-row layout controlled by media queries below */
 
 /* Make long user names truncate and add subtle spacing */
 .dashboard-admin .chart-card .bar-label { max-width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
