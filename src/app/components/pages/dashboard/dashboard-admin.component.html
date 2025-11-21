@@ -55,10 +55,10 @@
           </div>
           <div *ngIf="recentAdminItems && recentAdminItems.length; else noRecentAdmin">
             <div class="recent-row" *ngFor="let item of recentAdminItems">
-              <div class="col type">{{ item.type || '-' }}</div>
-              <div class="col title">{{ item.title }}</div>
-              <div class="col company">{{ item.company || '-' }}</div>
-              <div class="col company">{{ item.user || '-' }}</div>
+              <div class="col type" data-label="Tipo">{{ item.type || '-' }}</div>
+              <div class="col title" data-label="Documento">{{ item.title }}</div>
+              <div class="col company" data-label="Empresa">{{ item.company || '-' }}</div>
+              <div class="col company" data-label="Usuário">{{ item.user || '-' }}</div>
             </div>
           </div>
           <ng-template #noRecentAdmin>
@@ -97,9 +97,9 @@
 
             <div *ngIf="adminDocs && adminDocs.length; else noAdminDocs">
               <div class="doc-row" *ngFor="let d of adminDocs">
-                <div class="col name">{{ d.userName || d.name || ('User ' + (d.userId||'')) }}</div>
-                <div class="col doc">{{ d.lastDocumentTitle || d.documentTitle || d.title || '-' }}</div>
-                <div class="col qty" *ngIf="(d.visits || d.aeps)">{{ (d.visits||0) + (d.aeps||0) }}</div>
+                <div class="col name" data-label="Nome">{{ d.userName || d.name || ('User ' + (d.userId||'')) }}</div>
+                <div class="col doc" data-label="Documento">{{ d.lastDocumentTitle || d.documentTitle || d.title || '-' }}</div>
+                <div class="col qty" data-label="Quantidade" *ngIf="(d.visits || d.aeps)">{{ (d.visits||0) + (d.aeps||0) }}</div>
               </div>
             </div>
 

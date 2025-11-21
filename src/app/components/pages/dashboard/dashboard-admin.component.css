@@ -2,8 +2,13 @@
 /* ensure all admin elements use border-box to avoid unexpected overflow from padding/margins */
 .dashboard-admin *, .dashboard-admin *:before, .dashboard-admin *:after { box-sizing: inherit; }
 .admin-header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
-.admin-header .page-title { margin:0; font-size:1.8rem; }
+.admin-header .page-title { text-align: center; margin: 0 0 calc(var(--spacing-lg, 32px)); font-size: 1.6rem; color: var(--verde-escuro, #1a7a5e); font-weight: 600; width: 100%; }
 .admin-header-actions { display:flex; gap:12px; align-items:center; flex-wrap: wrap; }
+
+/* Ensure header actions don't get cut: allow horizontal scroll instead of wrapping/cutting */
+.admin-header { overflow-x: visible; }
+.admin-header-actions { flex-wrap: wrap; overflow-x: visible; }
+.admin-header-actions .header-btn { flex: 0 0 auto; white-space: normal; }
 
 /* Estilos dos botões do header */
 .header-btn {
@@ -181,9 +186,9 @@
 .dashboard-admin .agenda-date { width:56px; height:56px; background:#0ea5a0; color:#fff; border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:800; }
 .dashboard-admin .recent-table { border-radius:8px; padding:0; background:linear-gradient(180deg,#fff,#fbfdff); box-shadow:0 8px 18px rgba(2,6,23,0.04); overflow:hidden; }
 .dashboard-admin .recent-table { border-radius:8px; padding:12px; background:linear-gradient(180deg,#fff,#fbfdff); box-shadow:0 8px 18px rgba(2,6,23,0.04); overflow:hidden; }
-.dashboard-admin .recent-row { display:flex; gap:18px; align-items:center; padding:12px 8px; border-bottom:1px solid #f1f5f9; }
+.dashboard-admin .recent-row { display:flex; gap:12px; align-items:center; padding:12px 8px; border-bottom:1px solid #f1f5f9; flex-wrap: nowrap; overflow-x: auto; }
 .dashboard-admin .recent-row.header { background:transparent; font-weight:700; color:rgba(0,0,0,0.65); padding-bottom:8px; margin-bottom:6px; border-bottom:1px solid rgba(241,245,249,0.9); }
-.dashboard-admin .recent-row .col { padding:0 8px; }
+.dashboard-admin .recent-row .col { padding:0 8px; flex-shrink: 0; }
 
 /* Column sizing to better use available space */
 .dashboard-admin .recent-row .col.type { flex: 0 0 180px; max-width:220px; }
@@ -194,6 +199,185 @@
 @media (max-width: 720px) {
   .admin-header { flex-direction:column; align-items:flex-start; gap:8px; }
   .admin-grid { grid-template-columns: 1fr; }
+  
+  /* Mobile: reduzir padding geral */
+  .dashboard-admin { padding: 4px 0 8px; }
+  .dashboard-admin .card { padding: 10px; gap: 8px; }
+  .admin-header .page-title { font-size: 1.4rem; margin-bottom: 6px; }
+  
+  /* Mobile: botões do header compactos */
+  .header-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+    gap: 4px;
+  }
+  
+  .header-btn .btn-icon {
+    font-size: 14px;
+  }
+  
+  /* Mobile: cards com gap reduzido */
+  .admin-grid { gap: 12px; }
+  
+  /* Mobile: KPI grid em coluna ou 2 colunas */
+  .dashboard-admin .kpi-grid { 
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .dashboard-admin .kpi-item {
+    min-height: 60px;
+    padding: 8px;
+  }
+  
+  .dashboard-admin .kpi-value { font-size: 1.2rem; }
+  .dashboard-admin .kpi-label { font-size: 0.8rem; }
+  
+  /* Mobile: action buttons empilhados e compactos */
+  .dashboard-admin .action-card .actions-list { gap: 8px; }
+  .dashboard-admin .action-card .btn-primary { 
+    min-height: 56px; 
+    padding: 8px 10px;
+    font-size: 0.9rem;
+    gap: 8px;
+  }
+  
+  /* Mobile: reduzir tamanho de ícones */
+  .dashboard-admin .action-card .btn-primary .btn-icon { font-size: 18px; }
+  
+  /* Mobile: transformar 'Recent Activity' em cartões empilhados para melhor leitura */
+  .dashboard-admin .recent-table {
+    display: block;
+    padding: 0;
+  }
+
+  .dashboard-admin .recent-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 8px;
+    background: #fff;
+    margin-bottom: 10px;
+    border: 1px solid #e5e7eb;
+  }
+
+  .dashboard-admin .recent-row.header { display: none; }
+
+  .dashboard-admin .recent-row .col {
+    width: 100%;
+    padding: 0;
+    overflow: visible;
+    white-space: normal;
+    text-overflow: unset;
+    flex: none !important;
+    min-width: unset !important;
+    max-width: unset !important;
+  }
+
+  .dashboard-admin .recent-row .col.type {
+    flex: none !important;
+    min-width: unset !important;
+    max-width: unset !important;
+  }
+
+  .dashboard-admin .recent-row .col.title {
+    flex: none !important;
+    min-width: unset !important;
+  }
+
+  .dashboard-admin .recent-row .col.company {
+    flex: none !important;
+    min-width: unset !important;
+  }
+
+  .dashboard-admin .recent-row .col.user {
+    flex: none !important;
+    min-width: unset !important;
+  }
+
+  .dashboard-admin .recent-row .col::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: rgba(0,0,0,0.65);
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+  }
+  
+  /* Doc table cards */
+  .dashboard-admin .chart-card .doc-table {
+    display: block;
+    padding: 0;
+  }
+  
+  .dashboard-admin .chart-card .doc-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px;
+    background: #f9fafb;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #e5e7eb;
+  }
+  
+  .dashboard-admin .chart-card .doc-row.header { display: none; }
+  
+  .dashboard-admin .chart-card .doc-row .col {
+    width: 100%;
+    padding: 0;
+  }
+  
+  .dashboard-admin .chart-card .doc-row .col::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: rgba(0,0,0,0.65);
+    display: block;
+    font-size: 0.85rem;
+    margin-bottom: 2px;
+  }
+  
+  .dashboard-admin .chart-card .doc-row .col.qty {
+    text-align: left;
+  }
+  
+  /* Mobile: agenda items mais compactos */
+  .dashboard-admin .agenda-item {
+    gap: 8px;
+    padding: 10px;
+  }
+  
+  .dashboard-admin .agenda-date {
+    width: 48px;
+    height: 48px;
+    font-size: 0.85rem;
+  }
+  
+  .dashboard-admin .agenda-body {
+    flex: 1;
+  }
+  
+  .dashboard-admin .agenda-title { font-size: 0.95rem; }
+  .dashboard-admin .agenda-meta { font-size: 0.8rem; }
+  
+  /* Mobile: filtros em coluna */
+  .dashboard-admin .chart-card .chart-filters { 
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  
+  .dashboard-admin .chart-card .filter-label {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .dashboard-admin .chart-card .filter-label select {
+    width: 100%;
+    min-width: unset;
+  }
 }
 
 /* --- Documentos por Usuário (chart-card) visual improvements --- */
@@ -222,6 +406,10 @@
 .dashboard-admin .chart-card .doc-row .col.doc { flex: 3 1 0; min-width:220px; color:rgba(0,0,0,0.75); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .dashboard-admin .chart-card .doc-row .col.qty { flex: 0 0 80px; text-align:right; color:rgba(0,0,0,0.6); }
 .dashboard-admin .chart-card .muted { color:rgba(0,0,0,0.45); }
+
+/* Allow horizontal scrolling for document rows and ensure column layout doesn't break
+  on narrow viewports: columns keep min-width and parent scrolls horizontally. */
+/* doc-table and doc-row layout controlled by media queries below */
 
 /* Make long user names truncate and add subtle spacing */
 .dashboard-admin .chart-card .bar-label { max-width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
