@@ -340,6 +340,10 @@ fieldset.dados-relatorio legend { padding: 0 8px; margin-left: -8px; font-weight
   position: relative; 
   overflow: hidden; 
   background: #fafafa; 
+  box-sizing: border-box;
+  min-height: 120px;
+  /* keep a square-ish ratio to avoid vertical squeezing on small screens */
+  aspect-ratio: 1 / 1;
 }
 .photo-slot.empty { 
   background: #f0f0f0; 
@@ -423,15 +427,37 @@ fieldset.dados-relatorio legend { padding: 0 8px; margin-left: -8px; font-weight
   }
   .photo-slot { 
     width: 100%; 
-    height: 200px; 
+    height: auto; 
+    aspect-ratio: 1 / 1; /* keep it square on mobile */
+    min-height: 160px; /* ensure a reasonable visible area */
   }
   .photo-slot.small { 
     width: 100%; 
-    height: 150px; 
+    height: auto; 
+    aspect-ratio: 1 / 1;
+    min-height: 120px;
   }
   .record-meta { 
     flex-direction: column; 
   }
+}
+
+/* Ensure actions (buttons) are below the photo slots and don't overlap */
+.photo-actions {
+  margin-top: 8px;
+  padding-top: 6px;
+}
+
+/* If the image is missing, keep dashed visual centered and not collapsed */
+.photo-slot.empty::before {
+  content: '';
+  display: block;
+  width: 40%;
+  height: 40%;
+  border-left: 2px dashed rgba(0,0,0,0.08);
+  border-right: 2px dashed rgba(0,0,0,0.08);
+  box-sizing: border-box;
+  pointer-events: none;
 }
 
 /* Form group grid específico */

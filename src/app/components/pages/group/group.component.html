@@ -90,11 +90,20 @@
 	<!-- PDF Modal Overlay -->
 	<div class="pdf-modal-overlay" *ngIf="pdfModalOpen" (click)="closePdfModal()">
 		<div class="pdf-modal" (click)="$event.stopPropagation()">
-			<div class="pdf-modal-header"><h4>Visualizador de PDF</h4><button class="btn-close" (click)="closePdfModal()">Fechar</button></div>
-			<div class="pdf-modal-body">
-				<iframe *ngIf="pdfBlobUrl" [src]="pdfBlobUrl | safeUrl" width="100%" height="600px" title="Visualizador de PDF"></iframe>
-				<p *ngIf="!pdfBlobUrl">Carregando...</p>
+				<div class="pdf-modal-header">
+					<div class="pdf-toolbar">
+						<h4>Visualizador de PDF</h4>
+						<div class="pdf-actions">
+							<button class="btn-action" *ngIf="pdfBlobUrl && pdfModalItem" (click)="downloadDoc(pdfModalItem)">Baixar</button>
+							<button class="btn-action" *ngIf="pdfBlobUrl" (click)="openPdfInNewTab()">Abrir em nova aba</button>
+							<button class="btn-close" (click)="closePdfModal()">Fechar</button>
+						</div>
+					</div>
+				</div>
+				<div class="pdf-modal-body">
+					<iframe *ngIf="pdfBlobUrl" [src]="pdfBlobUrl | safeUrl" width="100%" height="600px" title="Visualizador de PDF"></iframe>
+					<p *ngIf="!pdfBlobUrl">Carregando...</p>
+				</div>
 			</div>
-		</div>
 	</div>
 </section>

@@ -90,13 +90,13 @@
 				</thead>
 				<tbody>
 					<tr *ngFor="let d of documents; let i = index" class="doc-row" [attr.data-index]="i" [class.signed]="isDocumentSigned(d)">
-						<td>
+						<td data-label="Tipo">
 							{{ d.documentType || formatDocumentType(d.type) }}
 						</td>
-						<td>{{ d.title || d.name || '-' }}</td>
-						<td>{{ d.companyName || d.company || d.clientName || '-' }}</td>
-						<td>{{ formatDate(d.creationDate || d.inspectionDate || d.createdAt || d.date) }}</td>
-					<td class="actions-cell">
+						<td data-label="Título">{{ d.title || d.name || '-' }}</td>
+						<td data-label="Empresa">{{ d.companyName || d.company || d.clientName || '-' }}</td>
+						<td data-label="Data">{{ formatDate(d.creationDate || d.inspectionDate || d.createdAt || d.date) }}</td>
+					<td class="actions-cell" data-label="Ações">
 						<button class="icon-btn" (click)="viewDocument(d)" title="Visualizar">
 							<!-- Eye icon -->
 							<svg class="icon-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">

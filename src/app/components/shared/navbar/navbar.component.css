@@ -49,18 +49,51 @@
 
 /* Mobile adjustments (smaller screens) */
 @media (max-width: 600px) {
-  .top-nav { padding:10px 12px; align-items:flex-start; }
+  .top-nav { padding:10px 12px; align-items:flex-start; position: relative; }
+  /* linha separadora entre ícones e usuário - centralizada com position fixed */
+  .top-nav::before {
+    content: '';
+    position: fixed;
+    top: 72px;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 1px;
+    background: rgba(255,255,255,0.15);
+    z-index: 90;
+  }
+  /* safe-area support: add extra top spacing on devices with notch/camera */
+  .top-nav {
+    /* base top padding preserved for browsers without safe-area support */
+    padding-top: 18px; /* increased base offset */
+    /* prefer env(), then the older constant() for legacy WebKit; both ignored if unsupported */
+    padding-top: calc(18px + env(safe-area-inset-top));
+    padding-top: calc(18px + constant(safe-area-inset-top));
+  }
   .top-nav .brand { font-size:1rem; }
 
   /* keep links horizontal on small screens; show icons (hide text) */
   .top-nav .nav-links { display:flex; flex-direction:row; gap:6px; width:100%; margin:0; justify-content:center; }
   .top-nav .nav-links a { display:flex; align-items:center; padding:8px 10px; border-radius:8px; }
   .top-nav .nav-links a .nav-text { display: none; }
-  .top-nav .nav-links a .nav-icon { display: inline-block; margin-right:6px; }
+  .top-nav .nav-links a .nav-icon { display: inline-block; margin-right:4px; }
 
   /* centralizar os ícones horizontalmente e aumentar área de toque para mobile */
-  .top-nav .nav-links { padding: 6px 0; }
-  .top-nav .nav-links a { min-width:42px; display:flex; align-items:center; justify-content:center; }
+  .top-nav .nav-links { padding: 4px 0; }
+    /* tighten spacing a bit more for mobile */
+    .top-nav .nav-links { gap:2px; }
+    .top-nav .nav-links a { min-width:34px; display:flex; align-items:center; justify-content:center; padding:5px 6px; }
+
+  /* Add extra top padding to the links container to avoid overlap with camera/notch */
+  .top-nav .nav-links {
+    /* give extra breathing room above the icons to avoid notch overlap */
+    padding-top: calc(12px + env(safe-area-inset-top));
+    padding-top: calc(12px + constant(safe-area-inset-top));
+  }
+
+  /* reduzir tamanho do ícone para agrupar visualmente */
+    /* slightly smaller icons to group visually while keeping touch area acceptable */
+    .top-nav .nav-links a .nav-icon { width:18px; height:18px; flex:0 0 18px; }
 
   /* hover mais visível em dispositivos com pointer */
   @media (hover: hover) and (pointer: fine) {
@@ -81,18 +114,6 @@
   .mini-info { margin-left:8px; margin-top:0; align-items:flex-start; text-align:left; }
   .mini-name { font-size:0.95rem; }
   .mini-role { font-size:0.78rem; margin-top:2px; color: rgba(255,255,255,0.85); }
-
-  /* separador sutil acima da área do usuário (traço) */
-  .user-trigger::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: rgba(255,255,255,0.08);
-    top: -8px;
-    border-radius: 1px;
-  }
   .mini-name { font-size:0.95rem; color: var(--branco); }
   .mini-role { font-size:0.8rem; color: rgba(255,255,255,0.9); }
 

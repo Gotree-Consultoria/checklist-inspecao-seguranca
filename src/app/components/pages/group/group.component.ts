@@ -24,6 +24,8 @@ export class GroupComponent implements OnInit {
   // Modal para visualizar PDFs
   pdfModalOpen = false;
   pdfBlobUrl: string | null = null;
+  // item atualmente aberto no modal de PDF (para ações como download)
+  pdfModalItem: any = null;
   // Perfil do usuário logado
   userProfile: any = null;
 
@@ -193,6 +195,7 @@ export class GroupComponent implements OnInit {
       const blobUrl = window.URL.createObjectURL(blob);
       // Abrir o PDF em modal na mesma página (iframe no componente)
       this.pdfBlobUrl = blobUrl;
+      this.pdfModalItem = item;
       this.pdfModalOpen = true;
       // Revogar URL após algum tempo para liberar memória
       setTimeout(() => {
@@ -211,7 +214,17 @@ export class GroupComponent implements OnInit {
       }
     } catch (_) {}
     this.pdfBlobUrl = null;
+    this.pdfModalItem = null;
     this.pdfModalOpen = false;
+  }
+
+  openPdfInNewTab(): void {
+    try {
+      if (!this.pdfBlobUrl) return;
+      window.open(this.pdfBlobUrl, '_blank');
+    } catch (e) {
+      console.warn('openPdfInNewTab failed', e);
+    }
   }
 
   documentTypeToSlug(type: string): string {

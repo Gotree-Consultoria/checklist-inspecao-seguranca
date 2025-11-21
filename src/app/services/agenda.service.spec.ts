@@ -97,7 +97,8 @@ describe('AgendaService', () => {
       const id = 123;
       const payload = {
         title: 'Reunião Atualizada',
-        eventDate: '2025-11-21'
+        eventDate: '2025-11-21',
+        eventType: 'EVENTO'
       };
       const mockResponse: AgendaResponseDTO = {
         title: payload.title,

@@ -194,10 +194,10 @@
 
 /* Responsividade */
 @media (max-width: 768px) {
-  .filter-row { flex-direction: column; }
+  .filter-row { flex-direction: column; gap: 8px; }
   .filter-group.small { width: 100%; }
-  .filter-group.search-group { width: 100%; }
-  .filter-actions { width: 100%; display:flex; justify-content: flex-end; }
+  .filter-group.search-group { width: 100%; flex: 0 0 auto; max-height: 90px; }
+  .filter-actions { width: 100%; display:flex; justify-content: flex-end; gap: 8px; }
   .pagination-section {
     flex-direction: column;
   }
@@ -227,9 +227,45 @@
   .actions-popup { position: fixed; right: 8px !important; left: 8px !important; min-width: auto; }
 }
 
+/* Ajustes extra para evitar grande área vazia no campo de busca em telas bem pequenas */
+@media (max-width: 420px) {
+  .filter-row { gap: 6px; }
+  .filter-group { margin: 0; }
+  /* força grupos ocuparem espaço mínimo e previne expansão vertical inesperada */
+  .filter-group.search-group { max-height: 80px; flex: 0 0 auto; }
+  .filter-group.small { max-height: 80px; flex: 0 0 auto; }
+  /* inputs compactos */
+  .filter-input, .filter-select { max-height: 40px; box-sizing: border-box; padding: 6px 8px; }
+  .filter-label { margin-bottom: 4px; font-size: 0.85rem; }
+  /* ações compactas */
+  .filter-actions { gap: 6px; padding-top: 0; }
+}
+
 /* PDF Modal Overlay styles */
 .pdf-modal-overlay { position:fixed; inset:0; background:rgba(2,6,23,0.45); display:flex; align-items:center; justify-content:center; z-index:120; }
 .pdf-modal { background:#fff; width:90%; max-width:980px; border-radius:10px; box-shadow:0 12px 40px rgba(2,6,23,0.4); overflow:hidden; }
 .pdf-modal-header { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid #eef3f8; }
 .pdf-modal-body { padding:12px; }
 .pdf-modal .btn-close { background:#f1f5f9; border:none; padding:6px 10px; border-radius:8px; cursor:pointer; }
+
+/* Mobile-specific: convert table rows into stacked cards for readability */
+@media (max-width: 640px) {
+  .documents-table-container { box-shadow: none; border-radius: 0; }
+  .documents-table-container table { display: block; width: 100%; }
+  .documents-table-container thead { display: none; }
+  .documents-table-container tbody { display: block; }
+  .documents-table-container tr { display: block; background: #fff; margin: 10px 0; padding: 12px; border-radius: 8px; box-shadow: var(--shadow-sm); border: 1px solid rgba(0,0,0,0.04); }
+  .documents-table-container td { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border: none; }
+  .documents-table-container td::before { content: attr(data-label) ":"; font-weight: 600; color: #556; margin-right: 8px; flex: 0 0 auto; width: 36%; }
+  .documents-table-container td[data-label="Ações"] { display: flex; justify-content: flex-end; gap: 8px; }
+  .documents-table-container td[data-label="Ações"] .icon-btn { width:36px; height:36px; padding:6px; }
+  .documents-table-container td[data-label="Título"] { font-weight:700; color: var(--verde-escuro); }
+}
+
+/* PDF modal: make full-screen on small devices and allow panning/scroll */
+@media (max-width: 640px) {
+  .pdf-modal { width: 100%; max-width: none; height: 100vh; border-radius: 0; margin: 0; display: flex; flex-direction: column; }
+  .pdf-modal-header { padding: 10px 12px; }
+  .pdf-modal-body { padding: 0; flex: 1 1 auto; overflow: auto; -webkit-overflow-scrolling: touch; }
+  .pdf-modal-body iframe { width: auto; min-width: 100%; height: 100%; border: none; display:block; }
+}
