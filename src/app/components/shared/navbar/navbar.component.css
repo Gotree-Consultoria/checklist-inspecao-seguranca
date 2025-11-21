@@ -50,18 +50,6 @@
 /* Mobile adjustments (smaller screens) */
 @media (max-width: 600px) {
   .top-nav { padding:10px 12px; align-items:flex-start; position: relative; }
-  /* linha separadora entre ícones e usuário - centralizada com position fixed */
-  .top-nav::before {
-    content: '';
-    position: fixed;
-    top: 72px;
-    left: 0;
-    right: 0;
-    width: 100%;
-    height: 1px;
-    background: rgba(255,255,255,0.15);
-    z-index: 90;
-  }
   /* safe-area support: add extra top spacing on devices with notch/camera */
   .top-nav {
     /* base top padding preserved for browsers without safe-area support */
