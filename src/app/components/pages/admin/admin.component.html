@@ -222,9 +222,9 @@
                 </div>
               </div>
               <div class="add-dynamic">
-                <input #unitName placeholder="Nome da unidade" class="dynamic-input" />
-                <input #unitCnpj placeholder="CNPJ (opcional)" class="dynamic-input" (change)="onUnitCnpjChange($event.target.value, unitName)" />
-                <button type="button" class="btn btn-secondary" (click)="addUnit(unitName, unitCnpj)">+ Adicionar</button>
+                <input #unitNameInput placeholder="Nome da unidade" class="dynamic-input" />
+                <input #unitCnpjInput placeholder="CNPJ (opcional)" class="dynamic-input" (change)="onUnitCnpjChange($event.target.value, unitNameInput)" />
+                <button type="button" class="btn btn-secondary btn-sm" (click)="addUnit(unitNameInput, unitCnpjInput)">+ Adicionar</button>
               </div>
             </div>
 
@@ -237,9 +237,9 @@
                   <button type="button" class="btn-remove" (click)="removeSector(i)" title="Remover">✕</button>
                 </div>
               </div>
-              <div class="add-dynamic">
-                <input #sectorName placeholder="Nome do setor" class="dynamic-input full-width" />
-                <button type="button" class="btn btn-secondary" (click)="addSector(sectorName)">+ Adicionar</button>
+              <div class="add-dynamic sector-add">
+                <input #sectorInput placeholder="Nome do setor" class="dynamic-input" />
+                <button type="button" class="btn btn-secondary btn-sm" (click)="addSector(sectorInput)">+ Adicionar</button>
               </div>
             </div>
 
@@ -338,9 +338,9 @@
           </div>
         </div>
         <div class="add-dynamic">
-          <input #unitName placeholder="Nome da unidade" class="dynamic-input" />
-          <input #unitCnpj placeholder="CNPJ" class="dynamic-input" (change)="onUnitCnpjChange($event.target.value, unitName)" />
-          <button type="button" class="btn btn-secondary" (click)="addUnit(unitName, unitCnpj)">+ Adicionar</button>
+          <input #unitNameEditInput placeholder="Nome da unidade" class="dynamic-input" />
+          <input #unitCnpjEditInput placeholder="CNPJ" class="dynamic-input" (change)="onUnitCnpjChange($event.target.value, unitNameEditInput)" />
+          <button type="button" class="btn btn-secondary btn-sm" (click)="addUnit(unitNameEditInput, unitCnpjEditInput)">+ Adicionar</button>
         </div>
       </div>
 
@@ -353,9 +353,9 @@
             <button type="button" class="btn-remove" (click)="removeSectorWithDelete(i)" title="Remover">✕</button>
           </div>
         </div>
-        <div class="add-dynamic">
-          <input #sectorName placeholder="Nome do setor" class="dynamic-input full-width" />
-          <button type="button" class="btn btn-secondary" (click)="addSector(sectorName)">+ Adicionar</button>
+        <div class="add-dynamic sector-add">
+          <input #sectorEditInput placeholder="Nome do setor" class="dynamic-input" />
+          <button type="button" class="btn btn-secondary btn-sm" (click)="addSector(sectorEditInput)">+ Adicionar</button>
         </div>
       </div>
 

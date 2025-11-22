@@ -773,6 +773,10 @@
   align-items: end;
 }
 
+.add-dynamic.sector-add {
+  grid-template-columns: 1fr auto;
+}
+
 .dynamic-input {
   padding: 10px;
   border: 1px solid #ddd;
@@ -841,6 +845,15 @@
 
 .btn-secondary:hover {
   background: #dee2e6;
+}
+
+.btn-sm {
+  padding: 12px 8px;
+  font-size: 14px;
+}
+
+.btn-sm:hover:not(:disabled) {
+  transform: translateY(-2px);
 }
 
 /* Mensagens */

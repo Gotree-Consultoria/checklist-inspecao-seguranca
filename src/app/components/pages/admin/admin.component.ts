@@ -448,7 +448,13 @@ export class AdminComponent implements OnInit {
       }
       this.companyFormMsg = '✅ Empresa criada com sucesso!';
       this.companyForm.reset();
-      this.dynamicUnits = []; this.dynamicSectors = [];
+      this.dynamicUnits = []; 
+      this.dynamicSectors = [];
+      // Limpar inputs dinamicamente adicionados (fora do formulário reativo)
+      const inputs = document.querySelectorAll('.add-dynamic input:not([formControlName])');
+      inputs.forEach((input: any) => {
+        if (input.value) input.value = '';
+      });
       setTimeout(() => this.loadCompanies(), 500);
     } catch (e: any) {
       const errorMsg = e?.message || String(e);
