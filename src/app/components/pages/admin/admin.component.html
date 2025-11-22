@@ -207,7 +207,7 @@
             </div>
             <div class="form-group full-width">
               <label>CNPJ *</label>
-              <input placeholder="00.000.000/0000-00" formControlName="companyCnpj" />
+              <input placeholder="00.000.000/0000-00" formControlName="companyCnpj" (change)="onCnpjChange($event.target.value, 'company')" />
             </div>
 
             <!-- Unidades -->
@@ -223,7 +223,7 @@
               </div>
               <div class="add-dynamic">
                 <input #unitName placeholder="Nome da unidade" class="dynamic-input" />
-                <input #unitCnpj placeholder="CNPJ (opcional)" class="dynamic-input" />
+                <input #unitCnpj placeholder="CNPJ (opcional)" class="dynamic-input" (change)="onUnitCnpjChange($event.target.value, unitName)" />
                 <button type="button" class="btn btn-secondary" (click)="addUnit(unitName, unitCnpj)">+ Adicionar</button>
               </div>
             </div>
@@ -244,9 +244,16 @@
             </div>
 
             <div class="form-actions">
-              <button type="submit" class="btn btn-primary">💾 Salvar Empresa</button>
+              <button type="submit" [disabled]="loadingCompanyForm" class="btn btn-primary">
+                {{ loadingCompanyForm ? '⏳ Adicionando empresa...' : '💾 Salvar Empresa' }}
+              </button>
             </div>
-            <div class="form-message" *ngIf="companyFormMsg" [class.success]="companyFormMsg.includes('sucesso')">{{companyFormMsg}}</div>
+            <div class="form-message" *ngIf="companyFormMsg" [class.success]="companyFormMsg.includes('✅')" [class.error]="companyFormMsg.includes('❌') || companyFormMsg.includes('⚠️')">
+              {{companyFormMsg}}
+              <button *ngIf="companyFormMsg.includes('⚠️')" type="button" class="btn-retry" (click)="submitCreateCompany()" title="Tentar novamente">
+                🔄 Tentar Novamente
+              </button>
+            </div>
           </form>
         </div>
       </section>
@@ -316,25 +323,7 @@
       </div>
       <div class="form-group full-width">
         <label>CNPJ *</label>
-        <input placeholder="00.000.000/0000-00" formControlName="companyCnpj" />
-      </div>
-
-<!-- Modal de Edição de Empresa -->
-<div class="modal-overlay" *ngIf="showEditCompanyModal" (click)="closeEditCompanyModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>Editar Empresa</h2>
-      <button class="modal-close" type="button" (click)="closeEditCompanyModal()" title="Fechar modal">✕</button>
-    </div>
-
-    <form (ngSubmit)="submitEditCompany()" [formGroup]="editCompanyForm" class="form-grid">
-      <div class="form-group full-width">
-        <label>Nome da Empresa *</label>
-        <input placeholder="Razão social" formControlName="companyName" />
-      </div>
-      <div class="form-group full-width">
-        <label>CNPJ *</label>
-        <input placeholder="00.000.000/0000-00" formControlName="companyCnpj" />
+        <input placeholder="00.000.000/0000-00" formControlName="companyCnpj" (change)="onCnpjChange($event.target.value, 'company')" />
       </div>
 
       <!-- Unidades -->
@@ -350,7 +339,7 @@
         </div>
         <div class="add-dynamic">
           <input #unitName placeholder="Nome da unidade" class="dynamic-input" />
-          <input #unitCnpj placeholder="CNPJ" class="dynamic-input" />
+          <input #unitCnpj placeholder="CNPJ" class="dynamic-input" (change)="onUnitCnpjChange($event.target.value, unitName)" />
           <button type="button" class="btn btn-secondary" (click)="addUnit(unitName, unitCnpj)">+ Adicionar</button>
         </div>
       </div>

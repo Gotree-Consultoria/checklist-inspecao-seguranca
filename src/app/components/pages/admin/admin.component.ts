@@ -4,6 +4,7 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angu
 import { LegacyService } from '../../../services/legacy.service';
 import { UiService } from '../../../services/ui.service';
 import { CnpjFormatPipe } from '../../../pipes/cnpj-format.pipe';
+import { debounceTime, Subject } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -19,8 +20,12 @@ export class AdminComponent implements OnInit {
   accessDenied = false;
   loadingUsers = false;
   loadingCompanies = false;
+  loadingCompanyForm = false;
   users: any[] = [];
   companies: any[] = [];
+
+  // Subject para debounce na busca de CNPJ
+  private cnpjSearchSubject = new Subject<{ cnpj: string; field: 'company' | 'unit'; index?: number }>();
 
   // Form state (reactive)
   fb = inject(FormBuilder);
@@ -79,6 +84,13 @@ export class AdminComponent implements OnInit {
     }
     this.loadUsers();
     this.loadCompanies();
+    
+    // Setup debounced CNPJ search
+    this.cnpjSearchSubject.pipe(
+      debounceTime(800)
+    ).subscribe(({ cnpj, field, index }) => {
+      this.fetchCnpjData(cnpj, field, index);
+    });
   }
 
   async loadUsers() {
@@ -420,6 +432,7 @@ export class AdminComponent implements OnInit {
         }),
       sectors: this.dynamicSectors
     };
+    this.loadingCompanyForm = true;
     try {
       const resp = await fetch(`${this.legacy.apiBaseUrl}/companies`, {
         method: 'POST',
@@ -433,12 +446,19 @@ export class AdminComponent implements OnInit {
         this.ui.showToast(serverMsg, 'error');
         throw new Error(serverMsg);
       }
-      this.companyFormMsg = 'Empresa criada com sucesso.';
+      this.companyFormMsg = '✅ Empresa criada com sucesso!';
       this.companyForm.reset();
       this.dynamicUnits = []; this.dynamicSectors = [];
-      this.loadCompanies();
+      setTimeout(() => this.loadCompanies(), 500);
     } catch (e: any) {
-      this.companyFormMsg = e?.message || String(e);
+      const errorMsg = e?.message || String(e);
+      if (errorMsg.includes('Failed to fetch') || errorMsg.toLowerCase().includes('timeout')) {
+        this.companyFormMsg = '⚠️ Timeout na conexão. O servidor está demorando mais do que o normal. Tente novamente em alguns segundos...';
+      } else {
+        this.companyFormMsg = `❌ ${errorMsg}`;
+      }
+    } finally {
+      this.loadingCompanyForm = false;
     }
   }
 
@@ -467,6 +487,79 @@ export class AdminComponent implements OnInit {
     const d1 = calc(str.slice(0,12));
     const d2 = calc(str.slice(0,12)+d1);
     return str.endsWith(String(d1)+String(d2));
+  }
+
+  // Buscar dados do CNPJ e preencher razão social
+  async fetchCnpjData(cnpj: string, field: 'company' | 'unit', index?: number) {
+    const cleanCnpj = this.onlyDigits(cnpj);
+    if (!cleanCnpj || cleanCnpj.length !== 14 || !this.validateCNPJ(cleanCnpj)) {
+      return; // CNPJ inválido, não fazer a busca
+    }
+
+    try {
+      const resp = await fetch(`${this.legacy.apiBaseUrl}/external/cnpj/${cleanCnpj}`, {
+        headers: this.legacy.authHeaders()
+      });
+      
+      if (!resp.ok) {
+        return; // Falha na busca, não preencher nada
+      }
+
+      const data = await resp.json();
+      // Tenta diferentes chaves possíveis da resposta
+      const socialName = data.razao_social || data.socialName || data.nome || data.name || '';
+
+      if (!socialName) {
+        return; // Nenhum nome encontrado, não preencher
+      }
+
+      if (field === 'company') {
+        // Preencher campo de empresa
+        this.companyForm.patchValue({ companyName: socialName });
+      } else if (field === 'unit' && typeof index === 'number') {
+        // Preencher nome da unidade
+        if (this.dynamicUnits[index]) {
+          this.dynamicUnits[index].name = socialName;
+        }
+      }
+    } catch (e: any) {
+      // Silenciosamente ignorar erros na busca automática
+      console.debug('Erro ao buscar CNPJ:', e);
+    }
+  }
+
+  // Trigger busca de CNPJ com debounce
+  onCnpjChange(cnpj: string, field: 'company' | 'unit', index?: number) {
+    this.cnpjSearchSubject.next({ cnpj, field, index });
+  }
+
+  // Busca CNPJ específica para unidade (preenche o input de nome antes de adicionar)
+  async onUnitCnpjChange(cnpj: string, nameInput: HTMLInputElement) {
+    const cleanCnpj = this.onlyDigits(cnpj);
+    if (!cleanCnpj || cleanCnpj.length !== 14 || !this.validateCNPJ(cleanCnpj)) {
+      return; // CNPJ inválido, não fazer a busca
+    }
+
+    try {
+      const resp = await fetch(`${this.legacy.apiBaseUrl}/external/cnpj/${cleanCnpj}`, {
+        headers: this.legacy.authHeaders()
+      });
+      
+      if (!resp.ok) {
+        return; // Falha na busca, não preencher nada
+      }
+
+      const data = await resp.json();
+      // Tenta diferentes chaves possíveis da resposta
+      const socialName = data.razao_social || data.socialName || data.nome || data.name || '';
+
+      if (socialName && nameInput) {
+        nameInput.value = socialName;
+      }
+    } catch (e: any) {
+      // Silenciosamente ignorar erros na busca automática
+      console.debug('Erro ao buscar CNPJ:', e);
+    }
   }
 
   // Editar Empresa
