@@ -289,9 +289,9 @@ export class AdminComponent implements OnInit {
     try {
       const response = await this.companyService.getAll(this.currentPage, this.pageSize);
       this.companies = response.content || [];
-      this.totalElements = response.totalElements;
-      this.totalPages = response.totalPages;
-      this.currentPage = response.number;
+      this.totalElements = response.page.totalElements;
+      this.totalPages = response.page.totalPages;
+      this.currentPage = response.page.number;
     } catch (e: any) {
       this.ui.showToast(e?.message || 'Erro ao carregar empresas', 'error');
       this.companies = [];

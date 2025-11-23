@@ -3,9 +3,12 @@ import { LegacyService } from './legacy.service';
 
 export interface PaginatedResponse<T> {
   content: T[];
-  totalElements: number;
-  totalPages: number;
-  number: number;
+  page: {
+    totalElements: number;
+    totalPages: number;
+    number: number;
+    size: number;
+  };
 }
 
 @Injectable({
@@ -63,9 +66,12 @@ export class CompanyService {
       // Garantir que a resposta tem a estrutura esperada
       return {
         content: data.content || [],
-        totalElements: data.totalElements || 0,
-        totalPages: data.totalPages || 0,
-        number: data.number || 0
+        page: {
+          totalElements: data.page?.totalElements || 0,
+          totalPages: data.page?.totalPages || 0,
+          number: data.page?.number || 0,
+          size: data.page?.size || 10
+        }
       };
     } catch (error) {
       console.error('Erro ao buscar empresas:', error);
@@ -91,16 +97,19 @@ export class CompanyService {
 
       // Última tentativa: encontrar apenas o conteúdo válido até "content" e reconstruir
       if (!this.isValidJSON(cleaned)) {
-        const contentMatch = text.match(/"content":\[([\s\S]*?)\],"totalElements"/);
+        const contentMatch = text.match(/"content":\[([\s\S]*?)\],"page"/);
         if (contentMatch) {
           // Temos o array de empresas, vamos reconstruir o JSON simples
-          const metadata = text.match(/"totalElements":(\d+),"totalPages":(\d+),"number":(\d+)/);
+          const metadata = text.match(/"page":\{\s*"totalElements":(\d+),"totalPages":(\d+),"number":(\d+),"size":(\d+)/);
           if (metadata) {
             return {
               content: [], // Retornar vazio é melhor que erro
-              totalElements: parseInt(metadata[1]) || 0,
-              totalPages: parseInt(metadata[2]) || 0,
-              number: parseInt(metadata[3]) || 0
+              page: {
+                totalElements: parseInt(metadata[1]) || 0,
+                totalPages: parseInt(metadata[2]) || 0,
+                number: parseInt(metadata[3]) || 0,
+                size: parseInt(metadata[4]) || 10
+              }
             };
           }
         }
