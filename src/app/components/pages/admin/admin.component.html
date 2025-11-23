@@ -235,6 +235,66 @@
                 </tr>
               </tbody>
             </table>
+
+            <!-- Paginação -->
+            <div class="pagination-wrapper" *ngIf="totalPages > 1">
+              <div class="pagination-info">
+                <span>Página {{currentPage + 1}} de {{totalPages}} (Total: {{totalElements}} empresa(s))</span>
+              </div>
+              <div class="pagination-controls">
+                <button 
+                  type="button" 
+                  class="btn btn-pagination" 
+                  (click)="onPageChange(0)"
+                  [disabled]="currentPage === 0"
+                  title="Primeira página"
+                >
+                  ⏮️ Primeira
+                </button>
+                <button 
+                  type="button" 
+                  class="btn btn-pagination" 
+                  (click)="onPageChange(currentPage - 1)"
+                  [disabled]="currentPage === 0"
+                  title="Página anterior"
+                >
+                  ◀️ Anterior
+                </button>
+                
+                <!-- Números de página -->
+                <div class="pagination-numbers">
+                  <button 
+                    *ngFor="let p of [].constructor(totalPages); let i = index"
+                    type="button" 
+                    class="btn btn-page-number"
+                    [class.active]="i === currentPage"
+                    (click)="onPageChange(i)"
+                    title="Página {{i + 1}}"
+                  >
+                    {{i + 1}}
+                  </button>
+                </div>
+
+                <button 
+                  type="button" 
+                  class="btn btn-pagination" 
+                  (click)="onPageChange(currentPage + 1)"
+                  [disabled]="currentPage === totalPages - 1"
+                  title="Próxima página"
+                >
+                  Próxima ▶️
+                </button>
+                <button 
+                  type="button" 
+                  class="btn btn-pagination" 
+                  (click)="onPageChange(totalPages - 1)"
+                  [disabled]="currentPage === totalPages - 1"
+                  title="Última página"
+                >
+                  Última ⏭️
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 

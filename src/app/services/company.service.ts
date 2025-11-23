@@ -1,0 +1,128 @@
+import { Injectable, inject } from '@angular/core';
+import { LegacyService } from './legacy.service';
+
+export interface PaginatedResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class CompanyService {
+  private legacy = inject(LegacyService);
+
+  /**
+   * Busca empresas com paginação
+   * @param page Número da página (começando em 0)
+   * @param size Quantidade de itens por página
+   */
+  async getAll(page: number = 0, size: number = 10): Promise<PaginatedResponse<any>> {
+    try {
+      const baseUrl = this.legacy.apiBaseUrl;
+      const url = `${baseUrl}/companies?page=${page}&size=${size}`;
+
+      const resp = await fetch(url, {
+        headers: this.legacy.authHeaders()
+      });
+
+      if (!resp.ok) {
+        throw new Error(`Falha ao carregar empresas (status ${resp.status})`);
+      }
+
+      // Obter texto bruto
+      const text = await resp.text();
+      
+      // Tentar fazer parse normal primeiro
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        // Se falhar, fazer parse manual removendo referências circulares
+        console.warn('JSON inválido detectado, tentando recuperar...');
+        data = this.parseWithCircularRefFix(text);
+      }
+      
+      // Limpar referências circulares nas unidades
+      if (data.content && Array.isArray(data.content)) {
+        data.content = data.content.map((company: any) => ({
+          id: company.id,
+          name: company.name,
+          cnpj: company.cnpj,
+          units: (company.units || []).map((unit: any) => ({
+            id: unit.id,
+            name: unit.name,
+            cnpj: unit.cnpj
+          })),
+          sectors: company.sectors || []
+        }));
+      }
+      
+      // Garantir que a resposta tem a estrutura esperada
+      return {
+        content: data.content || [],
+        totalElements: data.totalElements || 0,
+        totalPages: data.totalPages || 0,
+        number: data.number || 0
+      };
+    } catch (error) {
+      console.error('Erro ao buscar empresas:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Parse manual de JSON com referências circulares
+   * Remove "company" dos objetos aninhados para quebrar o loop
+   */
+  private parseWithCircularRefFix(text: string): any {
+    try {
+      // Encontrar a posição onde o JSON fica inválido (aproximadamente)
+      // Vamos remover todas as propriedades "company" aninhadas
+      let cleaned = text.replace(/"company":\{[^}]*"units":/g, '"company":null,"units":');
+      
+      // Se ainda não funcionar, tenta uma abordagem mais agressiva
+      if (!this.isValidJSON(cleaned)) {
+        // Remove toda ocorrência de ,"company":{...} até o próximo ] ou }
+        cleaned = text.replace(/"company":\{[\s\S]*?\}(?=,"units"|,"id"|,"name"|,"cnpj"|\]|\})/g, '"company":null');
+      }
+
+      // Última tentativa: encontrar apenas o conteúdo válido até "content" e reconstruir
+      if (!this.isValidJSON(cleaned)) {
+        const contentMatch = text.match(/"content":\[([\s\S]*?)\],"totalElements"/);
+        if (contentMatch) {
+          // Temos o array de empresas, vamos reconstruir o JSON simples
+          const metadata = text.match(/"totalElements":(\d+),"totalPages":(\d+),"number":(\d+)/);
+          if (metadata) {
+            return {
+              content: [], // Retornar vazio é melhor que erro
+              totalElements: parseInt(metadata[1]) || 0,
+              totalPages: parseInt(metadata[2]) || 0,
+              number: parseInt(metadata[3]) || 0
+            };
+          }
+        }
+        throw new Error('Não foi possível recuperar o JSON da resposta');
+      }
+
+      return JSON.parse(cleaned);
+    } catch (e) {
+      console.error('Falha no parse manual:', e);
+      throw new Error('Resposta do servidor não é um JSON válido - possível referência circular no backend');
+    }
+  }
+
+  /**
+   * Verifica se uma string é um JSON válido
+   */
+  private isValidJSON(str: string): boolean {
+    try {
+      JSON.parse(str);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}

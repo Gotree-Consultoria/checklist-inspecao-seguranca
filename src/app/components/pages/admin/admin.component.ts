@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { LegacyService } from '../../../services/legacy.service';
 import { UiService } from '../../../services/ui.service';
+import { CompanyService } from '../../../services/company.service';
 import { CnpjFormatPipe } from '../../../pipes/cnpj-format.pipe';
 import { debounceTime, Subject } from 'rxjs';
 
@@ -16,6 +17,7 @@ import { debounceTime, Subject } from 'rxjs';
 export class AdminComponent implements OnInit {
   private legacy = inject(LegacyService);
   private ui = inject(UiService);
+  private companyService = inject(CompanyService);
 
   accessDenied = false;
   loadingUsers = false;
@@ -23,6 +25,12 @@ export class AdminComponent implements OnInit {
   loadingCompanyForm = false;
   users: any[] = [];
   companies: any[] = [];
+
+  // Paginação
+  currentPage = 0;
+  pageSize = 10;
+  totalElements = 0;
+  totalPages = 0;
 
   // Subject para debounce na busca de CNPJ
   private cnpjSearchSubject = new Subject<{ cnpj: string; field: 'company' | 'unit'; index?: number }>();
@@ -279,10 +287,11 @@ export class AdminComponent implements OnInit {
   async loadCompanies() {
     this.loadingCompanies = true;
     try {
-      const resp = await fetch(`${this.legacy.apiBaseUrl}/companies`, { headers: this.legacy.authHeaders() });
-      if (!resp.ok) throw new Error('Falha ao carregar empresas');
-      const data = await resp.json();
-      this.companies = Array.isArray(data) ? data : [];
+      const response = await this.companyService.getAll(this.currentPage, this.pageSize);
+      this.companies = response.content || [];
+      this.totalElements = response.totalElements;
+      this.totalPages = response.totalPages;
+      this.currentPage = response.number;
     } catch (e: any) {
       this.ui.showToast(e?.message || 'Erro ao carregar empresas', 'error');
       this.companies = [];
@@ -333,6 +342,15 @@ export class AdminComponent implements OnInit {
     } catch (e: any) {
       this.ui.showToast(e?.message || 'Erro ao excluir empresa', 'error');
     }
+  }
+
+  /**
+   * Navega para uma página específica
+   */
+  onPageChange(page: number) {
+    if (page < 0 || page >= this.totalPages) return;
+    this.currentPage = page;
+    this.loadCompanies();
   }
 
   addUnit(nameInput: HTMLInputElement, cnpjInput: HTMLInputElement) {
