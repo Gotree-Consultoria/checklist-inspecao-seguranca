@@ -27,6 +27,12 @@ export class AdminComponent implements OnInit {
   // Subject para debounce na busca de CNPJ
   private cnpjSearchSubject = new Subject<{ cnpj: string; field: 'company' | 'unit'; index?: number }>();
 
+  // Importação de planilhas
+  selectedFile: File | null = null;
+  uploadingFile = false;
+  importMsg = '';
+  isExporting = false;
+
   // Form state (reactive)
   fb = inject(FormBuilder);
   userForm = this.fb.group({
@@ -641,5 +647,145 @@ export class AdminComponent implements OnInit {
     } catch (e: any) {
       this.editCompanyFormMsg = e?.message || String(e);
     }
+  }
+
+  // Download/Exportação de dados
+  downloadTemplate() {
+    const link = document.createElement('a');
+    link.href = '/assets/templates/Planilha-empresas.xlsx';
+    link.download = 'Planilha-empresas.xlsx';
+    link.click();
+  }
+
+  downloadExport() {
+    this.isExporting = true;
+
+    try {
+      const endpoint = `${this.legacy.apiBaseUrl}/import/export`;
+      
+      fetch(endpoint, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
+        }
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`Erro ao exportar (status ${response.status})`);
+          }
+          return response.blob();
+        })
+        .then(blob => {
+          // Cria um link temporário no navegador para baixar o arquivo
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `empresas_exportadas_${new Date().toISOString().split('T')[0]}.xlsx`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+          
+          this.ui.showToast('Dados exportados com sucesso', 'success');
+          this.isExporting = false;
+        })
+        .catch(error => {
+          console.error('Erro ao exportar:', error);
+          this.ui.showToast('Erro ao exportar dados: ' + error.message, 'error');
+          this.isExporting = false;
+        });
+    } catch (error: any) {
+      console.error('Erro ao exportar:', error);
+      this.ui.showToast('Erro ao exportar dados', 'error');
+      this.isExporting = false;
+    }
+  }
+
+  // Importação de planilhas
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      // Validar se é um arquivo Excel
+      const validTypes = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel'];
+      if (!validTypes.includes(file.type)) {
+        this.ui.showToast('Por favor, selecione um arquivo Excel válido (.xlsx ou .xls)', 'error');
+        this.selectedFile = null;
+        event.target.value = ''; // Limpar o input
+        return;
+      }
+      this.selectedFile = file;
+      this.importMsg = `Arquivo selecionado: ${file.name}`;
+    }
+  }
+
+  async uploadFile() {
+    if (!this.selectedFile) {
+      this.ui.showToast('Nenhum arquivo selecionado', 'error');
+      return;
+    }
+
+    this.uploadingFile = true;
+    this.importMsg = '';
+
+    try {
+      const formData = new FormData();
+      formData.append('file', this.selectedFile);
+
+      // Gerar um ID aleatório para a requisição
+      const randomId = Math.random().toString(36).substring(2, 10);
+      const endpoint = `${this.legacy.apiBaseUrl}/import/companies?file=${randomId}`;
+
+      const resp = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
+          // NÃO definir Content-Type para FormData - o navegador faz isso automaticamente
+        },
+        body: formData
+      });
+
+      const txt = await resp.text().catch(() => '');
+      
+      if (!resp.ok) {
+        let serverMsg = txt || `Erro ao importar arquivo (status ${resp.status})`;
+        try {
+          const parsed = JSON.parse(txt);
+          serverMsg = parsed.message || parsed.error || serverMsg;
+        } catch (e) {}
+        this.ui.showToast(serverMsg, 'error');
+        this.importMsg = `❌ ${serverMsg}`;
+        throw new Error(serverMsg);
+      }
+
+      this.importMsg = '✅ Importação realizada com sucesso!';
+      this.ui.showToast('Planilha importada com sucesso', 'success');
+      
+      // Limpar o arquivo selecionado
+      this.selectedFile = null;
+      const fileInput = document.querySelector('input[type="file"]#fileInput') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
+
+      // Recarregar a lista de empresas
+      setTimeout(() => {
+        this.loadCompanies();
+        this.importMsg = '';
+      }, 1500);
+    } catch (e: any) {
+      const errorMsg = e?.message || String(e);
+      if (errorMsg.includes('Failed to fetch') || errorMsg.toLowerCase().includes('timeout')) {
+        this.importMsg = '⚠️ Timeout na conexão. O servidor está demorando mais do que o normal. Tente novamente em alguns segundos...';
+      } else {
+        this.importMsg = `❌ ${errorMsg}`;
+      }
+    } finally {
+      this.uploadingFile = false;
+    }
+  }
+
+  cancelUpload() {
+    this.selectedFile = null;
+    this.importMsg = '';
+    const fileInput = document.querySelector('input[type="file"]#fileInput') as HTMLInputElement;
+    if (fileInput) fileInput.value = '';
   }
 }

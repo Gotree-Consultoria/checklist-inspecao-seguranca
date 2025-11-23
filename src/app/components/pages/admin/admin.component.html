@@ -155,7 +155,50 @@
               <p class="section-subtitle">Gerenciar empresas cadastradas</p>
             </div>
           </div>
-          <div class="company-count" *ngIf="companies && companies.length">{{companies.length}} empresa(s)</div>
+          <div class="header-actions">
+            <button type="button" class="btn btn-secondary" (click)="downloadTemplate()" title="Baixar modelo vazio para importação">
+              📋 Modelo
+            </button>
+            <button type="button" class="btn btn-secondary" (click)="downloadExport()" [disabled]="isExporting" title="Exportar dados atuais em Excel">
+              {{ isExporting ? '⏳ Exportando...' : '📥 Exportar Dados' }}
+            </button>
+            <label class="btn btn-secondary" [class.disabled]="uploadingFile" [title]="uploadingFile ? 'Importando...' : 'Selecionar planilha para importação'">
+              {{ selectedFile ? '✓ ' + selectedFile.name : '📤 Importar' }}
+              <input 
+                type="file" 
+                id="fileInput"
+                accept=".xlsx,.xls,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                (change)="onFileSelected($event)" 
+                [disabled]="uploadingFile"
+              />
+            </label>
+            <button 
+              type="button" 
+              class="btn btn-primary" 
+              *ngIf="selectedFile"
+              (click)="uploadFile()" 
+              [disabled]="uploadingFile"
+              [title]="uploadingFile ? 'Importando...' : 'Confirmar importação'"
+            >
+              {{ uploadingFile ? '⏳ Importando...' : '✓ Confirmar' }}
+            </button>
+            <button 
+              type="button" 
+              class="btn btn-cancel" 
+              *ngIf="selectedFile"
+              (click)="cancelUpload()"
+              [disabled]="uploadingFile"
+              title="Cancelar importação"
+            >
+              ✕ Cancelar
+            </button>
+            <div class="company-count" *ngIf="companies && companies.length">{{companies.length}} empresa(s)</div>
+          </div>
+        </div>
+
+        <!-- Mensagem de Importação -->
+        <div *ngIf="importMsg" class="import-message" [class.success]="importMsg.includes('✅')" [class.error]="importMsg.includes('❌')" [class.warning]="importMsg.includes('⚠️')">
+          {{importMsg}}
         </div>
 
         <!-- Lista de Empresas -->
