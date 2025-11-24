@@ -273,7 +273,8 @@ export class ReportService {
       if (token) headers['Authorization'] = `Bearer ${token}`;
       
       // Usar fetch diretamente para evitar problemas com HttpClient
-      const resp = await fetch(`${this.legacy.apiBaseUrl}/companies`, { 
+      // Usar size grande para trazer todas as empresas (sem paginação real para dropdowns)
+      const resp = await fetch(`${this.legacy.apiBaseUrl}/companies?page=0&size=1000`, { 
         headers,
         method: 'GET'
       });
@@ -283,7 +284,14 @@ export class ReportService {
       }
       
       const data = await resp.json();
-      return data;
+      
+      // Se resposta tiver estrutura paginada, extrair apenas o content
+      if (data.page && Array.isArray(data.content)) {
+        return data.content;
+      }
+      
+      // Se for um array simples, retornar como está
+      return Array.isArray(data) ? data : [];
     } catch (err) {
       console.error('[ReportService] Erro ao buscar empresas:', err);
       throw err;
