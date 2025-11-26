@@ -1154,3 +1154,52 @@ label.btn.disabled {
   }
 }
 
+/* Seção de Clientes */
+.clients-section {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.clients-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.clients-intro p {
+  color: #555;
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 600px;
+}
+
+.clients-intro .btn {
+  padding: 10px 20px;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.clients-intro .btn-primary {
+  background: #007bff;
+  color: white;
+}
+
+.clients-intro .btn-primary:hover {
+  background: #0056b3;
+  box-shadow: 0 4px 12px rgba(0, 86, 179, 0.3);
+}
+

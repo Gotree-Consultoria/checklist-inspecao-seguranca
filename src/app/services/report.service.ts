@@ -710,6 +710,60 @@ export class ReportService {
     return fetch(url, { method: 'DELETE', headers: this.authHeaders() });
   }
 
+  /**
+   * Envia um documento por e-mail
+   * @param type - Tipo de documento (visit, risk, checklist, aep)
+   * @param id - ID do documento
+   * @returns Promise<any> - Resposta do servidor (sucesso ou erro)
+   */
+  async sendDocumentEmail(type: string, id: string | number): Promise<any> {
+    if (!type || !id) {
+      throw new Error('type e id são necessários para enviar e-mail');
+    }
+    
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const headers: any = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      
+      const url = `${this.legacy.apiBaseUrl}/documents/email/${encodeURIComponent(String(type))}/${encodeURIComponent(String(id))}`;
+      
+      console.log('[ReportService] 📧 Enviando e-mail para:', url);
+      
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({})  // Corpo vazio conforme especificado
+      });
+      
+      if (!resp.ok) {
+        let errorDetails = `Status ${resp.status}: ${resp.statusText}`;
+        try {
+          const contentType = resp.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const errorBody = await resp.json();
+            errorDetails += ` | ${JSON.stringify(errorBody)}`;
+            console.error('[ReportService] ❌ Erro ao enviar e-mail:', errorBody);
+          } else {
+            const errorText = await resp.text();
+            errorDetails += ` | ${errorText}`;
+            console.error('[ReportService] ❌ Erro ao enviar e-mail (texto):', errorText);
+          }
+        } catch (parseErr) {
+          console.warn('[ReportService] ⚠️ Não foi possível fazer parse da resposta de erro', parseErr);
+        }
+        throw new Error(errorDetails);
+      }
+      
+      const data = await resp.json();
+      console.log('[ReportService] ✅ E-mail enviado com sucesso:', data);
+      return data;
+    } catch (err) {
+      console.error('[ReportService] ❌ ERRO ao enviar e-mail:', err);
+      throw err;
+    }
+  }
+
   // ---------------------------
   // Draft / offline helpers
   // ---------------------------

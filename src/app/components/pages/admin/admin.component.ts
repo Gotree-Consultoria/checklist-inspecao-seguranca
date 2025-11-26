@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { LegacyService } from '../../../services/legacy.service';
 import { UiService } from '../../../services/ui.service';
 import { CompanyService } from '../../../services/company.service';
@@ -10,7 +11,7 @@ import { debounceTime, Subject } from 'rxjs';
 @Component({
   standalone: true,
   selector: 'app-admin',
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, CnpjFormatPipe],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, CnpjFormatPipe, RouterModule],
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.css']
 })

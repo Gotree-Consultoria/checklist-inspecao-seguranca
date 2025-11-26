@@ -4,6 +4,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LegacyService } from '../../../services/legacy.service';
 import { UiService } from '../../../services/ui.service';
+import { ReportService } from '../../../services/report.service';
+import { DocumentService } from '../../../services/document.service';
+import { ClientService } from '../../../services/client.service';
 import { SafeUrlPipe } from '../../../pipes/safe-url.pipe';
 
 @Component({
@@ -16,6 +19,9 @@ import { SafeUrlPipe } from '../../../pipes/safe-url.pipe';
 export class DocumentsComponent implements OnInit, OnDestroy {
   private legacy = inject(LegacyService);
   private ui = inject(UiService);
+  private reportService = inject(ReportService);
+  private documentService = inject(DocumentService);
+  private clientService = inject(ClientService);
 
   // Filtros (novo formato: type, clientName, startDate, endDate)
   filters = {
@@ -37,6 +43,9 @@ export class DocumentsComponent implements OnInit, OnDestroy {
   pdfModalOpen = false;
   pdfBlobUrl: string | null = null;
 
+  // Email State
+  emailSendingFor: string = '';  // ID do documento sendo enviado (para mostrar loading)
+
   private outsideClickHandler = (ev: Event) => {
     // listener para fechar popup quando clicar fora (não mais necessário com icons inline)
   };
@@ -49,7 +58,7 @@ export class DocumentsComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.closePdfModal();
-    try { document.removeEventListener('click', this.outsideClickHandler); } catch(_) {}
+    try { document.removeEventListener('click', this.outsideClickHandler); } catch(_: any) {}
   }
 
   formatDocumentType(type: any) {
@@ -112,6 +121,9 @@ export class DocumentsComponent implements OnInit, OnDestroy {
         this.totalElements = pageData.totalElements || 0;
         this.totalPages = pageData.totalPages || 0;
         
+        // Enriquecer documentos com e-mail de cliente (se não tiver)
+        await this.enrichDocumentsWithClientEmail();
+        
         // Calcular números das páginas para exibição (ex: 1, 2, 3, 4, 5)
         this.updatePageNumbers();
         return;
@@ -148,6 +160,39 @@ export class DocumentsComponent implements OnInit, OnDestroy {
     }
     
     this.pageNumbers = pages;
+  }
+
+  /**
+   * Enriquece documentos com e-mail de cliente se não tiverem
+   * Busca clientes pela empresa do documento
+   */
+  private async enrichDocumentsWithClientEmail(): Promise<void> {
+    try {
+      // Buscar todos os clientes (sem paginação para cache)
+      const response = await this.clientService.getAll(0, 999);
+      const clients = response.content || [];
+      
+      // Para cada documento, tentar associar o e-mail do cliente da empresa
+      for (const doc of this.documents) {
+        // Se já tem e-mail, pular
+        if (doc.clientEmail) continue;
+        
+        // Se tem companyId, procurar cliente dessa empresa
+        if (doc.companyId) {
+          const client = clients.find((c: any) => 
+            c.companyIds && c.companyIds.includes(doc.companyId)
+          );
+          
+          if (client && client.email) {
+            doc.clientEmail = client.email;
+            console.log(`[Documents] 📧 E-mail encontrado para doc ${doc.id}: ${client.email}`);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('[Documents] ⚠️ Erro ao enriquecer documentos com e-mail:', err);
+      // Continuar mesmo com erro - não é crítico
+    }
   }
 
   goToPage(page: number): void {
@@ -278,6 +323,106 @@ export class DocumentsComponent implements OnInit, OnDestroy {
         this.ui.showToast('Tipo de documento não suporta edição', 'info');
       }
     } catch (err:any) { this.ui.showToast(err?.message || 'Não foi possível iniciar edição', 'error'); }
+  }
+
+  /**
+   * Verifica o status de envio de e-mail do documento
+   * @param doc - Documento a verificar
+   * @returns true se já foi enviado, false caso contrário
+   */
+  hasEmailBeenSent(doc: any): boolean {
+    return doc && typeof doc.emailSent === 'boolean' ? doc.emailSent : false;
+  }
+
+  /**
+   * Verifica se o documento tem um cliente com e-mail vinculado
+   * @param doc - Documento a verificar
+   * @returns true se tem e-mail, false caso contrário
+   */
+  hasClientEmail(doc: any): boolean {
+    return doc && typeof doc.clientEmail === 'string' && (doc.clientEmail?.trim()?.length ?? 0) > 0;
+  }
+
+  /**
+   * Obtém a cor do ícone de e-mail baseado no estado de envio
+   */
+  getEmailIconColor(doc: any): string {
+    if (!this.hasClientEmail(doc)) {
+      return 'disabled';  // Cinza/desabilitado
+    }
+    return this.hasEmailBeenSent(doc) ? 'sent' : 'unsent';  // Verde ou Vermelho
+  }
+
+  /**
+   * Obtém o título (tooltip) do botão de e-mail
+   */
+  getEmailButtonTitle(doc: any): string {
+    if (!this.hasClientEmail(doc)) {
+      return 'Empresa sem cliente vinculado';
+    }
+    return this.hasEmailBeenSent(doc) ? 'Enviar novamente' : 'Enviar por e-mail';
+  }
+
+  /**
+   * Manipula o clique no botão de e-mail
+   */
+  async onEmailButtonClick(doc: any): Promise<void> {
+    // 1. Bloqueio de Segurança: Se não tem e-mail, não fazer nada
+    if (!this.hasClientEmail(doc)) {
+      this.ui.showToast('Esta empresa não possui cliente/e-mail vinculado.', 'warning');
+      return;
+    }
+
+    // 2. Se já foi enviado, pedir confirmação
+    if (this.hasEmailBeenSent(doc)) {
+      const confirmed = confirm(`Este documento já foi enviado para ${doc.clientEmail}. Deseja enviar novamente?`);
+      if (!confirmed) return;
+    }
+
+    // 3. Processar envio
+    await this.processarEnvioEmail(doc);
+  }
+
+  /**
+   * Processa o envio de e-mail do documento
+   */
+  private async processarEnvioEmail(doc: any): Promise<void> {
+    const docId = doc.id || doc.reportId || '';
+    const documentType = doc.documentType || doc.type || '';
+    
+    if (!docId || !documentType) {
+      this.ui.showToast('Dados do documento incompletos', 'error');
+      return;
+    }
+
+    try {
+      // Marcar como enviando
+      this.emailSendingFor = String(docId);
+
+      // Converter nome do documento para tag da API
+      const typeTag = this.documentService.getDocTypeTag(documentType);
+
+      if (!typeTag) {
+        throw new Error(`Tipo de documento desconhecido: ${documentType}`);
+      }
+
+      console.log(`[Documents] 📧 Enviando e-mail para documento ${docId} (tipo: ${typeTag})`);
+
+      // Chamar o novo service
+      await this.documentService.sendEmail(typeTag, docId);
+
+      // Atualizar o estado do documento
+      doc.emailSent = true;
+
+      console.log(`[Documents] ✅ E-mail enviado com sucesso`);
+      this.ui.showToast('E-mail enviado com sucesso!', 'success');
+    } catch (err: any) {
+      console.error(`[Documents] ❌ Erro ao enviar e-mail:`, err);
+      this.ui.showToast(err?.message || 'Erro ao enviar e-mail. Tente novamente.', 'error');
+    } finally {
+      // Limpar estado de envio
+      this.emailSendingFor = '';
+    }
   }
 
   // Helper: Check if a document is signed and therefore immutable
