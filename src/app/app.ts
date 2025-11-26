@@ -29,8 +29,8 @@ export class App {
 
   private updateFooterClass() {
     try {
-      const isLoginRoute = window.location.pathname.includes('/login') || (window.location.hash||'').includes('login');
-      const shouldFixFooter = isLoginRoute && !this.isAuthenticated();
+      // footer só fica fixo quando NÃO autenticado (página de login)
+      const shouldFixFooter = !this.isAuthenticated();
       if (shouldFixFooter) document.body.classList.add('login-footer-fixed'); else document.body.classList.remove('login-footer-fixed');
     } catch (_) {}
   }

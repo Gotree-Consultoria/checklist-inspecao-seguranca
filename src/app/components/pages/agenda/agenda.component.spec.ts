@@ -298,6 +298,9 @@ describe('AgendaComponent', () => {
       spyOn(agendaService, 'createEvento').and.returnValue(
         Promise.reject(new Error('Creation failed'))
       );
+      spyOn(agendaService, 'listEventos').and.returnValue(
+        Promise.resolve([])
+      );
       spyOn(uiService, 'showToast');
 
       await component.onModalConfirm(data);

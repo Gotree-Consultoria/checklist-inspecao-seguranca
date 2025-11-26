@@ -39,6 +39,7 @@ export class ReportComponent implements OnInit, OnDestroy {
   companies: Array<any> = [];
   private reportDraft: { records: ReportRecord[] } = { records: [] };
   private readonly DRAFT_KEY = 'draftReport';
+  private onlineListener: any = null;
 
   async ngOnInit(): Promise<void> {
     // Carrega rascunho salvo do localStorage
@@ -62,6 +63,14 @@ export class ReportComponent implements OnInit, OnDestroy {
 
     // Conecta botões do modal de assinaturas aos métodos do componente
     this.wireSignatureModalButtons();
+    
+    // Tenta reenviar rascunhos pendentes quando carregado
+    try { this.report.retryPendingDrafts().catch(()=>{}); } catch(_) {}
+
+    // Registrar listener para reconexão
+    this.onlineListener = () => { try { this.report.retryPendingDrafts().catch(()=>{}); } catch(_) {} };
+    window.addEventListener('online', this.onlineListener);
+
   }
 
   private wireSignatureModalButtons(): void {
@@ -137,6 +146,7 @@ export class ReportComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     // Ao sair do componente, limpa o rascunho para que o próximo "Novo Relatório" comece vazio
     this.clearDraft();
+    try { if (this.onlineListener) window.removeEventListener('online', this.onlineListener); } catch(_) {}
   }
 
   private clearDraft(): void {
@@ -871,6 +881,7 @@ export class ReportComponent implements OnInit, OnDestroy {
 
   // Recebe as assinaturas do componente compartilhado e envia o relatório
   public async onSharedSignaturesConfirmed(data: any): Promise<void> {
+    let payload: any = null;
     try {
       // Validações semelhantes às de handleSendReport
       if (!this.records || this.records.length === 0) {
@@ -894,7 +905,7 @@ export class ReportComponent implements OnInit, OnDestroy {
       const visitDateFormatted = this.formatDate((document.getElementById('dataInspecao') as HTMLInputElement)?.value || '');
       const startTimeFormatted = this.formatTime((document.getElementById('reportStartTime') as HTMLInputElement)?.value || '');
 
-      const payload: any = {
+      payload = {
         title: (document.getElementById('reportTitle') as HTMLInputElement)?.value?.trim() || '',
         clientCompanyId: clientCompanyIdValue ? parseInt(clientCompanyIdValue) : null,
         unitId: unitIdValue ? parseInt(unitIdValue) : null,
@@ -951,10 +962,23 @@ export class ReportComponent implements OnInit, OnDestroy {
       const errorMsg = error?.message || 'Erro desconhecido';
       console.error('Erro ao enviar relatório via modal compartilhado:', error);
       this.ui.showToast(`Falha ao enviar relatório: ${errorMsg}`, 'error');
+      // Salvar rascunho completo para reenvio posterior (inclui imagens de assinatura e fotos)
+      try {
+        // Montar payload final igual ao que foi tentado enviar
+        const pendingPayload = payload || null;
+        if (pendingPayload) {
+          try { await this.report.savePendingDraft(pendingPayload); } catch(_) {}
+          this.saveDraftToStorage();
+          this.ui.showToast('Rascunho salvo localmente. Será reenviado quando houver conexão.', 'info', 6000);
+        }
+      } catch (saveErr) {
+        console.error('[Report] Falha ao salvar rascunho localmente:', saveErr);
+      }
     }
   }
 
   public async handleSendReport(): Promise<void> {
+    let payload: any = null;
     try {
       // Validar que pelo menos um registro foi adicionado
       if (!this.records || this.records.length === 0) {
@@ -988,7 +1012,7 @@ export class ReportComponent implements OnInit, OnDestroy {
       const visitDateFormatted = this.formatDate((document.getElementById('dataInspecao') as HTMLInputElement)?.value || '');
       const startTimeFormatted = this.formatTime((document.getElementById('reportStartTime') as HTMLInputElement)?.value || '');
       
-      const payload = {
+      payload = {
         title: (document.getElementById('reportTitle') as HTMLInputElement)?.value?.trim() || '',
         clientCompanyId: clientCompanyIdValue ? parseInt(clientCompanyIdValue) : null,
         unitId: unitIdValue ? parseInt(unitIdValue) : null,
@@ -1119,6 +1143,17 @@ export class ReportComponent implements OnInit, OnDestroy {
       console.error('Full error object:', error);
       
       this.ui.showToast(`Falha ao enviar relatório: ${errorMsg}`, 'error');
+      // Salvar rascunho completo para reenvio posterior (inclui imagens de assinatura e fotos)
+      try {
+        const pendingPayload = payload || null;
+        if (pendingPayload) {
+          try { await this.report.savePendingDraft(pendingPayload); } catch(_) {}
+          this.saveDraftToStorage();
+          this.ui.showToast('Rascunho salvo localmente. Será reenviado quando houver conexão.', 'info', 6000);
+        }
+      } catch (saveErr) {
+        console.error('[Report] Falha ao salvar rascunho localmente:', saveErr);
+      }
     }
   }
 

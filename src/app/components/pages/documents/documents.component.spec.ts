@@ -21,8 +21,12 @@ describe('DocumentsComponent', () => {
   });
 
   it('deve carregar documentos do servidor (mock)', async () => {
-    const mockDocs = [{ id: '1', title: 'Doc 1' }];
-    spyOn(window as any, 'fetch').and.returnValue(Promise.resolve(new Response(JSON.stringify(mockDocs), { status: 200, headers: { 'Content-Type': 'application/json' } })));
+    const mockResponse = {
+      content: [{ id: '1', title: 'Doc 1', documentType: 'visit' }],
+      totalElements: 1,
+      totalPages: 1
+    };
+    spyOn(window as any, 'fetch').and.returnValue(Promise.resolve(new Response(JSON.stringify(mockResponse), { status: 200, headers: { 'Content-Type': 'application/json' } })));
     await component.loadDocumentsList();
     expect(component.documents.length).toBeGreaterThan(0);
     expect(component.documents[0].title).toBe('Doc 1');

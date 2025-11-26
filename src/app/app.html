@@ -12,4 +12,7 @@
   <router-outlet></router-outlet>
 </main>
 
-<app-footer></app-footer>
+<!-- Footer visível apenas na página de login (quando NÃO autenticado) -->
+<ng-container *ngIf="!isAuthenticated()">
+  <app-footer></app-footer>
+</ng-container>

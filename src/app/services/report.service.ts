@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { LegacyService } from './legacy.service';
+import localforage from 'localforage';
 
 @Injectable({
   providedIn: 'root'
@@ -707,5 +708,86 @@ export class ReportService {
     if (!type || !id) throw new Error('type e id são necessários para exclusão do documento');
     const url = `${this.getBase()}/documents/${encodeURIComponent(type)}/${encodeURIComponent(id)}`;
     return fetch(url, { method: 'DELETE', headers: this.authHeaders() });
+  }
+
+  // ---------------------------
+  // Draft / offline helpers
+  // ---------------------------
+  private PENDING_KEY = 'pendingTechnicalVisits';
+
+  // Use IndexedDB via localforage for storing pending drafts (safer for large base64 images)
+  async savePendingDraft(draft: any): Promise<void> {
+    try {
+      const list = (await localforage.getItem(this.PENDING_KEY) as any[]) || [];
+      const id = `pending_${Date.now()}`;
+      list.push({ id, createdAt: Date.now(), draft });
+      await localforage.setItem(this.PENDING_KEY, list);
+      console.log('[ReportService] Rascunho salvo localmente com id', id);
+    } catch (e) {
+      console.error('[ReportService] Falha ao salvar rascunho localmente', e);
+      // Fallback: try to use localStorage if IndexedDB unavailable
+      try {
+        const raw = localStorage.getItem(this.PENDING_KEY) || '[]';
+        const list = JSON.parse(raw);
+        const id = `pending_${Date.now()}`;
+        list.push({ id, createdAt: Date.now(), draft });
+        localStorage.setItem(this.PENDING_KEY, JSON.stringify(list));
+        console.log('[ReportService] Rascunho salvo em localStorage (fallback) id', id);
+      } catch (e2) {
+        console.error('[ReportService] Falha ao salvar rascunho em localStorage (fallback)', e2);
+      }
+    }
+  }
+
+  async getPendingDrafts(): Promise<Array<any>> {
+    try {
+      const list = (await localforage.getItem(this.PENDING_KEY) as any[]) || [];
+      return list;
+    } catch (e) {
+      try {
+        const raw = localStorage.getItem(this.PENDING_KEY) || '[]';
+        return JSON.parse(raw);
+      } catch (_) {
+        return [];
+      }
+    }
+  }
+
+  async removePendingDraft(id: string): Promise<void> {
+    try {
+      const list = (await this.getPendingDrafts()) || [];
+      const filtered = list.filter((i: any) => i.id !== id);
+      await localforage.setItem(this.PENDING_KEY, filtered);
+      console.log('[ReportService] Rascunho removido:', id);
+    } catch (e) {
+      console.error('[ReportService] Falha ao remover rascunho', e);
+      try {
+        const raw = localStorage.getItem(this.PENDING_KEY) || '[]';
+        const list = JSON.parse(raw).filter((i: any) => i.id !== id);
+        localStorage.setItem(this.PENDING_KEY, JSON.stringify(list));
+      } catch (_) {}
+    }
+  }
+
+  /**
+   * Tenta reenviar rascunhos pendentes para o backend.
+   * Remove os que forem enviados com sucesso.
+   */
+  async retryPendingDrafts(): Promise<void> {
+    const pending = await this.getPendingDrafts();
+    if (!pending || pending.length === 0) return;
+    console.log('[ReportService] Tentando reenviar', pending.length, 'rascunhos pendentes');
+    for (const item of pending) {
+      try {
+        // postTechnicalVisit espera o payload original
+        await this.postTechnicalVisit(item.draft);
+        await this.removePendingDraft(item.id);
+        console.log('[ReportService] Rascunho reenviado com sucesso:', item.id);
+      } catch (e) {
+        console.warn('[ReportService] Falha ao reenviar rascunho:', item.id, e);
+        // continuar para o próximo, não remover
+        continue;
+      }
+    }
   }
 }

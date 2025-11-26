@@ -11,88 +11,112 @@ import { LegacyService } from '../../../services/legacy.service';
   imports: [CommonModule, FormsModule],
   template: `
     <div class="modal-overlay" [class.hidden-modal]="!isOpen">
-      <div class="modal">
+      <div class="modal" role="dialog" aria-label="Modal de Assinaturas">
         <div class="modal-header">
-          <h3>{{ techOnly ? 'Assinatura - Técnico' : 'Assinaturas' }}</h3>
+          <div class="header-content">
+            <h2 class="modal-title">{{ techOnly ? '✍️ Assinatura do Técnico' : '✍️ Assinaturas' }}</h2>
+            <p class="modal-subtitle">{{ techOnly ? 'Colete sua assinatura' : 'Colete as assinaturas do Técnico e Cliente' }}</p>
+          </div>
           <button type="button" class="close-btn" (click)="cancel()" aria-label="Fechar">&times;</button>
         </div>
-        <div class="modal-body">
-          <p *ngIf="!techOnly">Por favor, colete a assinatura do Técnico e do Cliente.</p>
-          <p *ngIf="techOnly">Por favor, colete a assinatura do Técnico.</p>
 
-          <div class="sign-block">
-            <h4>Técnico</h4>
-            <div class="fg">
-              <label for="techName">Nome do Técnico</label>
-              <input type="text" id="techName" class="form-control sig-name-input" [(ngModel)]="techName" readonly />
+        <div class="modal-body">
+          <!-- TÉCNICO -->
+          <div class="sign-section">
+            <div class="section-header">
+              <h3>👨‍💼 Técnico</h3>
             </div>
-            <div class="fg">
-              <label>Assinatura do Técnico</label>
-              <canvas
-                #techSignatureCanvas
-                id="techSignatureCanvas"
-                width="600"
-                height="150"
-                class="signature-canvas"
-              ></canvas>
-              <div class="signature-clear-btn">
-                <button type="button" (click)="clearTechSignature()" class="btn-secondary">
-                  Limpar Assinatura (Técnico)
-                </button>
+            <div class="form-group">
+              <label for="techName">Nome do Técnico *</label>
+              <input type="text" id="techName" class="form-control" [(ngModel)]="techName" readonly />
+            </div>
+            <div class="form-group">
+              <label class="canvas-label">Assinatura do Técnico *</label>
+              <div class="canvas-container">
+                <canvas
+                  #techSignatureCanvas
+                  id="techSignatureCanvas"
+                  width="600"
+                  height="150"
+                  class="signature-canvas"
+                ></canvas>
+                <div class="canvas-hint">Assine aqui</div>
               </div>
+              <button type="button" (click)="clearTechSignature()" class="btn-clear-sig">
+                🗑️ Limpar
+              </button>
             </div>
           </div>
 
-          <hr *ngIf="!techOnly" />
-
-          <div class="sign-block" *ngIf="!techOnly">
-            <h4>Cliente</h4>
-            <div class="fg">
-              <label for="clientName">Nome do Responsável pela Empresa</label>
-              <input type="text" id="clientName" class="form-control sig-name-input" [(ngModel)]="clientName" />
+          <!-- CLIENTE -->
+          <div class="sign-section" *ngIf="!techOnly">
+            <div class="divider"></div>
+            <div class="section-header">
+              <h3>👤 Responsável pela Empresa</h3>
             </div>
-            <div class="fg">
-              <label>Assinatura do Cliente</label>
-              <canvas
-                #clientSignatureCanvas
-                id="clientSignatureCanvas"
-                width="600"
-                height="150"
-                class="signature-canvas"
-              ></canvas>
-              <div class="signature-clear-btn">
-                <button type="button" (click)="clearClientSignature()" class="btn-secondary">
-                  Limpar Assinatura (Cliente)
-                </button>
+            <div class="form-group">
+              <label for="clientName">Nome do Responsável *</label>
+              <input type="text" id="clientName" class="form-control" [(ngModel)]="clientName" placeholder="Digite o nome..." />
+            </div>
+            <div class="form-group">
+              <label class="canvas-label">Assinatura do Cliente *</label>
+              <div class="canvas-container">
+                <canvas
+                  #clientSignatureCanvas
+                  id="clientSignatureCanvas"
+                  width="600"
+                  height="150"
+                  class="signature-canvas"
+                ></canvas>
+                <div class="canvas-hint">Assine aqui</div>
               </div>
+              <button type="button" (click)="clearClientSignature()" class="btn-clear-sig">
+                🗑️ Limpar
+              </button>
             </div>
           </div>
         </div>
 
         <div class="modal-footer">
-          <button type="button" (click)="clearAll()" class="btn-secondary">Limpar</button>
-          <button type="button" (click)="confirm()" class="btn-submit">Confirmar e Salvar</button>
-          <button type="button" (click)="cancel()" class="btn-secondary">Cancelar</button>
+          <button type="button" (click)="clearAll()" class="btn btn-secondary">
+            🔄 Limpar Tudo
+          </button>
+          <button type="button" (click)="confirm()" class="btn btn-primary">
+            ✓ Confirmar e Salvar
+          </button>
+          <button type="button" (click)="cancel()" class="btn btn-secondary">
+            ✕ Cancelar
+          </button>
         </div>
       </div>
     </div>
   `,
   styles: [
     `
+      :host {
+        --primary-color: #4CAF50;
+        --danger-color: #f44336;
+        --warning-color: #ff9800;
+        --secondary-color: #2196F3;
+        --border-radius: 12px;
+        --shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+      }
+
       .modal-overlay {
         position: fixed;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        background-color: rgba(0, 0, 0, 0.5);
+        background: linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.6) 100%);
         display: flex;
         align-items: center;
         justify-content: center;
         z-index: 10000;
+        padding: 12px;
         opacity: 1;
         visibility: visible;
-        transition: opacity 0.3s, visibility 0.3s;
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
       .modal-overlay.hidden-modal {
@@ -103,125 +127,388 @@ import { LegacyService } from '../../../services/legacy.service';
 
       .modal {
         background: white;
-        border-radius: 8px;
-        max-width: 800px;
-        width: 90%;
+        border-radius: var(--border-radius);
+        width: 100%;
+        max-width: 850px;
         max-height: 90vh;
         overflow-y: auto;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        box-shadow: var(--shadow);
+        animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
 
       .modal-header {
-        padding: 20px;
-        border-bottom: 1px solid #eee;
+        padding: 24px;
+        border-bottom: 1px solid #f0f0f0;
         display: flex;
         justify-content: space-between;
-        align-items: center;
+        align-items: flex-start;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
       }
 
-      .modal-header h3 {
+      .header-content {
+        flex: 1;
+      }
+
+      .modal-title {
+        margin: 0 0 6px 0;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        letter-spacing: -0.5px;
+      }
+
+      .modal-subtitle {
         margin: 0;
-        font-size: 1.5rem;
+        font-size: 0.95rem;
+        color: #666;
+        font-weight: 400;
       }
 
       .close-btn {
-        background: none;
-        border: none;
-        font-size: 2rem;
+        background: rgba(255, 255, 255, 0.8);
+        border: 2px solid #ddd;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        font-size: 24px;
         cursor: pointer;
         color: #666;
+        transition: all 0.25s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        margin-left: 16px;
+        flex-shrink: 0;
+      }
+
+      .close-btn:hover {
+        background: white;
+        border-color: #999;
+        color: #333;
+        transform: rotate(90deg);
       }
 
       .modal-body {
-        padding: 20px;
+        padding: 28px 24px;
+        overflow-y: auto;
+        max-height: calc(90vh - 180px);
       }
 
-      /* Sign blocks center the pads and align inputs to limited width */
-      .sign-block {
+      .sign-section {
+        margin-bottom: 24px;
+      }
+
+      .section-header {
+        margin-bottom: 18px;
+      }
+
+      .section-header h3 {
+        margin: 0;
+        font-size: 1.3rem;
+        color: #1a1a1a;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .divider {
+        height: 2px;
+        background: linear-gradient(to right, transparent, #ddd, transparent);
+        margin: 28px 0;
+      }
+
+      .form-group {
         margin-bottom: 20px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-      }
-
-      .fg {
-        margin-bottom: 15px;
-        width: 100%;
-        max-width: 620px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
       }
 
       label {
         display: block;
-        font-weight: 500;
-        margin-bottom: 5px;
+        font-weight: 600;
+        margin-bottom: 8px;
         color: #333;
-        width: 100%;
-        max-width: 620px;
-        text-align: left;
-      }
-
-      .form-control {
-        width: 60%;
-        max-width: 360px;
-        padding: 8px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
         font-size: 0.95rem;
       }
 
-      .signature-canvas {
-        border: 2px solid #ddd;
-        border-radius: 6px;
-        cursor: crosshair;
-        background-color: white;
-        display: block;
-        margin: 10px auto; /* centraliza horizontalmente */
+      .canvas-label {
+        color: #2c3e50;
       }
 
-      /* inputs menores para nomes nas assinaturas */
-      .sig-name-input {
-        width: 60%;
-        max-width: 360px;
+      .form-control {
+        width: 100%;
+        padding: 12px 14px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        transition: all 0.25s ease;
+        background: white;
+        box-sizing: border-box;
+      }
+
+      .form-control:focus {
+        outline: none;
+        border-color: var(--secondary-color);
+        box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+        background: #f8fbff;
+      }
+
+      .form-control:disabled {
+        background-color: #f5f5f5;
+        color: #999;
+      }
+
+      .canvas-container {
+        position: relative;
+        background: white;
+        border: 3px dashed #ddd;
+        border-radius: 10px;
+        padding: 8px;
+        overflow: hidden;
+        transition: all 0.25s ease;
+      }
+
+      .canvas-container:hover {
+        border-color: var(--secondary-color);
+        box-shadow: 0 4px 12px rgba(33, 150, 243, 0.1);
+      }
+
+      .signature-canvas {
+        display: block;
+        background-color: white;
+        cursor: crosshair;
+        border-radius: 6px;
+        touch-action: none;
+      }
+
+      .canvas-hint {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        font-size: 0.8rem;
+        color: #ccc;
+        font-weight: 500;
+        pointer-events: none;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .btn-clear-sig {
+        margin-top: 10px;
+        padding: 8px 16px;
+        background-color: #f5f5f5;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #666;
+        transition: all 0.25s ease;
         display: inline-block;
       }
 
-      .signature-clear-btn {
-        margin-top: 10px;
+      .btn-clear-sig:hover {
+        background-color: #ffe6e6;
+        border-color: var(--danger-color);
+        color: var(--danger-color);
       }
 
       .modal-footer {
-        padding: 16px;
-        border-top: 1px solid #eee;
+        padding: 16px 24px;
+        border-top: 1px solid #f0f0f0;
         display: flex;
-        justify-content: flex-end; /* alinhamento à direita (restaurado) */
-        gap: 8px;
+        justify-content: center;
+        gap: 12px;
+        background-color: #fafafa;
+        flex-wrap: wrap;
       }
 
-      /* botões menores e compactos */
-      .btn-submit,
-      .btn-secondary {
-        padding: 6px 12px;
+      .btn {
+        padding: 11px 24px;
         border: none;
-        border-radius: 4px;
+        border-radius: 8px;
         cursor: pointer;
-        font-size: 0.9rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
       }
 
-      .btn-submit {
-        background-color: #bfd83a;
+      .btn-primary {
+        background: linear-gradient(135deg, var(--primary-color) 0%, #45a049 100%);
         color: white;
+        box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+      }
+
+      .btn-primary:active {
+        transform: translateY(0);
       }
 
       .btn-secondary {
         background-color: #e65f3c;
         color: white;
+        box-shadow: 0 4px 12px rgba(230, 95, 60, 0.2);
       }
 
-      hr {
-        margin: 20px 0;
+      .btn-secondary:hover {
+        background-color: #d94d2e;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(230, 95, 60, 0.3);
+      }
+
+      .btn-secondary:active {
+        transform: translateY(0);
+      }
+
+      /* RESPONSIVO - TABLET */
+      @media (max-width: 768px) {
+        .modal {
+          width: calc(100% - 24px);
+        }
+
+        .modal-header {
+          padding: 18px;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .header-content {
+          width: 100%;
+        }
+
+        .modal-title {
+          font-size: 1.4rem;
+        }
+
+        .modal-subtitle {
+          font-size: 0.85rem;
+        }
+
+        .close-btn {
+          margin-left: 0;
+          align-self: flex-end;
+        }
+
+        .modal-body {
+          padding: 20px 16px;
+          max-height: calc(90vh - 150px);
+        }
+
+        .signature-canvas {
+          height: 160px;
+        }
+
+        .modal-footer {
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .btn {
+          width: 100%;
+          justify-content: center;
+        }
+      }
+
+      /* RESPONSIVO - MOBILE */
+      @media (max-width: 480px) {
+        .modal-overlay {
+          padding: 8px;
+        }
+
+        .modal {
+          max-height: 95vh;
+        }
+
+        .modal-header {
+          padding: 14px;
+        }
+
+        .modal-title {
+          font-size: 1.2rem;
+        }
+
+        .modal-subtitle {
+          font-size: 0.8rem;
+        }
+
+        .close-btn {
+          width: 36px;
+          height: 36px;
+          font-size: 20px;
+        }
+
+        .modal-body {
+          padding: 16px 12px;
+          max-height: calc(95vh - 120px);
+        }
+
+        .section-header h3 {
+          font-size: 1.1rem;
+        }
+
+        label {
+          font-size: 0.9rem;
+        }
+
+        .form-control {
+          padding: 10px 12px;
+          font-size: 0.9rem;
+        }
+
+        .canvas-container {
+          padding: 6px;
+        }
+
+        .signature-canvas {
+          height: 120px;
+        }
+
+        .btn {
+          padding: 10px 16px;
+          font-size: 0.85rem;
+        }
+
+        .modal-footer {
+          padding: 12px;
+        }
+      }
+
+      /* Scrollbar styling */
+      .modal-body::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .modal-body::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+      }
+
+      .modal-body::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 10px;
+      }
+
+      .modal-body::-webkit-scrollbar-thumb:hover {
+        background: #999;
       }
     `,
   ],
