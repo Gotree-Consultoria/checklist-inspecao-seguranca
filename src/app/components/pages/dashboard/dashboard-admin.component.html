@@ -3,11 +3,11 @@
     <h1 class="page-title">Dashboard do Administrador</h1>
     <div class="admin-header-actions">
       <button class="header-btn header-btn-refresh" type="button" (click)="loadAdminDashboard()" title="Atualizar dados do dashboard">
-        <span class="btn-icon">🔄</span>
+        <span class="btn-icon material-icons">refresh</span>
         <span class="btn-label">Atualizar</span>
       </button>
       <button class="header-btn header-btn-export" type="button" (click)="goTo('/reports')" title="Ir para relatórios e exportar">
-        <span class="btn-icon">📥</span>
+        <span class="btn-icon material-icons">download</span>
         <span class="btn-label">Exportar</span>
       </button>
     </div>
@@ -17,28 +17,28 @@
       <!-- Left column: Title + Shortcuts -->
       <div class="card action-card">
         <div class="card-header"><h3>Atalhos Administrativos</h3></div>
-        <div class="actions-list">
-          <button class="btn-primary" type="button" (click)="goTo('/users')"><span class="btn-icon">👥</span><span class="btn-text">Gerenciar Usuários</span></button>
-          <button class="btn-primary" type="button" (click)="goTo('/companies')"><span class="btn-icon">🏢</span><span class="btn-text">Gerenciar Empresas</span></button>
-          <button class="btn-primary" type="button" (click)="goTo('/documents')"><span class="btn-icon">📄</span><span class="btn-text">Ver Todos os Documentos</span></button>
+        <div class="actions-list gr-actions-list">
+          <button class="btn-primary gr-action-btn" type="button" (click)="goTo('/users')"><span class="gr-btn-icon material-icons">group</span><span class="gr-btn-text">Gerenciar Usuários</span></button>
+          <button class="btn-primary gr-action-btn" type="button" (click)="goTo('/companies')"><span class="gr-btn-icon material-icons">business</span><span class="gr-btn-text">Gerenciar Empresas</span></button>
+          <button class="btn-primary gr-action-btn" type="button" (click)="goTo('/documents')"><span class="gr-btn-icon material-icons">description</span><span class="gr-btn-text">Ver Todos os Documentos</span></button>
         </div>
       </div>
 
       <!-- KPIs -->
       <div class="card kpi-card">
         <div class="card-header"><h3>Indicadores Gerais</h3></div>
-        <div class="kpi-grid mt-16">
-          <div class="kpi-item">
-            <div class="kpi-value">{{ adminStats?.usersActive || 0 }}</div>
-            <div class="kpi-label">Usuários Ativos</div>
+        <div class="kpi-grid gr-kpi-grid mt-16">
+          <div class="kpi-item gr-kpi-item">
+            <div class="kpi-value gr-kpi-value">{{ adminStats?.totalUsers || 0 }}</div>
+            <div class="kpi-label gr-kpi-label">Usuários</div>
           </div>
-          <div class="kpi-item">
-            <div class="kpi-value">{{ adminStats?.companies || 0 }}</div>
-            <div class="kpi-label">Empresas Clientes</div>
+          <div class="kpi-item gr-kpi-item">
+            <div class="kpi-value gr-kpi-value">{{ adminStats?.totalCompanies || 0 }}</div>
+            <div class="kpi-label gr-kpi-label">Empresas Clientes</div>
           </div>
-          <div class="kpi-item">
-            <div class="kpi-value">{{ adminStats?.totalDocuments || 0 }}</div>
-            <div class="kpi-label">Total de Documentos</div>
+          <div class="kpi-item gr-kpi-item">
+            <div class="kpi-value gr-kpi-value">{{ adminStats?.totalDocuments || 0 }}</div>
+            <div class="kpi-label gr-kpi-label">Total de Documentos</div>
           </div>
         </div>
       </div>
@@ -46,19 +46,18 @@
       <!-- Recent Activity (right column on desktop) -->
       <div class="card recent-card">
         <div class="card-header"><h3>Atividade Recente</h3></div>
-        <div class="recent-table mt-16">
-          <div class="recent-row header">
-            <div class="col type">Tipo</div>
-            <div class="col title">Documento</div>
-            <div class="col company">Empresa</div>
-            <div class="col company">Usuário</div>
-          </div>
+        <div class="recent-activity mt-12">
           <div *ngIf="recentAdminItems && recentAdminItems.length; else noRecentAdmin">
-            <div class="recent-row" *ngFor="let item of recentAdminItems">
-              <div class="col type" data-label="Tipo">{{ item.type || '-' }}</div>
-              <div class="col title" data-label="Documento">{{ item.title }}</div>
-              <div class="col company" data-label="Empresa">{{ item.company || '-' }}</div>
-              <div class="col company" data-label="Usuário">{{ item.user || '-' }}</div>
+            <div class="activity-item" *ngFor="let item of recentAdminItems">
+              <div class="activity-content">
+                <div class="activity-title">{{ item.title }}</div>
+                <div class="activity-meta">
+                  <span class="meta-company" *ngIf="item.company"><i class="material-icons">business</i> {{ item.company }}</span>
+                  <span class="meta-user" *ngIf="item.user"><i class="material-icons">person</i> {{ item.user }}</span>
+                  <span class="meta-date"><i class="material-icons">calendar_today</i> {{ formatDateToBrazil(item.date) }}</span>
+                </div>
+              </div>
+              <div class="activity-type-tag">{{ item.type || 'Documento' }}</div>
             </div>
           </div>
           <ng-template #noRecentAdmin>
@@ -72,34 +71,61 @@
         <div class="card-header"><h3>Documentos por Usuário</h3></div>
         
         <div class="doc-table-wrap mt-12">
-          <div class="chart-filters">
-            <label class="filter-label">Filtrar por Usuário:
-              <select [(ngModel)]="adminDocsFilterUser" (change)="loadAdminDocuments()">
-                <option value="all">Todos</option>
-                <option *ngFor="let u of adminDocsUsers" [value]="u.id">{{ u.name }}</option>
-              </select>
-            </label>
-            <label class="filter-label">Filtrar por Tipo:
-              <select [(ngModel)]="adminDocsFilterType" (change)="loadAdminDocuments()">
-                <option value="all">Todos</option>
-                <option value="VISITA">Visita</option>
-                <option value="AEP">AEP</option>
-              </select>
-            </label>
+          <div class="filters-container">
+            <div class="filters-header">
+              <h4>Filtros</h4>
+            </div>
+            <div class="chart-filters">
+              <div class="filter-group">
+                <label class="filter-label">
+                  <span class="filter-icon material-icons">person</span>
+                  <span class="filter-title">Usuário</span>
+                  <select [(ngModel)]="adminDocsFilterUser" (change)="loadAdminDocuments()">
+                    <option value="all">Todos</option>
+                    <option *ngFor="let u of adminDocsUsers" [value]="u.id">{{ u.name }}</option>
+                  </select>
+                </label>
+              </div>
+              <div class="filter-group">
+                <label class="filter-label">
+                  <span class="filter-icon material-icons">list_alt</span>
+                  <span class="filter-title">Tipo de Documento</span>
+                  <select [(ngModel)]="adminDocsFilterType" (change)="loadAdminDocuments()">
+                    <option value="all">Todos</option>
+                    <option value="VISITA">Visita</option>
+                    <option value="AEP">AEP</option>
+                  </select>
+                </label>
+              </div>
+            </div>
           </div>
+
+          <div class="table-header-divider"></div>
 
           <div class="doc-table">
             <div class="doc-row header">
-              <div class="col name">Nome</div>
-              <div class="col doc">Documento</div>
-              <div class="col qty">Quantidade</div>
+              <div class="col name">Usuário</div>
+              <div class="col visits">Visitas</div>
+              <div class="col aeps">AEPs</div>
+              <div class="col risks">Riscos</div>
+              <div class="col total">Total</div>
             </div>
 
             <div *ngIf="adminDocs && adminDocs.length; else noAdminDocs">
               <div class="doc-row" *ngFor="let d of adminDocs">
-                <div class="col name" data-label="Nome">{{ d.userName || d.name || ('User ' + (d.userId||'')) }}</div>
-                <div class="col doc" data-label="Documento">{{ d.lastDocumentTitle || d.documentTitle || d.title || '-' }}</div>
-                <div class="col qty" data-label="Quantidade" *ngIf="(d.visits || d.aeps)">{{ (d.visits||0) + (d.aeps||0) }}</div>
+                <div class="col name" data-label="Usuário">{{ d.userName || d.name || ('Usuário ' + (d.userId||'')) }}</div>
+                <div class="col visits" data-label="Visitas">
+                  <span class="badge badge-visits">{{ d.totalVisits || 0 }}</span>
+                </div>
+                <div class="col aeps" data-label="AEPs">
+                  <span class="badge badge-aeps">{{ d.totalAeps || 0 }}</span>
+                </div>
+                <div class="col risks" data-label="Riscos">
+                  <span class="badge badge-risks">{{ d.totalRisks || 0 }}</span>
+                </div>
+                <div class="col total" data-label="Total">
+                  <span class="badge badge-total">{{ d.totalDocuments || 0 }}</span>
+                </div>
               </div>
             </div>
 
@@ -123,6 +149,107 @@
           <ng-template #noTeamAgenda>
             <div class="muted">Nenhum compromisso da equipe encontrado.</div>
           </ng-template>
+        </div>
+      </div>
+
+      <!-- All Documents in System (wide) -->
+      <div class="card all-docs-card">
+        <div class="card-header">
+          <h3>Todos os Documentos do Sistema</h3>
+          <div class="pagination-info" *ngIf="allDocsPageInfo">
+            {{ allDocsPageInfo.number * allDocsPageInfo.size + 1 }}-{{ (allDocsPageInfo.number + 1) * allDocsPageInfo.size > allDocsPageInfo.totalElements ? allDocsPageInfo.totalElements : (allDocsPageInfo.number + 1) * allDocsPageInfo.size }} de {{ allDocsPageInfo.totalElements }}
+          </div>
+        </div>
+
+        <div class="filters-container">
+          <div class="chart-filters">
+            <div class="filter-group">
+              <label class="filter-label">Tipo</label>
+              <input type="text" [(ngModel)]="allDocsFilterType" (change)="onAllDocsFilterChange()" placeholder="AEP, VISITA...">
+            </div>
+            <div class="filter-group">
+              <label class="filter-label">Empresa</label>
+              <input type="text" [(ngModel)]="allDocsFilterClientName" (change)="onAllDocsFilterChange()" placeholder="Nome da empresa...">
+            </div>
+            <div class="filter-group">
+              <label class="filter-label">De</label>
+              <input type="date" [(ngModel)]="allDocsFilterStartDate" (change)="onAllDocsFilterChange()" title="Data de início">
+            </div>
+            <div class="filter-group">
+              <label class="filter-label">Até</label>
+              <input type="date" [(ngModel)]="allDocsFilterEndDate" (change)="onAllDocsFilterChange()" title="Data de fim">
+            </div>
+          </div>
+        </div>
+
+        <div class="all-docs-table">
+          <div class="doc-row header">
+            <div class="col type">Tipo</div>
+            <div class="col title">Documento</div>
+            <div class="col company">Empresa</div>
+            <div class="col technician">Técnico</div>
+            <div class="col date">Data</div>
+            <div class="col actions">Ações</div>
+          </div>
+          <div class="doc-row" *ngFor="let doc of allDocuments">
+            <div class="col type" data-label="Tipo">
+              <span class="type-badge" [ngClass]="'badge-' + (doc.documentType?.toLowerCase() || 'default')">
+                {{ doc.documentType || 'Documento' }}
+              </span>
+            </div>
+            <div class="col title" data-label="Documento">{{ doc.title }}</div>
+            <div class="col company" data-label="Empresa">{{ doc.clientName || '-' }}</div>
+            <div class="col technician" data-label="Técnico">{{ doc.technicianName || '-' }}</div>
+            <div class="col date" data-label="Data">{{ formatDateToBrazil(doc.creationDate) }}</div>
+            <div class="col actions" data-label="Ações">
+              <button class="btn-action btn-view icon-btn" title="Visualizar documento" (click)="viewDocument(doc)" type="button">
+                <svg class="icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8S2 12 2 12z" stroke="#374151" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none"></path>
+                  <circle cx="12" cy="12" r="3" stroke="#374151" stroke-width="1.2" fill="none"></circle>
+                </svg>
+              </button>
+              <button class="btn-action btn-download icon-btn" title="Baixar documento" (click)="downloadDocument(doc)" type="button">
+                <svg class="icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M12 3v12" stroke="#374151" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M8 9l4 4 4-4" stroke="#374151" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M21 21H3" stroke="#374151" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div *ngIf="!allDocuments || !allDocuments.length" class="muted">Nenhum documento encontrado.</div>
+        </div>
+
+        <div class="pagination-controls" *ngIf="allDocsPageInfo && allDocsPageInfo.totalPages > 1">
+          <button class="btn-pagination" (click)="loadPreviousDocsPage()" [disabled]="allDocsPageInfo.number === 0">
+            ← Anterior
+          </button>
+          <span class="page-indicator">
+            Página {{ allDocsPageInfo.number + 1 }} de {{ allDocsPageInfo.totalPages }}
+          </span>
+          <button class="btn-pagination" (click)="loadNextDocsPage()" [disabled]="allDocsPageInfo.number >= allDocsPageInfo.totalPages - 1">
+            Próxima →
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PDF Modal Overlay -->
+    <div class="pdf-modal-overlay" *ngIf="pdfModalOpen" (click)="closePdfModal()">
+      <div class="pdf-modal" (click)="$event.stopPropagation()">
+        <div class="pdf-modal-header">
+          <div class="pdf-toolbar">
+            <h4>Visualizador de PDF</h4>
+            <div class="pdf-actions">
+              <button class="btn-action" *ngIf="pdfBlobUrl && pdfModalItem" (click)="downloadDocument(pdfModalItem)">Baixar</button>
+              <button class="btn-action" *ngIf="pdfBlobUrl" (click)="openPdfInNewTab()">Abrir em nova aba</button>
+              <button class="btn-close" (click)="closePdfModal()">Fechar</button>
+            </div>
+          </div>
+        </div>
+        <div class="pdf-modal-body">
+          <iframe *ngIf="pdfBlobUrl" [src]="pdfBlobUrl | safeUrl" width="100%" height="600px" title="Visualizador de PDF"></iframe>
+          <p *ngIf="!pdfBlobUrl">Carregando...</p>
         </div>
       </div>
     </div>

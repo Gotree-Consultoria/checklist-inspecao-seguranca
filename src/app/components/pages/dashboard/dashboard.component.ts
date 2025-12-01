@@ -86,6 +86,7 @@ export class DashboardComponent implements OnInit {
     this.loading = true;
     try {
       const stats: MyDashboardStats = await this.dashboard.myStats();
+      console.log('[Dashboard] Stats recebidas:', stats);
       const hours = stats.totalVisitTimeHours || 0;
       const minutes = stats.totalVisitTimeMinutes || 0;
       this.kpis = {
@@ -94,8 +95,11 @@ export class DashboardComponent implements OnInit {
         totalRisks: stats.totalRisks || 0,
         totalVisitTime: `${hours}h ${minutes}m`
       };
+      console.log('[Dashboard] KPIs processados:', this.kpis);
       this.topCompanies = Array.isArray(stats.topCompanies) ? stats.topCompanies.slice(0,5) : [];
+      console.log('[Dashboard] Top companies:', this.topCompanies);
     } catch (e:any) {
+      console.error('[Dashboard] Erro ao carregar dados:', e);
       this.ui.showToast('Não foi possível carregar indicadores do dashboard', 'error');
       this.kpis = { totalVisits: 0, totalAeps: 0, totalRisks: 0, totalVisitTime: '0h 0m' };
       this.topCompanies = [];
@@ -154,8 +158,17 @@ export class DashboardComponent implements OnInit {
       try {
         const latest = await this.dashboard.latestAll();
         const items = Array.isArray(latest) ? latest.slice(0,5) : (latest ? [latest] : []);
-        this.recentAdminItems = items.map((i:any) => ({ title: i.title || i.type || 'Documento', date: (i.inspectionDate || i.createdAt || '').substring(0,10), id: String(i.id||i.reportId||''), type: i.documentType||i.type||'', user: i.authorName || i.userName || i.responsible || '', company: i.companyName || i.company || '' }));
+        this.recentAdminItems = items.map((i:any) => ({ 
+          title: i.title || i.type || 'Documento', 
+          date: (i.creationDate || i.inspectionDate || i.createdAt || '').substring(0,10), 
+          id: String(i.id||i.reportId||''), 
+          type: i.documentType||i.type||'', 
+          user: i.technicianName || i.authorName || i.userName || i.responsible || '', 
+          company: i.clientName || i.companyName || i.company || '' 
+        }));
+        console.log('[Dashboard] recentAdminItems:', this.recentAdminItems);
       } catch (e:any) {
+        console.error('[Dashboard] Erro ao carregar atividade recente:', e);
         this.recentAdminItems = [];
       }
 
