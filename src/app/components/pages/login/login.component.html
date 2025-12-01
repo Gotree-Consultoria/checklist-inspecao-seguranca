@@ -33,4 +33,62 @@
         </form>
     </div>
   </div>
+
+  <!-- Password Reset Required Modal -->
+  <div *ngIf="showResetPasswordModal" class="modal-overlay">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Alterar Senha Obrigatoriamente</h2>
+        <p class="modal-subtitle">Sua senha expirou. Por favor, escolha uma nova senha para continuar.</p>
+      </div>
+
+      <form (submit)="submitResetPassword()" class="reset-password-form" novalidate>
+        <div class="form-group">
+          <label for="newPassword">Nova Senha</label>
+          <input 
+            type="password" 
+            id="newPassword" 
+            class="form-control"
+            [(ngModel)]="resetPasswordForm.newPassword"
+            name="newPassword"
+            placeholder="Mínimo 8 caracteres"
+            required
+            [disabled]="resetPasswordLoading"
+            autocomplete="new-password"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">Confirmar Senha</label>
+          <input 
+            type="password" 
+            id="confirmPassword" 
+            class="form-control"
+            [(ngModel)]="resetPasswordForm.confirmPassword"
+            name="confirmPassword"
+            placeholder="Repita a nova senha"
+            required
+            [disabled]="resetPasswordLoading"
+            autocomplete="new-password"
+          />
+        </div>
+
+        <div *ngIf="resetPasswordError" class="error-message" role="alert">
+          {{ resetPasswordError }}
+        </div>
+
+        <div class="form-actions">
+          <button 
+            type="submit" 
+            class="btn btn-primary"
+            [disabled]="resetPasswordLoading"
+          >
+            {{ resetPasswordLoading ? 'Alterando...' : 'Alterar Senha' }}
+          </button>
+        </div>
+      </form>
+      
+      <p class="modal-info">Este é um passo obrigatório de segurança. Você não conseguirá sair sem alterar sua senha.</p>
+    </div>
+  </div>
 </div>

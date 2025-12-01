@@ -1,15 +1,17 @@
 import { Component, ElementRef, OnInit, inject } from '@angular/core';
 import { CommonModule, NgIf, NgForOf } from '@angular/common';
 import { Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { UiService } from '../../../services/ui.service';
 import { ReportService } from '../../../services/report.service';
 import { LegacyService } from '../../../services/legacy.service';
+import { PasswordResetService } from '../../../services/password-reset.service';
 import { SafeUrlPipe } from '../../../pipes/safe-url.pipe';
 
 @Component({
   standalone: true,
   selector: 'app-group',
-  imports: [CommonModule, NgIf, NgForOf, SafeUrlPipe],
+  imports: [CommonModule, NgIf, NgForOf, SafeUrlPipe, FormsModule],
   templateUrl: './group.component.html',
   styleUrls: ['./group.component.css']
 })
@@ -29,13 +31,29 @@ export class GroupComponent implements OnInit {
   // Perfil do usuário logado
   userProfile: any = null;
 
+  // Password reset modal
+  showResetPasswordModal = false;
+  resetPasswordForm = {
+    newPassword: '',
+    confirmPassword: ''
+  };
+  resetPasswordLoading = false;
+  resetPasswordError = '';
+
   private ui = inject(UiService);
   private report = inject(ReportService);
   private legacy = inject(LegacyService);
+  private passwordResetService = inject(PasswordResetService);
   constructor(private el: ElementRef, private router: Router) {}
 
   ngOnInit(): void {
     // Não injetamos estilos legacy automaticamente — a UI foi migrada.
+    
+    // Verificar se precisa resetar senha
+    this.passwordResetService.passwordResetRequired$.subscribe((required) => {
+      this.showResetPasswordModal = required;
+    });
+    
     // Carregar perfil do usuário
     this.loadUserProfile();
     // Carregar histórico com pequeno delay para garantir que o token foi salvo
@@ -251,4 +269,65 @@ export class GroupComponent implements OnInit {
   go(route: string) {
     try { this.router.navigate([route]); } catch (_) { window.location.href = '/' + route; }
   }
+
+  async submitResetPassword() {
+    // Validar senhas
+    if (!this.resetPasswordForm.newPassword || !this.resetPasswordForm.confirmPassword) {
+      this.resetPasswordError = 'Nova senha e confirmação são obrigatórias';
+      return;
+    }
+
+    if (this.resetPasswordForm.newPassword.length < 8) {
+      this.resetPasswordError = 'A senha deve ter no mínimo 8 caracteres';
+      return;
+    }
+
+    if (this.resetPasswordForm.newPassword !== this.resetPasswordForm.confirmPassword) {
+      this.resetPasswordError = 'As senhas não correspondem';
+      return;
+    }
+
+    this.resetPasswordLoading = true;
+    this.resetPasswordError = '';
+
+    try {
+      // Usar o token JWT que foi obtido no login
+      const token = localStorage.getItem('jwtToken');
+      if (!token) {
+        throw new Error('Token não encontrado. Por favor, faça login novamente.');
+      }
+
+      // Fazer requisição PUT para /users/me/change-password
+      const response = await fetch(`${this.legacy.apiBaseUrl}/users/me/change-password`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          newPassword: this.resetPasswordForm.newPassword
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Erro ao alterar senha (status ${response.status})`);
+      }
+
+      this.ui.showToast('Senha alterada com sucesso!', 'success');
+      
+      // Limpar modal e formulário
+      this.showResetPasswordModal = false;
+      this.passwordResetService.setPasswordResetRequired(false);
+      this.resetPasswordForm = { newPassword: '', confirmPassword: '' };
+
+      // Usuário pode agora navegar normalmente
+    } catch (error: any) {
+      this.resetPasswordError = error?.message || 'Erro ao alterar a senha. Tente novamente.';
+      this.ui.showToast(this.resetPasswordError, 'error');
+    } finally {
+      this.resetPasswordLoading = false;
+    }
+  }
 }
+
