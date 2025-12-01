@@ -5,6 +5,7 @@ import { RouterModule } from '@angular/router';
 import { LegacyService } from '../../../services/legacy.service';
 import { UiService } from '../../../services/ui.service';
 import { CompanyService } from '../../../services/company.service';
+import { ClientService, Client } from '../../../services/client.service';
 import { CnpjFormatPipe } from '../../../pipes/cnpj-format.pipe';
 import { debounceTime, Subject } from 'rxjs';
 
@@ -19,13 +20,27 @@ export class AdminComponent implements OnInit {
   private legacy = inject(LegacyService);
   private ui = inject(UiService);
   private companyService = inject(CompanyService);
+  private clientService = inject(ClientService);
 
   accessDenied = false;
   loadingUsers = false;
   loadingCompanies = false;
   loadingCompanyForm = false;
+  loadingClients = false;
+  loadingClientForm = false;
   users: any[] = [];
   companies: any[] = [];
+  clients: Client[] = [];
+
+  // Dropdown de usuários
+  showUsersDropdown = false;
+  showNewUserModal = false;
+
+  // Dropdown e modal de clientes
+  showClientsDropdown = false;
+  showNewClientModal = false;
+  editingClientId: number | null = null;
+  showEditClientModal = false;
 
   // Paginação
   currentPage = 0;
@@ -44,6 +59,7 @@ export class AdminComponent implements OnInit {
 
   // Form state (reactive)
   fb = inject(FormBuilder);
+  
   userForm = this.fb.group({
     name: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
@@ -90,6 +106,21 @@ export class AdminComponent implements OnInit {
   // messages
   userFormMsg = '';
   companyFormMsg = '';
+  clientFormMsg = '';
+  editClientFormMsg = '';
+
+  // Form para clientes
+  clientForm = this.fb.group({
+    name: ['', Validators.required],
+    email: ['', [Validators.required, Validators.email]],
+    companyIds: [[] as number[]]
+  });
+
+  editClientForm = this.fb.group({
+    name: ['', Validators.required],
+    email: ['', [Validators.required, Validators.email]],
+    companyIds: [[] as number[]]
+  });
 
   ngOnInit(): void {
     const role = this.legacy.getUserRole();
@@ -99,6 +130,7 @@ export class AdminComponent implements OnInit {
     }
     this.loadUsers();
     this.loadCompanies();
+    this.loadClients();
     
     // Setup debounced CNPJ search
     this.cnpjSearchSubject.pipe(
@@ -121,6 +153,179 @@ export class AdminComponent implements OnInit {
     } finally {
       this.loadingUsers = false;
     }
+  }
+
+  async loadClients() {
+    this.loadingClients = true;
+    try {
+      const result = await this.clientService.getAll(0, 999);
+      this.clients = result.content || [];
+    } catch (e: any) {
+      this.ui.showToast(e?.message || 'Erro ao carregar clientes', 'error');
+      this.clients = [];
+    } finally {
+      this.loadingClients = false;
+    }
+  }
+
+  toggleUsersDropdown() {
+    this.showUsersDropdown = !this.showUsersDropdown;
+    if (this.showUsersDropdown && this.users.length === 0 && !this.loadingUsers) {
+      this.loadUsers();
+    }
+  }
+
+  toggleClientsDropdown() {
+    this.showClientsDropdown = !this.showClientsDropdown;
+    if (this.showClientsDropdown && this.clients.length === 0 && !this.loadingClients) {
+      this.loadClients();
+    }
+  }
+
+  openNewClientModal() {
+    this.showNewClientModal = true;
+    this.clientForm.reset({ name: '', email: '', companyIds: [] });
+    this.clientFormMsg = '';
+  }
+
+  closeNewClientModal() {
+    this.showNewClientModal = false;
+    this.clientForm.reset();
+    this.clientFormMsg = '';
+  }
+
+  async submitCreateClient() {
+    this.clientFormMsg = '';
+    if (this.clientForm.invalid) {
+      this.clientFormMsg = 'Preencha todos os campos obrigatórios corretamente.';
+      return;
+    }
+
+    const val = this.clientForm.value;
+    const payload: Client = {
+      name: val.name || '',
+      email: val.email || '',
+      companyIds: val.companyIds || []
+    };
+
+    this.loadingClientForm = true;
+    try {
+      await this.clientService.create(payload);
+      this.clientFormMsg = '✅ Cliente criado com sucesso.';
+      this.ui.showToast('Cliente criado com sucesso', 'success');
+      setTimeout(() => this.closeNewClientModal(), 1500);
+      this.loadClients();
+    } catch (e: any) {
+      this.clientFormMsg = e?.message || String(e);
+      this.ui.showToast(e?.message || 'Erro ao criar cliente', 'error');
+    } finally {
+      this.loadingClientForm = false;
+    }
+  }
+
+  openEditClientModal(client: Client) {
+    this.editingClientId = client.id || null;
+    this.editClientForm.patchValue({
+      name: client.name,
+      email: client.email,
+      companyIds: client.companyIds || []
+    });
+    this.showEditClientModal = true;
+    this.editClientFormMsg = '';
+  }
+
+  closeEditClientModal() {
+    this.showEditClientModal = false;
+    this.editingClientId = null;
+    this.editClientForm.reset();
+    this.editClientFormMsg = '';
+  }
+
+  async submitEditClient() {
+    this.editClientFormMsg = '';
+    if (this.editClientForm.invalid) {
+      this.editClientFormMsg = 'Preencha todos os campos obrigatórios.';
+      return;
+    }
+    if (!this.editingClientId) return;
+
+    const val = this.editClientForm.value;
+    const payload: Client = {
+      id: this.editingClientId,
+      name: val.name || '',
+      email: val.email || '',
+      companyIds: val.companyIds || []
+    };
+
+    this.loadingClientForm = true;
+    try {
+      await this.clientService.update(this.editingClientId, payload);
+      this.editClientFormMsg = '✅ Cliente atualizado com sucesso.';
+      this.ui.showToast('Cliente atualizado com sucesso', 'success');
+      setTimeout(() => this.closeEditClientModal(), 1500);
+      this.loadClients();
+    } catch (e: any) {
+      this.editClientFormMsg = e?.message || String(e);
+      this.ui.showToast(e?.message || 'Erro ao atualizar cliente', 'error');
+    } finally {
+      this.loadingClientForm = false;
+    }
+  }
+
+  async deleteClient(clientId: number | undefined) {
+    if (!clientId) return;
+    const proceed = window.confirm('Deseja realmente excluir este cliente? Esta ação não pode ser desfeita.');
+    if (!proceed) return;
+    try {
+      await this.clientService.delete(clientId);
+      this.ui.showToast('Cliente excluído com sucesso', 'success');
+      this.loadClients();
+    } catch (e: any) {
+      this.ui.showToast(e?.message || 'Erro ao excluir cliente', 'error');
+    }
+  }
+
+  async getClientDetails(clientId: number | undefined) {
+    if (!clientId) return;
+    try {
+      const client = await this.clientService.getById(clientId);
+      console.log('Detalhes do cliente:', client);
+      this.ui.showToast(`Cliente: ${client.name} (${client.email})`, 'success');
+    } catch (e: any) {
+      this.ui.showToast(e?.message || 'Erro ao buscar detalhes', 'error');
+    }
+  }
+
+  toggleCompanySelection(companyId: number, isAdding: boolean) {
+    const control = isAdding ? this.clientForm.get('companyIds') : this.editClientForm.get('companyIds');
+    if (!control) return;
+    
+    const currentValues = control.value || [];
+    if (isAdding) {
+      if (currentValues.includes(companyId)) {
+        control.setValue(currentValues.filter((id: number) => id !== companyId));
+      } else {
+        control.setValue([...currentValues, companyId]);
+      }
+    } else {
+      if (currentValues.includes(companyId)) {
+        control.setValue(currentValues.filter((id: number) => id !== companyId));
+      } else {
+        control.setValue([...currentValues, companyId]);
+      }
+    }
+  }
+
+  openNewUserModal() {
+    this.showNewUserModal = true;
+    this.userForm.reset({ role: 'USER' });
+    this.userFormMsg = '';
+  }
+
+  closeNewUserModal() {
+    this.showNewUserModal = false;
+    this.userForm.reset({ role: 'USER' });
+    this.userFormMsg = '';
   }
 
   async deleteUser(userId: string) {
@@ -277,7 +482,8 @@ export class AdminComponent implements OnInit {
         throw new Error(serverMsg);
       }
       this.userFormMsg = 'Usuário criado com sucesso.';
-      this.userForm.reset({ role: 'USER' });
+      this.ui.showToast('Usuário criado com sucesso', 'success');
+      setTimeout(() => this.closeNewUserModal(), 1500);
       this.loadUsers();
     } catch (e: any) {
       this.userFormMsg = e?.message || String(e);

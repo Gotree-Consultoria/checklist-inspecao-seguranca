@@ -130,7 +130,8 @@
 /* Body da Seção */
 .section-body {
   padding: 24px;
-  border-bottom: 1px solid #e0e0e0;
+  padding-left: 48px;
+  padding-right: 48px;
 }
 
 /* Estados de Carregamento e Vazio */
@@ -283,6 +284,24 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon:hover {
+  background: #f5f5f5;
+  transform: scale(1.1);
 }
 
 .btn-delete:hover {
@@ -478,6 +497,17 @@
   color: #333;
 }
 
+.modal-body {
+  padding: 24px;
+  text-align: center;
+}
+
+.modal-body p {
+  margin: 0 0 16px 0;
+  color: #555;
+  font-size: 14px;
+}
+
 .modal-content .form-grid {
   padding: 24px;
 }
@@ -511,6 +541,36 @@
   outline: none;
   border-color: #667eea;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.companies-checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #555;
+  font-weight: 400;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.checkbox-label input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #007bff;
+}
+
+.checkbox-label:hover {
+  color: #333;
 }
 
 .modal-content .form-actions {
@@ -989,14 +1049,106 @@ label.btn.disabled {
   border-color: #ffeaa7;
 }
 
+/* Header Actions para Usuários */
+.header-actions-users {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.btn-new-user {
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-new-user:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+/* Dropdown Toggle Button */
+.dropdown-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #f5f7fa;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  color: #555;
+  transition: all 0.3s ease;
+}
+
+.dropdown-toggle:hover {
+  background: #e9ecef;
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.dropdown-toggle.active {
+  background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.toggle-icon {
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+.dropdown-toggle.active .toggle-icon {
+  transform: rotate(0deg);
+}
+
+.toggle-text {
+  font-weight: 600;
+}
+
+/* Dropdown Content */
+.dropdown-content {
+  max-height: 100vh;
+  overflow: hidden;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    max-height: 0;
+    opacity: 0;
+  }
+  to {
+    max-height: 100vh;
+    opacity: 1;
+  }
+}
+
 /* Responsivo */
 @media (max-width: 768px) {
-  .admin-header {
-    padding: 24px;
+  .header-actions-users {
+    flex-direction: column;
+    width: 100%;
   }
 
-  .admin-header h1 {
-    font-size: 24px;
+  .btn-new-user,
+  .dropdown-toggle {
+    width: 100%;
+    justify-content: center;
   }
 
   .section-header {
@@ -1007,44 +1159,6 @@ label.btn.disabled {
 
   .user-count, .company-count {
     align-self: flex-start;
-  }
-
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .add-dynamic {
-    grid-template-columns: 1fr;
-  }
-
-  .users-table {
-    font-size: 12px;
-  }
-
-  .users-table th, .users-table td {
-    padding: 12px 8px;
-  }
-
-  .companies-table {
-    font-size: 12px;
-  }
-
-  .companies-table th, .companies-table td {
-    padding: 10px 8px;
-  }
-
-  .company-name-cell {
-    max-width: 150px;
-  }
-
-  .btn-action {
-    padding: 4px 6px;
-    font-size: 14px;
-    margin: 0 2px;
-  }
-
-  .companies-table .actions-col {
-    width: 80px;
   }
 }
 
@@ -1159,11 +1273,53 @@ label.btn.disabled {
   background: white;
   border: 1px solid #e0e0e0;
   border-radius: 12px;
-  padding: 24px;
   margin-bottom: 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
+/* ===== DROPDOWN DE USUÁRIOS =====  */
+
+/* Intro Section - similar to clients */
+.users-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.users-intro p {
+  color: #555;
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 600px;
+}
+
+.users-intro .btn {
+  padding: 10px 20px;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.users-intro .btn-primary {
+  background: #007bff;
+  color: white;
+}
+
+.users-intro .btn-primary:hover {
+  background: #0056b3;
+  box-shadow: 0 4px 12px rgba(0, 86, 179, 0.3);
+}
+
+/* Clients Intro - same as users */
 .clients-intro {
   display: flex;
   flex-direction: column;
@@ -1203,3 +1359,140 @@ label.btn.disabled {
   box-shadow: 0 4px 12px rgba(0, 86, 179, 0.3);
 }
 
+/* Users List Header */
+.users-list-header {
+  background: #f9f9f9;
+  padding: 16px 24px;
+  border-top: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+/* Clients List Header */
+.clients-list-header {
+  background: #f9f9f9;
+  padding: 16px 24px;
+  border-top: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+/* Dropdown Toggle Button */
+.dropdown-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  color: #555;
+  transition: all 0.3s ease;
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.dropdown-toggle:hover {
+  background: #f5f7fa;
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.dropdown-toggle.active {
+  background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.toggle-icon {
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+  min-width: 14px;
+}
+
+.toggle-text {
+  font-weight: 600;
+  flex: 1;
+}
+
+.user-count {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Dropdown Content */
+.dropdown-content {
+  max-height: 100vh;
+  overflow: hidden;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    max-height: 0;
+    opacity: 0;
+  }
+  to {
+    max-height: 100vh;
+    opacity: 1;
+  }
+}
+
+/* Company Checkboxes */
+.company-checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+}
+
+.checkbox-item label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 14px;
+  margin: 0;
+}
+
+.checkbox-item input[type="checkbox"] {
+  margin-right: 8px;
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+}
+
+/* Mobile Responsivo */
+@media (max-width: 768px) {
+  .users-intro {
+    width: 100%;
+  }
+
+  .users-intro .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .users-list-header {
+    padding: 12px 16px;
+  }
+
+  .dropdown-toggle {
+    width: 100%;
+  }
+}

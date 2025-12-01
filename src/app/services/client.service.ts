@@ -6,8 +6,8 @@ export interface Client {
   name: string;
   email: string;
   companyIds: number[];
-  companies?: any[];  // Preenchido após busca com dados das empresas
-  companyNames?: string[];  // Nomes das empresas do backend
+  companies?: any[];
+  companyNames?: string[];
 }
 
 export interface PaginatedResponse<T> {
@@ -26,9 +26,6 @@ export interface PaginatedResponse<T> {
 export class ClientService {
   private legacy = inject(LegacyService);
 
-  /**
-   * Busca todos os clientes com paginação
-   */
   async getAll(page: number = 0, size: number = 10): Promise<PaginatedResponse<Client>> {
     try {
       const url = `${this.legacy.apiBaseUrl}/clients?page=${page}&size=${size}`;
@@ -54,7 +51,6 @@ export class ClientService {
       const data = await resp.json();
       console.log('[ClientService] Clientes obtidos:', data);
 
-      // Se a resposta é um array direto, converter para estrutura paginada
       if (Array.isArray(data)) {
         return {
           content: data,
@@ -67,7 +63,6 @@ export class ClientService {
         };
       }
 
-      // Se for estrutura paginada
       return {
         content: data.content || [],
         page: {
@@ -83,9 +78,6 @@ export class ClientService {
     }
   }
 
-  /**
-   * Busca um cliente por ID
-   */
   async getById(id: number): Promise<Client> {
     try {
       const url = `${this.legacy.apiBaseUrl}/clients/${id}`;
@@ -117,9 +109,6 @@ export class ClientService {
     }
   }
 
-  /**
-   * Cria um novo cliente
-   */
   async create(client: Client): Promise<Client> {
     try {
       const url = `${this.legacy.apiBaseUrl}/clients`;
@@ -164,9 +153,6 @@ export class ClientService {
     }
   }
 
-  /**
-   * Atualiza um cliente existente
-   */
   async update(id: number, client: Client): Promise<Client> {
     try {
       const url = `${this.legacy.apiBaseUrl}/clients/${id}`;
@@ -211,9 +197,6 @@ export class ClientService {
     }
   }
 
-  /**
-   * Deleta um cliente
-   */
   async delete(id: number): Promise<void> {
     try {
       const url = `${this.legacy.apiBaseUrl}/clients/${id}`;

@@ -12,8 +12,6 @@ import { DocumentsComponent } from './components/pages/documents/documents.compo
 import { ProfileComponent } from './components/pages/profile/profile.component';
 import { ChangePasswordComponent } from './components/pages/change-password/change-password.component';
 import { AdminGuard } from './guards/admin.guard';
-import { ClientListComponent } from './components/pages/admin/client-list/client-list.component';
-import { ClientFormComponent } from './components/pages/admin/client-form/client-form.component';
 // Forms and ChangePassword pages are not yet migrated; remove their imports for now
 
 
@@ -28,9 +26,6 @@ export const routes: Routes = [
 	{ path: 'profile', component: ProfileComponent },
 	// rotas forms/change-password removidas temporariamente até migração completa
 	{ path: 'admin', component: AdminComponent, canActivate: [AdminGuard] },
-	{ path: 'admin/clients', component: ClientListComponent, canActivate: [AdminGuard] },
-	{ path: 'admin/clients/new', component: ClientFormComponent, canActivate: [AdminGuard] },
-	{ path: 'admin/clients/edit/:id', component: ClientFormComponent, canActivate: [AdminGuard] },
 	{ path: 'aep', component: AepComponent },
 	{ path: 'checklist', component: ChecklistComponent },
 	{ path: 'checklist/edit/:id', component: ChecklistComponent },
