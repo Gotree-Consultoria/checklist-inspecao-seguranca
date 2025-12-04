@@ -231,6 +231,10 @@
 .dashboard-admin .chart-card .doc-row .col.name { flex: 2 1 0; min-width:160px; }
 .dashboard-admin .chart-card .doc-row .col.doc { flex: 3 1 0; min-width:220px; color:rgba(0,0,0,0.75); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .dashboard-admin .chart-card .doc-row .col.qty { flex: 0 0 80px; text-align:right; color:rgba(0,0,0,0.6); }
+.dashboard-admin .chart-card .doc-row .col.visits { flex: 0 0 auto; text-align:center; min-width:80px; }
+.dashboard-admin .chart-card .doc-row .col.aeps { flex: 0 0 auto; text-align:center; min-width:80px; }
+.dashboard-admin .chart-card .doc-row .col.risks { flex: 0 0 auto; text-align:center; min-width:80px; }
+.dashboard-admin .chart-card .doc-row .col.total { flex: 0 0 auto; text-align:center; min-width:80px; }
 .dashboard-admin .chart-card .muted { color:rgba(0,0,0,0.45); }
 .dashboard-admin .chart-card .bar-label { max-width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
@@ -249,5 +253,142 @@
   .dashboard-admin .chart-card .admin-filter-label,
   .dashboard-admin .chart-card .admin-filter-type { display:block; margin-right:0; margin-bottom:8px; }
   .dashboard-admin .chart-card .bar-label { max-width:120px; }
+}
+
+/* PDF Modal Overlay Styles */
+.dashboard-admin .pdf-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.dashboard-admin .pdf-modal {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: hidden;
+  width: 100%;
+}
+
+.dashboard-admin .pdf-modal-header {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 16px;
+  flex-shrink: 0;
+}
+
+.dashboard-admin .pdf-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dashboard-admin .pdf-toolbar h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: #0b1220;
+  font-weight: 600;
+}
+
+.dashboard-admin .pdf-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.dashboard-admin .pdf-actions .btn-action {
+  padding: 8px 16px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #374151;
+  transition: all 0.2s ease;
+}
+
+.dashboard-admin .pdf-actions .btn-action:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.dashboard-admin .pdf-actions .btn-close {
+  padding: 8px 16px;
+  border: none;
+  background: #ef4444;
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.dashboard-admin .pdf-actions .btn-close:hover {
+  background: #dc2626;
+}
+
+.dashboard-admin .pdf-modal-body {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f9fafb;
+  padding: 12px;
+}
+
+.dashboard-admin .pdf-modal-body iframe {
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.dashboard-admin .pdf-modal-body p {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .dashboard-admin .pdf-modal {
+    max-width: 95vw;
+    max-height: 95vh;
+  }
+
+  .dashboard-admin .pdf-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .dashboard-admin .pdf-toolbar h4 {
+    flex: 1 1 100%;
+    margin-bottom: 8px;
+  }
+
+  .dashboard-admin .pdf-actions {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+  }
+
+  .dashboard-admin .pdf-actions .btn-action,
+  .dashboard-admin .pdf-actions .btn-close {
+    flex: 1 1 auto;
+    min-width: 80px;
+  }
+
+  .dashboard-admin .pdf-modal-body iframe {
+    height: 400px !important;
+  }
 }
 

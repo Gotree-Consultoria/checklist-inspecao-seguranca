@@ -49,6 +49,15 @@ export class ReportComponent implements OnInit, OnDestroy {
 
   records: Array<ReportRecord> = [];
   companies: Array<any> = [];
+
+  // Character limits for record fields
+  recordFieldLimits = {
+    description: 2000,
+    consequences: 2000,
+    legal: 3000,
+    penalties: 2000,
+    responsible: 255
+  };
   private reportDraft: { records: ReportRecord[] } = { records: [] };
   private readonly DRAFT_KEY = 'draftReport';
   private onlineListener: any = null;

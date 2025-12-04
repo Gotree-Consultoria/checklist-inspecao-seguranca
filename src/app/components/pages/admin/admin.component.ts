@@ -42,6 +42,9 @@ export class AdminComponent implements OnInit {
   editingClientId: number | null = null;
   showEditClientModal = false;
 
+  // Modal de nova empresa
+  showNewCompanyModal = false;
+
   // Paginação
   currentPage = 0;
   pageSize = 10;
@@ -180,6 +183,22 @@ export class AdminComponent implements OnInit {
     if (this.showClientsDropdown && this.clients.length === 0 && !this.loadingClients) {
       this.loadClients();
     }
+  }
+
+  openNewCompanyModal() {
+    this.showNewCompanyModal = true;
+    this.companyForm.reset({ companyName: '', companyCnpj: '' });
+    this.dynamicUnits = [];
+    this.dynamicSectors = [];
+    this.companyFormMsg = '';
+  }
+
+  closeNewCompanyModal() {
+    this.showNewCompanyModal = false;
+    this.companyForm.reset();
+    this.dynamicUnits = [];
+    this.dynamicSectors = [];
+    this.companyFormMsg = '';
   }
 
   openNewClientModal() {
@@ -678,15 +697,11 @@ export class AdminComponent implements OnInit {
         throw new Error(serverMsg);
       }
       this.companyFormMsg = '✅ Empresa criada com sucesso!';
-      this.companyForm.reset();
-      this.dynamicUnits = []; 
-      this.dynamicSectors = [];
-      // Limpar inputs dinamicamente adicionados (fora do formulário reativo)
-      const inputs = document.querySelectorAll('.add-dynamic input:not([formControlName])');
-      inputs.forEach((input: any) => {
-        if (input.value) input.value = '';
-      });
-      setTimeout(() => this.loadCompanies(), 500);
+      this.ui.showToast('Empresa criada com sucesso', 'success');
+      setTimeout(() => {
+        this.closeNewCompanyModal();
+        this.loadCompanies();
+      }, 1500);
     } catch (e: any) {
       const errorMsg = e?.message || String(e);
       if (errorMsg.includes('Failed to fetch') || errorMsg.toLowerCase().includes('timeout')) {

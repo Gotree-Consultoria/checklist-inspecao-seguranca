@@ -48,11 +48,42 @@ select::-ms-expand { display: none; }
 
 /* Não alterar a largura do input date — manter comportamento nativo */
 .aep-header .field-input > .form-control[type="date"] {
-	max-width: none;
+	max-width: 200px;
+}
+
+.aep-header .date-input {
+	max-width: 200px !important;
 }
 /* allow certain rows to take half width (two columns) */
 .aep-header .field-row.half {
 	width: calc(50% - 12px);
+}
+
+/* Input with character counter */
+.input-with-counter {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	position: relative;
+}
+
+.input-with-counter .form-control {
+	flex: 1;
+	padding-right: 50px;
+}
+
+.char-counter {
+	position: absolute;
+	right: 8px;
+	font-size: 0.80rem;
+	color: #6b7280;
+	font-weight: 500;
+	white-space: nowrap;
+	pointer-events: none;
+}
+
+.input-with-counter .form-control:focus ~ .char-counter {
+	color: #2563eb;
 }
 
 /* align CNPJ label width with other labels so the input aligns with other fields */

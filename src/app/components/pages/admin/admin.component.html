@@ -202,7 +202,14 @@
               <p class="section-subtitle">Gerenciar empresas cadastradas</p>
             </div>
           </div>
-          <div class="header-actions">
+          <button type="button" class="btn btn-primary" (click)="openNewCompanyModal()" title="Criar nova empresa">
+            ➕ Nova Empresa
+          </button>
+        </div>
+
+        <!-- Ações: Modelo, Exportar, Importar -->
+        <div class="section-body">
+          <div class="header-actions header-actions-top">
             <button type="button" class="btn btn-secondary" (click)="downloadTemplate()" title="Baixar modelo vazio para importação">
               📋 Modelo
             </button>
@@ -239,13 +246,12 @@
             >
               ✕ Cancelar
             </button>
-            <div class="company-count" *ngIf="companies && companies.length">{{companies.length}} empresa(s)</div>
           </div>
-        </div>
 
-        <!-- Mensagem de Importação -->
-        <div *ngIf="importMsg" class="import-message" [class.success]="importMsg.includes('✅')" [class.error]="importMsg.includes('❌')" [class.warning]="importMsg.includes('⚠️')">
-          {{importMsg}}
+          <!-- Mensagem de Importação -->
+          <div *ngIf="importMsg" class="import-message" [class.success]="importMsg.includes('✅')" [class.error]="importMsg.includes('❌')" [class.warning]="importMsg.includes('⚠️')">
+            {{importMsg}}
+          </div>
         </div>
 
         <!-- Lista de Empresas -->
@@ -286,7 +292,7 @@
             <!-- Paginação -->
             <div class="pagination-wrapper" *ngIf="totalPages > 1">
               <div class="pagination-info">
-                <span>Página {{currentPage + 1}} de {{totalPages}} (Total: {{totalElements}} empresa(s))</span>
+                <span>Total: {{totalElements}} empresa(s)</span>
               </div>
               <div class="pagination-controls">
                 <button 
@@ -344,70 +350,75 @@
             </div>
           </div>
         </div>
-
-        <!-- Formulário de Criação -->
-        <div class="form-section">
-          <div class="form-header">
-            <h3>➕ Nova Empresa</h3>
-          </div>
-          <form (ngSubmit)="submitCreateCompany()" [formGroup]="companyForm" class="form-grid">
-            <div class="form-group full-width">
-              <label>Nome da Empresa *</label>
-              <input placeholder="Razão social" formControlName="companyName" />
-            </div>
-            <div class="form-group full-width">
-              <label>CNPJ *</label>
-              <input placeholder="00.000.000/0000-00" formControlName="companyCnpj" (change)="onCnpjChange($event.target.value, 'company')" />
-            </div>
-
-            <!-- Unidades -->
-            <div class="form-group full-width">
-              <label class="dynamic-label">🏭 Unidades</label>
-              <div class="dynamic-items">
-                <div *ngFor="let u of dynamicUnits; let i = index" class="dynamic-item">
-                  <span class="item-name">{{u.name}}</span>
-                  <span class="item-detail" *ngIf="u.cnpj">{{u.cnpj | cnpjFormat}}</span>
-                  <span class="item-detail text-muted" *ngIf="!u.cnpj">(sem CNPJ)</span>
-                  <button type="button" class="btn-remove" (click)="removeUnit(i)" title="Remover">✕</button>
-                </div>
-              </div>
-              <div class="add-dynamic">
-                <input #unitNameInput placeholder="Nome da unidade" class="dynamic-input" />
-                <input #unitCnpjInput placeholder="CNPJ (opcional)" class="dynamic-input" (change)="onUnitCnpjChange($event.target.value, unitNameInput)" />
-                <button type="button" class="btn btn-secondary btn-sm" (click)="addUnit(unitNameInput, unitCnpjInput)">+ Adicionar</button>
-              </div>
-            </div>
-
-            <!-- Setores -->
-            <div class="form-group full-width">
-              <label class="dynamic-label">🏷️ Setores</label>
-              <div class="dynamic-items">
-                <div *ngFor="let s of dynamicSectors; let i=index" class="dynamic-item">
-                  <span class="item-name">{{s}}</span>
-                  <button type="button" class="btn-remove" (click)="removeSector(i)" title="Remover">✕</button>
-                </div>
-              </div>
-              <div class="add-dynamic sector-add">
-                <input #sectorInput placeholder="Nome do setor" class="dynamic-input" />
-                <button type="button" class="btn btn-secondary btn-sm" (click)="addSector(sectorInput)">+ Adicionar</button>
-              </div>
-            </div>
-
-            <div class="form-actions">
-              <button type="submit" [disabled]="loadingCompanyForm" class="btn btn-primary">
-                {{ loadingCompanyForm ? '⏳ Adicionando empresa...' : '💾 Salvar Empresa' }}
-              </button>
-            </div>
-            <div class="form-message" *ngIf="companyFormMsg" [class.success]="companyFormMsg.includes('✅')" [class.error]="companyFormMsg.includes('❌') || companyFormMsg.includes('⚠️')">
-              {{companyFormMsg}}
-              <button *ngIf="companyFormMsg.includes('⚠️')" type="button" class="btn-retry" (click)="submitCreateCompany()" title="Tentar novamente">
-                🔄 Tentar Novamente
-              </button>
-            </div>
-          </form>
-        </div>
       </section>
     </div>
+  </div>
+</div>
+
+<!-- Modal de Nova Empresa -->
+<div class="modal-overlay" *ngIf="showNewCompanyModal" (click)="closeNewCompanyModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Nova Empresa</h2>
+      <button class="modal-close" type="button" (click)="closeNewCompanyModal()" title="Fechar modal">✕</button>
+    </div>
+
+    <form (ngSubmit)="submitCreateCompany()" [formGroup]="companyForm" class="form-grid">
+      <div class="form-group full-width">
+        <label>Nome da Empresa *</label>
+        <input placeholder="Razão social" formControlName="companyName" />
+      </div>
+      <div class="form-group full-width">
+        <label>CNPJ *</label>
+        <input placeholder="00.000.000/0000-00" formControlName="companyCnpj" (change)="onCnpjChange($event.target.value, 'company')" />
+      </div>
+
+      <!-- Unidades -->
+      <div class="form-group full-width">
+        <label class="dynamic-label">🏭 Unidades</label>
+        <div class="dynamic-items">
+          <div *ngFor="let u of dynamicUnits; let i = index" class="dynamic-item">
+            <span class="item-name">{{u.name}}</span>
+            <span class="item-detail" *ngIf="u.cnpj">{{u.cnpj | cnpjFormat}}</span>
+            <span class="item-detail text-muted" *ngIf="!u.cnpj">(sem CNPJ)</span>
+            <button type="button" class="btn-remove" (click)="removeUnit(i)" title="Remover">✕</button>
+          </div>
+        </div>
+        <div class="add-dynamic">
+          <input #unitNameInput placeholder="Nome da unidade" class="dynamic-input" />
+          <input #unitCnpjInput placeholder="CNPJ (opcional)" class="dynamic-input" (change)="onUnitCnpjChange($event.target.value, unitNameInput)" />
+          <button type="button" class="btn btn-secondary btn-sm" (click)="addUnit(unitNameInput, unitCnpjInput)">+ Adicionar</button>
+        </div>
+      </div>
+
+      <!-- Setores -->
+      <div class="form-group full-width">
+        <label class="dynamic-label">🏷️ Setores</label>
+        <div class="dynamic-items">
+          <div *ngFor="let s of dynamicSectors; let i=index" class="dynamic-item">
+            <span class="item-name">{{s}}</span>
+            <button type="button" class="btn-remove" (click)="removeSector(i)" title="Remover">✕</button>
+          </div>
+        </div>
+        <div class="add-dynamic sector-add">
+          <input #sectorInput placeholder="Nome do setor" class="dynamic-input" />
+          <button type="button" class="btn btn-secondary btn-sm" (click)="addSector(sectorInput)">+ Adicionar</button>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-cancel" (click)="closeNewCompanyModal()">Cancelar</button>
+        <button type="submit" [disabled]="loadingCompanyForm" class="btn btn-primary">
+          {{ loadingCompanyForm ? '⏳ Adicionando empresa...' : '💾 Salvar Empresa' }}
+        </button>
+      </div>
+      <div class="form-message" *ngIf="companyFormMsg" [class.success]="companyFormMsg.includes('✅')" [class.error]="companyFormMsg.includes('❌') || companyFormMsg.includes('⚠️')">
+        {{companyFormMsg}}
+        <button *ngIf="companyFormMsg.includes('⚠️')" type="button" class="btn-retry" (click)="submitCreateCompany()" title="Tentar novamente">
+          🔄 Tentar Novamente
+        </button>
+      </div>
+    </form>
   </div>
 </div>
 

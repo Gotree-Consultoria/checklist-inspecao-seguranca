@@ -190,27 +190,42 @@
             <div class="record-fields">
               <div class="field-row-inline">
                 <label for="rec-desc-{{i}}" class="field-label">Descrição:</label>
-                <input type="text" [id]="'rec-desc-' + i" [name]="'rec-desc-' + i" [(ngModel)]="record.description" (change)="onRecordChange(i)" class="form-control" placeholder="Descrição do achado" />
+                <div class="field-input-with-counter">
+                  <input type="text" [id]="'rec-desc-' + i" [name]="'rec-desc-' + i" [(ngModel)]="record.description" (change)="onRecordChange(i)" class="form-control" placeholder="Descrição do achado" [maxlength]="recordFieldLimits.description" />
+                  <span class="char-counter">{{ record.description.length }}/{{ recordFieldLimits.description }}</span>
+                </div>
               </div>
 
               <div class="field-row-inline">
                 <label for="rec-conseq-{{i}}" class="field-label">Consequências:</label>
-                <input type="text" [id]="'rec-conseq-' + i" [name]="'rec-conseq-' + i" [(ngModel)]="record.consequences" (change)="onRecordChange(i)" class="form-control" placeholder="Consequências potenciais" />
+                <div class="field-input-with-counter">
+                  <input type="text" [id]="'rec-conseq-' + i" [name]="'rec-conseq-' + i" [(ngModel)]="record.consequences" (change)="onRecordChange(i)" class="form-control" placeholder="Consequências potenciais" [maxlength]="recordFieldLimits.consequences" />
+                  <span class="char-counter">{{ record.consequences.length }}/{{ recordFieldLimits.consequences }}</span>
+                </div>
               </div>
 
               <div class="field-row-inline">
                 <label for="rec-legal-{{i}}" class="field-label">Orientação Legal:</label>
-                <input type="text" [id]="'rec-legal-' + i" [name]="'rec-legal-' + i" [(ngModel)]="record.legal" (change)="onRecordChange(i)" class="form-control" placeholder="Base legal ou normativa" />
+                <div class="field-input-with-counter">
+                  <input type="text" [id]="'rec-legal-' + i" [name]="'rec-legal-' + i" [(ngModel)]="record.legal" (change)="onRecordChange(i)" class="form-control" placeholder="Base legal ou normativa" [maxlength]="recordFieldLimits.legal" />
+                  <span class="char-counter">{{ record.legal.length }}/{{ recordFieldLimits.legal }}</span>
+                </div>
               </div>
 
               <div class="field-row-inline">
                 <label for="rec-penal-{{i}}" class="field-label">Penalidades:</label>
-                <input type="text" [id]="'rec-penal-' + i" [name]="'rec-penal-' + i" [(ngModel)]="record.penalties" (change)="onRecordChange(i)" class="form-control" placeholder="Penalidades aplicáveis" />
+                <div class="field-input-with-counter">
+                  <input type="text" [id]="'rec-penal-' + i" [name]="'rec-penal-' + i" [(ngModel)]="record.penalties" (change)="onRecordChange(i)" class="form-control" placeholder="Penalidades aplicáveis" [maxlength]="recordFieldLimits.penalties" />
+                  <span class="char-counter">{{ record.penalties.length }}/{{ recordFieldLimits.penalties }}</span>
+                </div>
               </div>
 
               <div class="field-row-inline">
                 <label for="rec-resp-{{i}}" class="field-label">Responsável:</label>
-                <input type="text" [id]="'rec-resp-' + i" [name]="'rec-resp-' + i" [(ngModel)]="record.responsible" (change)="onRecordChange(i)" class="form-control" placeholder="Responsável pela correção" />
+                <div class="field-input-with-counter">
+                  <input type="text" [id]="'rec-resp-' + i" [name]="'rec-resp-' + i" [(ngModel)]="record.responsible" (change)="onRecordChange(i)" class="form-control" placeholder="Responsável pela correção" [maxlength]="recordFieldLimits.responsible" />
+                  <span class="char-counter">{{ record.responsible.length }}/{{ recordFieldLimits.responsible }}</span>
+                </div>
               </div>
 
               <div class="field-row-inline">

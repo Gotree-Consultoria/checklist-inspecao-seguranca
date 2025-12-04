@@ -376,6 +376,15 @@ export class ChecklistComponent implements OnInit {
   date = '';
   funcao = '';
 
+  // Character limits for inputs
+  charLimits = {
+    evaluator: 100,
+    sigla: 10,
+    registro: 50,
+    especialidade: 100,
+    title: 200
+  };
+
   // checklist items (code, risco, fator)
   items: Array<{ code: number; risco: string; fator: string; checked?: boolean }> = [
     { code: 1, risco: 'FÍSICO', fator: 'Infrassom e sons de baixa frequência' },

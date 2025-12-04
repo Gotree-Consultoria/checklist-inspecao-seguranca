@@ -216,7 +216,14 @@ export class DashboardAdminComponent {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${doc.title || 'documento'}.pdf`;
+      
+      // Construir nome do arquivo: Tipo - Nome - Empresa - Data
+      const docType = doc.documentType || doc.type || 'Documento';
+      const docTitle = doc.title || 'documento';
+      const clientName = doc.clientName || 'empresa';
+      const dateStr = (doc.creationDate || '').substring(0, 10); // YYYY-MM-DD
+      const fileName = `${docType} - ${docTitle} - ${clientName} - ${dateStr}.pdf`;
+      a.download = fileName;
       document.body.appendChild(a);
       a.click();
       a.remove();

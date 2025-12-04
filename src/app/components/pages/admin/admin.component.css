@@ -94,6 +94,27 @@
   border-bottom: 2px solid #e0e0e0;
 }
 
+.section-header .btn-primary {
+  background: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-header .btn-primary:hover {
+  background: #0056b3;
+  box-shadow: 0 4px 12px rgba(0, 86, 179, 0.3);
+  transform: translateY(-2px);
+}
+
 .section-title-wrapper {
   display: flex;
   gap: 16px;
@@ -129,9 +150,9 @@
 
 /* Body da Seção */
 .section-body {
-  padding: 24px;
   padding-left: 48px;
   padding-right: 48px;
+  padding-top: 12px;
 }
 
 /* Estados de Carregamento e Vazio */
@@ -991,6 +1012,11 @@
   align-items: center;
 }
 
+.header-actions-top {
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
 /* Hidden file input */
 #fileInput {
   display: none;
@@ -1312,6 +1338,7 @@ label.btn.disabled {
 .users-intro .btn-primary {
   background: #007bff;
   color: white;
+  margin: 8px;
 }
 
 .users-intro .btn-primary:hover {
@@ -1352,6 +1379,7 @@ label.btn.disabled {
 .clients-intro .btn-primary {
   background: #007bff;
   color: white;
+  margin: 8px;
 }
 
 .clients-intro .btn-primary:hover {

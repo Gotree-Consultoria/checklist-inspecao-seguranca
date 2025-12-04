@@ -19,6 +19,32 @@ fieldset.dados-relatorio legend { padding: 0 8px; margin-left: -8px; font-weight
   .field-label { margin-bottom:6px; } 
 }
 
+/* Field input with character counter */
+.field-input-with-counter {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.field-input-with-counter .form-control {
+  flex: 1;
+  padding-right: 60px;
+}
+
+.char-counter {
+  position: absolute;
+  right: 8px;
+  font-size: 0.75rem;
+  color: #9ca3af;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.field-input-with-counter .form-control:focus ~ .char-counter {
+  color: #2563eb;
+}
+
 /* Seção do Calendário de Disponibilidade */
 .field-row.calendar-section {
   margin-top: 24px;

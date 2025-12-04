@@ -47,12 +47,17 @@
 
         <div class="field-row date-row">
           <label for="aepDate" class="field-label">Data da Inspeção:</label>
-            <div class="field-input"><input id="aepDate" class="form-control" [(ngModel)]="date" type="date" title="Data" /></div>
+            <div class="field-input"><input id="aepDate" class="form-control date-input" [(ngModel)]="date" type="date" title="Data" /></div>
         </div>
 
         <div class="field-row">
           <label for="checklistTitle" class="field-label">Título do Relatório (opcional):</label>
-          <div class="field-input"><input id="checklistTitle" class="form-control" [(ngModel)]="title" type="text" placeholder="Ex: Inspeção ABC - Setor X" title="Título do relatório" /></div>
+          <div class="field-input">
+            <div class="input-with-counter">
+              <input id="checklistTitle" class="form-control" [(ngModel)]="title" type="text" placeholder="Ex: Inspeção ABC - Setor X" title="Título do relatório" [maxlength]="charLimits.title" />
+              <span class="char-counter">{{ title.length }}/{{ charLimits.title }}</span>
+            </div>
+          </div>
         </div>
         
       </div>
@@ -63,22 +68,42 @@
     <div class="fields">
         <div class="field-row">
           <label for="aepEvaluator" class="field-label">Avaliador:</label>
-          <div class="field-input"><input id="aepEvaluator" class="form-control" title="Nome do avaliador" [(ngModel)]="evaluator" placeholder="Nome do avaliador" /></div>
+          <div class="field-input">
+            <div class="input-with-counter">
+              <input id="aepEvaluator" class="form-control" title="Nome do avaliador" [(ngModel)]="evaluator" placeholder="Nome do avaliador" [maxlength]="charLimits.evaluator" />
+              <span class="char-counter">{{ evaluator.length }}/{{ charLimits.evaluator }}</span>
+            </div>
+          </div>
         </div>
 
         <div class="field-row">
           <label for="aepSigla" class="field-label">Sigla do Conselho:</label>
-          <div class="field-input"><input id="aepSigla" class="form-control" [(ngModel)]="sigla" title="Sigla do Conselho" placeholder="Sigla (ex: TST)" /></div>
+          <div class="field-input">
+            <div class="input-with-counter">
+              <input id="aepSigla" class="form-control" [(ngModel)]="sigla" title="Sigla do Conselho" placeholder="Sigla (ex: TST)" [maxlength]="charLimits.sigla" />
+              <span class="char-counter">{{ sigla.length }}/{{ charLimits.sigla }}</span>
+            </div>
+          </div>
         </div>
 
         <div class="field-row">
           <label for="aepRegistro" class="field-label">Registro no Conselho:</label>
-          <div class="field-input"><input id="aepRegistro" class="form-control" [(ngModel)]="registro" title="Registro" placeholder="Número do registro" /></div>
+          <div class="field-input">
+            <div class="input-with-counter">
+              <input id="aepRegistro" class="form-control" [(ngModel)]="registro" title="Registro" placeholder="Número do registro" [maxlength]="charLimits.registro" />
+              <span class="char-counter">{{ registro.length }}/{{ charLimits.registro }}</span>
+            </div>
+          </div>
         </div>
 
         <div class="field-row">
           <label for="aepEspecialidade" class="field-label">Especialidade:</label>
-          <div class="field-input"><input id="aepEspecialidade" class="form-control" [(ngModel)]="especialidade" title="Especialidade" placeholder="Ex: Técnico de Segurança do Trabalho" /></div>
+          <div class="field-input">
+            <div class="input-with-counter">
+              <input id="aepEspecialidade" class="form-control" [(ngModel)]="especialidade" title="Especialidade" placeholder="Ex: Técnico de Segurança do Trabalho" [maxlength]="charLimits.especialidade" />
+              <span class="char-counter">{{ especialidade.length }}/{{ charLimits.especialidade }}</span>
+            </div>
+          </div>
         </div>
 
       </div>

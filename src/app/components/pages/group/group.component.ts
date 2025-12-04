@@ -194,7 +194,21 @@ export class GroupComponent implements OnInit {
       if (!resp.ok) throw new Error('Falha ao baixar PDF');
       const blob = await resp.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = `document-${id}.pdf`; document.body.appendChild(a); a.click(); a.remove(); window.URL.revokeObjectURL(url);
+      const a = document.createElement('a');
+      a.href = url;
+      
+      // Construir nome do arquivo: Tipo - Nome - Empresa - Data
+      const docType = item.type || item.documentType || 'Documento';
+      const docTitle = item.title || 'documento';
+      const clientName = item.clientName || item.companyName || 'empresa';
+      const dateStr = (item.creationDate || item.date || '').substring(0, 10); // YYYY-MM-DD
+      const fileName = `${docType} - ${docTitle} - ${clientName} - ${dateStr}.pdf`;
+      a.download = fileName;
+      
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
       this.ui.showToast('Download iniciado.', 'success');
     } catch (e: any) {
       console.warn('downloadDoc failed', e);

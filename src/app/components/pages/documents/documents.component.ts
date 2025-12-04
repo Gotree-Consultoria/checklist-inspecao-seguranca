@@ -230,7 +230,7 @@ export class DocumentsComponent implements OnInit, OnDestroy {
 
   async downloadDocument(d:any) {
     try {
-  const typeSlug = this.documentTypeToSlug(d.documentType || d.type || '');
+      const typeSlug = this.documentTypeToSlug(d.documentType || d.type || '');
       const id = d.id || d.reportId || '';
       if (!id) throw new Error('ID ausente');
       const resp = await fetch(`${this.legacy.apiBaseUrl}/documents/${encodeURIComponent(typeSlug)}/${encodeURIComponent(id)}/pdf`, { headers: this.legacy.authHeaders() });
@@ -239,7 +239,21 @@ export class DocumentsComponent implements OnInit, OnDestroy {
       if (!ct.includes('pdf')) throw new Error('Resposta não é PDF');
       const blob = await resp.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = `document-${id}.pdf`; document.body.appendChild(a); a.click(); a.remove(); window.URL.revokeObjectURL(url);
+      const a = document.createElement('a');
+      a.href = url;
+      
+      // Construir nome do arquivo: Tipo - Nome - Empresa - Data
+      const docType = d.documentType || d.type || 'Documento';
+      const docTitle = d.title || 'documento';
+      const clientName = d.clientName || 'empresa';
+      const dateStr = (d.creationDate || '').substring(0, 10); // YYYY-MM-DD
+      const fileName = `${docType} - ${docTitle} - ${clientName} - ${dateStr}.pdf`;
+      a.download = fileName;
+      
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
       this.ui.showToast('Download iniciado.', 'success');
       return;
     } catch (err:any) { console.warn('download failed', err); this.ui.showToast(err?.message || 'Não foi possível obter PDF do documento.', 'error'); }
