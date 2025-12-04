@@ -28,10 +28,12 @@ export class AepComponent implements OnInit {
   companies: any[] = [];
   // usado quando carregamos AEP antes das companies estarem disponíveis
   pendingCompanyToSelect: any = null;
+  pendingCnpj: string = ''; // Armazenar CNPJ pendente para fallback
   units: any[] = [];
   sectors: any[] = [];
   loadingCompanies = false;
   msg = '';
+  private msgTimeout: any = null;
 
   // fisioterapeutas
   physiotherapists: any[] = [];
@@ -87,6 +89,15 @@ export class AepComponent implements OnInit {
                 fisioterapeutaId: data.physiotherapistId || data.physiotherapistId || '',
                 fisioterapeutaNome: data.physiotherapistName || data.physiotherapistNome || ''
               });
+              
+              // Preencher CNPJ diretamente se disponível nos dados
+              if (data.companyCnpj) {
+                const formattedCnpj = formatCNPJ(data.companyCnpj);
+                this.form.patchValue({ cnpj: formattedCnpj });
+                this.pendingCnpj = formattedCnpj; // Armazenar para fallback
+                console.log('[AEP] CNPJ preenchido diretamente:', data.companyCnpj);
+              }
+              
               // preencher avaliador e outros campos se presentes
               if (data.evaluator) this.form.patchValue({ evaluator: data.evaluator });
               if (data.sigla) this.form.patchValue({ sigla: data.sigla });
@@ -211,20 +222,44 @@ export class AepComponent implements OnInit {
   async loadCompanies(){
     this.loadingCompanies = true;
     try{
-      const resp = await fetch(`${this.legacy.apiBaseUrl}/companies`, { headers: this.legacy.authHeaders() });
-      if (!resp.ok) throw new Error('Falha ao carregar empresas');
-      const data = await resp.json();
+      // Usar o método do ReportService em vez de fetch direto
+      const data = await this.report.fetchCompanies();
       this.companies = Array.isArray(data) ? data : [];
+      console.log('[AEP] Empresas carregadas:', this.companies.length);
+      
       // se temos uma company pendente (vinha no AEP), tentar preencher agora
       if (this.pendingCompanyToSelect) {
         try {
-          // patchValue company com o identificador pendente e acionar preenchimento
-          this.form.patchValue({ company: this.pendingCompanyToSelect });
-          this.onCompanyChange(this.pendingCompanyToSelect);
-        } catch(_) {}
+          console.log('[AEP] Processando pendingCompanyToSelect:', this.pendingCompanyToSelect);
+          
+          // Procurar a empresa correspondente
+          const company = this.companies.find(c => 
+            String(c.id || c._id) === String(this.pendingCompanyToSelect) ||
+            String(c.id) === String(this.pendingCompanyToSelect)
+          );
+          
+          if (company) {
+            console.log('[AEP] Empresa pendente encontrada:', company.name);
+            
+            // patchValue company com o identificador pendente
+            this.form.patchValue({ company: company.id || company._id });
+            
+            // Acionar preenchimento da empresa (CNPJ, unidades, setores)
+            this.fillCompany(company);
+          } else {
+            console.warn('[AEP] Empresa pendente não encontrada nas companies carregadas');
+            this.onCompanyChange(this.pendingCompanyToSelect);
+          }
+        } catch(e) {
+          console.error('[AEP] Erro ao processar pendingCompanyToSelect:', e);
+        }
         this.pendingCompanyToSelect = null;
       }
-    }catch(e:any){ this.ui.showToast(e?.message || 'Erro ao carregar empresas', 'error'); this.companies = []; }
+    }catch(e:any){ 
+      console.error('[AEP] Erro ao carregar empresas:', e);
+      this.ui.showToast(e?.message || 'Erro ao carregar empresas', 'error'); 
+      this.companies = []; 
+    }
     finally{ this.loadingCompanies = false; }
   }
 
@@ -269,28 +304,51 @@ export class AepComponent implements OnInit {
   cancelCreatePhysio(){ this.creatingPhysio = false; this.newPhysioName = ''; this.newPhysioCrefito = ''; }
 
   onCompanyChange(companyId: any){
+    console.log('[AEP] onCompanyChange chamado com:', companyId);
     if (!companyId) {
+      console.log('[AEP] Company ID vazio, limpando campos');
       this.form.patchValue({ cnpj: '' });
       this.units = []; this.sectors = [];
       this.form.get('unit')?.disable(); this.form.get('sector')?.disable();
       return;
     }
+    console.log('[AEP] Procurando empresa:', { companyId, companiesCount: this.companies.length });
     const sel = this.companies.find(c => String(c.id || c._id || c.name) === String(companyId) || String(c.id) === String(companyId));
     if (!sel) {
       // sometimes the option stores name; try find by name
+      console.log('[AEP] Empresa não encontrada por ID, tentando por nome');
       const byName = this.companies.find(c => c.name === companyId);
-      if (byName) { this.fillCompany(byName); return; }
-      this.form.patchValue({ cnpj: '' });
+      if (byName) { 
+        console.log('[AEP] Empresa encontrada por nome:', byName.name);
+        this.fillCompany(byName); 
+        return; 
+      }
+      console.warn('[AEP] Empresa não encontrada em nenhuma lista');
+      // Se não encontrar mas tiver CNPJ pendente, pelo menos manter o CNPJ exibido
+      if (this.pendingCnpj) {
+        console.log('[AEP] Usando CNPJ pendente como fallback:', this.pendingCnpj);
+        this.form.patchValue({ cnpj: this.pendingCnpj });
+      } else {
+        this.form.patchValue({ cnpj: '' });
+      }
       return;
     }
+    console.log('[AEP] Empresa encontrada:', sel.name);
     this.fillCompany(sel);
   }
 
   fillCompany(sel: any){
-  const cnpj = sel.cnpj || sel.CNPJ || sel.companyCnpj || '';
-  this.form.patchValue({ cnpj: formatCNPJ(cnpj) });
+    console.log('[AEP] fillCompany chamado com:', sel);
+    const cnpj = sel.cnpj || sel.CNPJ || sel.companyCnpj || sel.document || sel.documentNumber || '';
+    const formattedCnpj = formatCNPJ(cnpj);
+    
+    this.form.patchValue({ cnpj: formattedCnpj });
+    console.log('[AEP] CNPJ preenchido:', { raw: cnpj, formatted: formattedCnpj });
+    
     this.units = Array.isArray(sel.units) ? sel.units : (sel.unidades || []);
     this.sectors = Array.isArray(sel.sectors) ? sel.sectors : (sel.setores || []);
+    console.log('[AEP] Unidades carregadas:', this.units.length, 'Setores carregados:', this.sectors.length);
+    
     if (this.units.length) this.form.get('unit')?.enable(); else this.form.get('unit')?.disable();
     if (this.sectors.length) this.form.get('sector')?.enable(); else this.form.get('sector')?.disable();
   }
@@ -302,15 +360,15 @@ export class AepComponent implements OnInit {
   }
 
   submit(){
-    if (this.form.invalid) { this.msg = 'Preencha os campos obrigatórios.'; return; }
+    if (this.form.invalid) { this.setMessage('Preencha os campos obrigatórios.', 4000); return; }
     const v = this.form.getRawValue();
 
     console.log('Form values:', v); // ← DEBUG
 
     // Validar campos críticos
-    if (!v.company) { this.msg = 'Empresa é obrigatória.'; return; }
-    if (!v.funcao) { this.msg = 'Função avaliada é obrigatória.'; return; }
-    if (!v.evaluator) { this.msg = 'Avaliador é obrigatório.'; return; }
+    if (!v.company) { this.setMessage('Empresa é obrigatória.', 4000); return; }
+    if (!v.funcao) { this.setMessage('Função avaliada é obrigatória.', 4000); return; }
+    if (!v.evaluator) { this.setMessage('Avaliador é obrigatório.', 4000); return; }
 
     // Varre o DOM do componente para coletar descrições dos riscos marcados
     let selectedRiskDescriptions: string[] = [];
@@ -348,15 +406,45 @@ export class AepComponent implements OnInit {
           console.log('Atualizando AEP ID:', v.id); // ← DEBUG
           const updated = await this.report.putAepReport(v.id, aepPayload);
           console.log('Resposta PUT:', updated); // ← DEBUG
+          this.ui.showToast('✓ AEP atualizada com sucesso!', 'success', 4000);
         } else {
           console.log('Criando nova AEP'); // ← DEBUG
           const created = await this.report.postAepReport(aepPayload);
           console.log('Resposta POST:', created); // ← DEBUG
+          this.msg = '✓ AEP emitida com sucesso!';
+          this.ui.showToast('✓ AEP emitida com sucesso! Redirecionando...', 'success', 3000);
+          
+          // Aguardar 3 segundos antes de navegar (tempo do toast)
+          setTimeout(() => {
+            this.router.navigate(['/documents']);
+            // Limpar mensagem após navegação
+            this.msg = '';
+          }, 3000);
         }
       } catch (err:any) {
         console.error('Erro ao salvar:', err); // ← DEBUG
+        const errorMsg = err?.message || 'Erro ao salvar AEP';
+        this.msg = `✗ ${errorMsg}`;
+        this.ui.showToast(`Erro: ${errorMsg}`, 'error', 4000);
       }
     })();
+  }
+
+  setMessage(msg: string, autoClearMs: number = 0) {
+    // Limpar timeout anterior se existir
+    if (this.msgTimeout) {
+      clearTimeout(this.msgTimeout);
+    }
+    
+    this.msg = msg;
+    
+    // Auto-limpar mensagens de validação após X milissegundos
+    if (autoClearMs > 0) {
+      this.msgTimeout = setTimeout(() => {
+        this.msg = '';
+        this.msgTimeout = null;
+      }, autoClearMs);
+    }
   }
 
   clear(){
@@ -364,7 +452,7 @@ export class AepComponent implements OnInit {
     this.form.reset({ date: this.todayIso() });
     this.selectedRisks = [];
     this.units = []; this.sectors = [];
-    this.msg = 'Formulário limpo.';
+    this.setMessage('Formulário limpo.', 3000);
   }
 }
 

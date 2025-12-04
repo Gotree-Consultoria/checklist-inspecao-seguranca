@@ -143,7 +143,7 @@
         <button type="submit" class="btn-primary">Emitir AEP</button>
         <button type="button" id="aepClear" class="btn-secondary" (click)="clear()">Limpar</button>
       </div>
-      <div id="aepMsg" class="feedback">{{msg}}</div>
+      <div id="aepMsg" class="feedback" [ngClass]="{'success': msg.includes('✓'), 'error': msg.includes('✗'), 'warning': msg && !msg.includes('✓') && !msg.includes('✗')}">{{msg}}</div>
     </form>
   </div>
 </section>

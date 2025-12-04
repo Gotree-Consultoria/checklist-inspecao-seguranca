@@ -1288,9 +1288,16 @@ export class ReportComponent implements OnInit, OnDestroy {
       };
       // campo opcional: próxima visita
       try {
-        const nextVisit = (document.getElementById('nextVisitDate') as HTMLInputElement)?.value || '';
-        payload.nextVisitDate = this.formatDate(nextVisit) || null;
-      } catch(_) { payload.nextVisitDate = null; }
+        console.log('[onSharedSignaturesConfirmed] Valor em selectedNextVisitDate:', this.selectedNextVisitDate);
+        if (this.selectedNextVisitDate && this.selectedNextVisitDate.trim()) {
+          payload.nextVisitDate = this.selectedNextVisitDate;
+        } else {
+          payload.nextVisitDate = null;
+        }
+      } catch(e) { 
+        console.error('[onSharedSignaturesConfirmed] Erro ao processar data próxima visita', e);
+        payload.nextVisitDate = null; 
+      }
 
       // campo opcional: turno da próxima visita
       try {
@@ -1412,9 +1419,13 @@ export class ReportComponent implements OnInit, OnDestroy {
       };
       // campo opcional: próxima visita
       try {
-        const nextVisit = (document.getElementById('nextVisitDate') as HTMLInputElement)?.value || '';
-        (payload as any).nextVisitDate = this.formatDate(nextVisit) || null;
-      } catch(_) { (payload as any).nextVisitDate = null; }
+        (payload as any).nextVisitDate = this.selectedNextVisitDate && this.selectedNextVisitDate.trim() ? this.selectedNextVisitDate : null;
+        console.log('[report] nextVisitDate from component:', this.selectedNextVisitDate);
+        console.log('[report] nextVisitDate final payload value:', (payload as any).nextVisitDate);
+      } catch(e) { 
+        console.error('[report] error capturing nextVisitDate:', e);
+        (payload as any).nextVisitDate = null; 
+      }
 
       // campo opcional: turno da próxima visita
       try {
@@ -1670,7 +1681,7 @@ export class ReportComponent implements OnInit, OnDestroy {
       reader.onload = (e: ProgressEvent<FileReader>) => {
         const img = new Image();
         img.onload = () => {
-          // 6.8 cm = ~256 pixels (assumindo 96 DPI)
+          // 6.8 cm = 256 pixels (96 DPI padrão PDF)
           const maxWidth = 256;
           let width = img.width;
           let height = img.height;
@@ -1694,8 +1705,8 @@ export class ReportComponent implements OnInit, OnDestroy {
           }
           ctx.drawImage(img, 0, 0, width, height);
 
-          // Converte para base64 com qualidade reduzida (0.85 = 85%)
-          const resizedBase64 = canvas.toDataURL('image/jpeg', 0.85);
+          // Converte para base64 com qualidade melhorada (0.90 = 90%)
+          const resizedBase64 = canvas.toDataURL('image/jpeg', 0.90);
           console.log('[Report] Imagem redimensionada para', width, 'x', height, 'pixels');
           resolve(resizedBase64);
         };
@@ -1715,7 +1726,7 @@ export class ReportComponent implements OnInit, OnDestroy {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
-        // 6.8 cm = ~256 pixels (assumindo 96 DPI)
+        // 6.8 cm = 256 pixels (96 DPI padrão PDF)
         const maxWidth = 256;
         let width = img.width;
         let height = img.height;
@@ -1739,8 +1750,8 @@ export class ReportComponent implements OnInit, OnDestroy {
         }
         ctx.drawImage(img, 0, 0, width, height);
 
-        // Converte para base64 com qualidade reduzida (0.85 = 85%)
-        const resizedBase64 = canvas.toDataURL('image/jpeg', 0.85);
+        // Converte para base64 com qualidade melhorada (0.90 = 90%)
+        const resizedBase64 = canvas.toDataURL('image/jpeg', 0.90);
         console.log('[Report] Imagem (base64) redimensionada para', width, 'x', height, 'pixels');
         resolve(resizedBase64);
       };
