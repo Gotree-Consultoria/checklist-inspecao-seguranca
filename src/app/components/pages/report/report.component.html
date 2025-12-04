@@ -10,7 +10,7 @@
             <div class="field-row">
               <label for="empresaCliente" class="field-label">Empresa Cliente:</label>
               <div class="field-input">
-                <select id="empresaCliente" name="empresaCliente" class="form-select" title="Selecione a empresa cliente" (change)="onCompanyChange($event)">
+                <select id="empresaCliente" name="empresaCliente" class="form-select" title="Selecione a empresa cliente" (change)="onCompanyChange($event); onReportFieldChange()">
                   <option value="">Selecione uma empresa</option>
                 </select>
               </div>
@@ -60,7 +60,27 @@
             <div class="field-row">
               <label for="nextVisitDate" class="field-label">Próxima Visita (opcional)</label>
               <div class="field-input">
-                <input type="date" id="nextVisitDate" name="nextVisitDate" class="form-control" />
+                <app-availability-calendar
+                  [selectedDate]="selectedDate"
+                  (dateSelected)="onAvailabilityDateSelected($event)"
+                ></app-availability-calendar>
+                <div *ngIf="duplicityCheckPending" class="field-loading">
+                  <span class="spinner"></span> Verificando agenda...
+                </div>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <label for="nextVisitShift" class="field-label">Turno da Próxima Visita</label>
+              <div class="field-input">
+                <select id="nextVisitShift" name="nextVisitShift" class="form-control" [class.field-error]="isDuplicityBlocked" [(ngModel)]="selectedNextVisitShift" (change)="onReportFieldChange()">
+                  <option value="">— Selecione um turno —</option>
+                  <option value="MANHA">Manhã</option>
+                  <option value="TARDE">Tarde</option>
+                </select>
+              </div>
+              <div *ngIf="duplicityError" class="field-error-message">
+               {{ duplicityError }}
               </div>
             </div>
 
@@ -233,9 +253,39 @@
       </div>
 
       <div class="form-actions">
-        <button type="button" id="saveReportBtn" class="btn-submit" (click)="handleSaveClick($event)">Prosseguir para Assinatura</button>
+        <button type="button" id="handleSaveClickBtn" class="btn-submit" (click)="handleSaveClick($event)">Prosseguir para Assinatura</button>
       </div>
     </form>
+  </div>
+
+  <!-- MODAL DE CÂMERA -->
+  <div class="camera-modal" *ngIf="cameraActive" (click)="closeCameraModal()">
+    <div class="camera-modal-content" (click)="$event.stopPropagation()">
+      <div class="camera-header">
+        <h3>Capturar Foto</h3>
+        <button type="button" class="close-btn" (click)="closeCameraModal()" aria-label="Fechar câmera">✕</button>
+      </div>
+
+      <div class="camera-body">
+        <!-- Visualização da câmera -->
+        <div class="camera-view" *ngIf="!capturedImageBase64">
+          <video id="cameraVideoFeed" class="video-feed" [attr.playsinline]="true"></video>
+          <div class="camera-controls">
+            <button type="button" class="btn-camera btn-flip" (click)="toggleCameraFacing()" title="Trocar câmera">🔄 Trocar Câmera</button>
+            <button type="button" class="btn-camera btn-capture" (click)="capturePhotoFromCamera()" title="Capturar foto">📷 Capturar</button>
+          </div>
+        </div>
+
+        <!-- Visualização da foto capturada -->
+        <div class="photo-preview" *ngIf="capturedImageBase64">
+          <img [src]="capturedImageBase64" alt="Foto capturada" class="preview-image" />
+          <div class="preview-controls">
+            <button type="button" class="btn-action btn-retake" (click)="capturedImageBase64 = null" title="Recapturar foto">🔄 Recapturar</button>
+            <button type="button" class="btn-action btn-confirm" (click)="confirmCapturedPhoto()" title="Confirmar foto">✓ Confirmar</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 

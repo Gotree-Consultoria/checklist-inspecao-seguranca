@@ -47,7 +47,11 @@
       <li *ngFor="let it of eventos; trackBy: trackByEventoId" class="agenda-item" [class]="'type-' + (it.type || 'EVENTO').toLowerCase()">
         <div class="left">
           <div class="title">{{ it.title }}</div>
-          <div class="meta">{{ formatDateToBrazil(it.date) }} • <span class="type" [class]="'badge-' + (it.type || 'EVENTO').toLowerCase()">{{ it.type || 'EVENTO' }}</span></div>
+          <div class="meta">
+            {{ formatDateToBrazil(it.date) }}
+            <span *ngIf="it.shift" class="shift-badge">• {{ it.shift === 'MANHA' ? '🌅 Manhã' : '🌆 Tarde' }}</span>
+            • <span class="type" [class]="'badge-' + (it.type || 'EVENTO').toLowerCase()">{{ it.type || 'EVENTO' }}</span>
+          </div>
           <div class="responsible" *ngIf="it.responsibleName">Responsável: {{ it.responsibleName }}</div>
           <div class="desc" *ngIf="it.description">{{ it.description }}</div>
           <div class="log" *ngIf="(it.type || 'EVENTO') === 'VISITA_REAGENDADA'">

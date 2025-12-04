@@ -199,6 +199,15 @@ export class AgendaComponent implements OnInit, AfterViewInit, OnDestroy {
           this.eventos = await this.agendaService.listEventos();
         }
       }
+      // DEBUG: Log the eventos to check if shift field is present
+      console.log('Eventos carregados:', this.eventos);
+      
+      // Fallback: Se shift for null, usar 'MANHA' como padrão (até backend estar configurado)
+      this.eventos = this.eventos.map(evt => ({
+        ...evt,
+        shift: evt.shift || 'MANHA' // Default to 'MANHA' if null/undefined
+      }));
+      
       // Atualiza o calendário imediatamente usando a API do FullCalendar
       // Only update FullCalendar when not in admin mode (admins don't use calendar UI)
       if (!this.isAdmin) {
@@ -226,18 +235,29 @@ export class AgendaComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private mapEventoToCalendarEvent(evento: AgendaResponseDTO): any {
+    // Adicionar turno ao título se disponível
+    let title = evento.title;
+    if (evento.shift) {
+      const shiftLabel = evento.shift === 'MANHA' ? '🌅 Manhã' : '🌆 Tarde';
+      title = `${title} (${shiftLabel})`;
+    }
+
     return {
       id: String(evento.referenceId),
-      title: evento.title,
+      title: title,
       start: evento.date,
       backgroundColor: this.getColorByType(evento.type || 'EVENTO'),
       borderColor: this.getColorByType(evento.type || 'EVENTO'),
       extendedProps: {
         type: evento.type || 'EVENTO',
         description: evento.description,
+        shift: evento.shift,
+        clientName: evento.clientName,
         originalDate: evento.originalVisitDate,
-        sourceVisitId: evento.sourceVisitId
-        , responsibleName: evento.responsibleName || null
+        sourceVisitId: evento.sourceVisitId,
+        nextVisitDate: evento.nextVisitDate,
+        nextVisitShift: evento.nextVisitShift,
+        responsibleName: evento.responsibleName || null
       }
     };
   }
@@ -260,12 +280,16 @@ export class AgendaComponent implements OnInit, AfterViewInit, OnDestroy {
         title: evento.title,
         description: evento.description || null,
         date: evento.date,
+        shift: evento.shift,
         type: evento.type,
         referenceId: evento.referenceId,
+        clientName: evento.clientName || null,
         unitName: evento.unitName || null,
         sectorName: evento.sectorName || null,
         originalVisitDate: evento.originalVisitDate || null,
         sourceVisitId: evento.sourceVisitId || null,
+        nextVisitDate: evento.nextVisitDate || undefined,
+        nextVisitShift: evento.nextVisitShift || undefined,
         responsibleName: evento.responsibleName || null
       });
     }
@@ -325,7 +349,9 @@ export class AgendaComponent implements OnInit, AfterViewInit, OnDestroy {
         await this.agendaService.createEvento({
           title: data.title,
           description: data.description || null,
-          eventDate: data.date
+          eventDate: data.date,
+          shift: data.shift || 'MANHA',
+          clientName: data.clientName || null
         });
         this.ui.showToast('Evento criado com sucesso', 'success');
       } else if (data.mode === 'edit') {
@@ -334,7 +360,9 @@ export class AgendaComponent implements OnInit, AfterViewInit, OnDestroy {
           title: data.title,
           description: data.description || null,
           eventDate: data.date,
-          eventType: this.currentEditingItem.type || 'EVENTO'
+          eventType: this.currentEditingItem.type || 'EVENTO',
+          shift: data.shift || 'MANHA',
+          clientName: data.clientName || null
         });
         this.ui.showToast('Evento atualizado com sucesso', 'success');
       } else if (data.mode === 'reschedule') {
@@ -378,7 +406,9 @@ export class AgendaComponent implements OnInit, AfterViewInit, OnDestroy {
         title: data.title || '',
         description: data.description || null,
         date: data.date || '',
+        shift: data.shift,
         type: data.type || 'EVENTO',
+        clientName: data.clientName || null,
         unitName: data.unitName || null,
         sectorName: data.sectorName || null,
         originalVisitDate: data.originalVisitDate || null,
@@ -411,7 +441,9 @@ export class AgendaComponent implements OnInit, AfterViewInit, OnDestroy {
       this.agendaModal?.open('edit', {
         title: item.title,
         description: item.description,
-        date: item.date
+        date: item.date,
+        shift: item.shift,
+        clientName: item.clientName
       });
       return;
     }

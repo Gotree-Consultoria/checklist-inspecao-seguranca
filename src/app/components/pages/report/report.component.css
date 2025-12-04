@@ -18,6 +18,25 @@ fieldset.dados-relatorio legend { padding: 0 8px; margin-left: -8px; font-weight
   .field-row-inline { grid-template-columns: 1fr; }
   .field-label { margin-bottom:6px; } 
 }
+
+/* Seção do Calendário de Disponibilidade */
+.field-row.calendar-section {
+  margin-top: 24px;
+  grid-column: 1 / -1;
+}
+
+/* Container do datepicker com botão */
+.datepicker-container {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+}
+
+.datepicker-container input {
+  flex: 1;
+}
+
 /* Modal de Assinaturas - Estilos Aprimorados */
 .modal-overlay {
   display: none;
@@ -489,3 +508,301 @@ fieldset.dados-relatorio legend { padding: 0 8px; margin-left: -8px; font-weight
   background: rgba(191, 224, 56, 0.05); 
 }
 
+/* MODAL DE CÂMERA */
+.camera-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 16px;
+}
+
+.camera-modal-content {
+  background: #fff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.camera-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #e5e5e5;
+  background: #f8f9fa;
+}
+
+.camera-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.camera-header .close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #999;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.camera-header .close-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+.camera-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
+
+.camera-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #000;
+  position: relative;
+}
+
+.video-feed {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #000;
+}
+
+.camera-controls {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.btn-camera {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+}
+
+.btn-flip {
+  background: #6b7280;
+}
+
+.btn-flip:hover {
+  background: #4b5563;
+}
+
+.btn-capture {
+  background: #bfe038;
+  color: #000;
+  flex: 1;
+}
+
+.btn-capture:hover {
+  background: #a3d614;
+}
+
+.photo-preview {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  background: #f8f9fa;
+}
+
+.preview-image {
+  width: 100%;
+  height: auto;
+  max-height: 400px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #e5e5e5;
+  margin-bottom: 16px;
+}
+
+.preview-controls {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-action {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-retake {
+  background: #e5e5e5;
+  color: #333;
+}
+
+.btn-retake:hover {
+  background: #d0d0d0;
+}
+
+.btn-confirm {
+  background: #bfe038;
+  color: #000;
+}
+
+.btn-confirm:hover {
+  background: #a3d614;
+}
+
+@media (max-width: 600px) {
+  .camera-modal-content {
+    max-width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .video-feed {
+    min-height: 300px;
+  }
+}
+
+/* Mensagem de erro para duplicidade */
+.field-error-message {
+  color: #dc2626;
+  font-size: 0.85rem;
+  margin-top: 8px;
+  margin-left: 0;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: linear-gradient(135deg, #fef2f2 0%, #fff5f5 100%);
+  border-left: 3px solid #dc2626;
+  border-radius: 4px;
+  animation: slideInDown 0.3s ease-out;
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.1);
+  white-space: nowrap;
+}
+
+.field-error-message::before {
+  content: "⚠";
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+/* Input com erro */
+.form-control.input-error,
+.form-select.input-error,
+.form-control.field-error,
+.form-select.field-error {
+  border-color: #dc2626;
+  border-width: 2px;
+  background-color: #fef2f2;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.08);
+}
+
+.form-control.input-error:focus,
+.form-select.input-error:focus,
+.form-control.field-error:focus,
+.form-select.field-error:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+}
+
+/* Indicador de carregamento */
+.field-loading {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #e5e7eb;
+  border-top-color: #bfe038;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Estado de botão desabilitado com feedback visual */
+.btn-submit:disabled,
+.btn-submit.btn-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #d1d5db;
+  color: #6b7280;
+  box-shadow: none;
+  transition: all 0.2s ease;
+}
+
+.btn-submit:disabled:hover,
+.btn-submit.btn-disabled:hover {
+  background-color: #d1d5db;
+  transform: none;
+}

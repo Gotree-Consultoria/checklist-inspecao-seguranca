@@ -1,12 +1,21 @@
 import { Component, OnInit, OnDestroy, inject, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatInputModule } from '@angular/material/input';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { LegacyService } from '../../../services/legacy.service';
 import { formatCNPJ } from '../../../utils/formatters';
 import { UiService } from '../../../services/ui.service';
 import { ReportService } from '../../../services/report.service';
 import { SignatureService } from '../../../services/signature.service';
+import { AgendaValidationService } from '../../../services/agenda-validation.service';
+import { TechnicalVisitService } from '../../../services/technical-visit.service';
+import { ShiftAvailabilityService } from '../../../services/shift-availability.service';
 import { SignatureModalComponent } from '../../shared/signature-modal/signature-modal.component';
+import { AvailabilityCalendarComponent } from '../../shared/availability-calendar/availability-calendar.component';
 
 interface ReportRecord {
   id?: string;
@@ -24,7 +33,7 @@ interface ReportRecord {
 @Component({
   standalone: true,
   selector: 'app-report',
-  imports: [CommonModule, FormsModule, SignatureModalComponent],
+  imports: [CommonModule, FormsModule, MatDatepickerModule, MatInputModule, MatNativeDateModule, MatButtonModule, MatIconModule, SignatureModalComponent, AvailabilityCalendarComponent],
   templateUrl: './report.component.html',
   styleUrls: ['./report.component.css']
 })
@@ -33,6 +42,9 @@ export class ReportComponent implements OnInit, OnDestroy {
   private ui = inject(UiService);
   private report = inject(ReportService);
   private signatureService = inject(SignatureService);
+  private agendaValidation = inject(AgendaValidationService);
+  private technicalVisit = inject(TechnicalVisitService);
+  private shiftAvailability = inject(ShiftAvailabilityService);
   private host = inject(ElementRef);
 
   records: Array<ReportRecord> = [];
@@ -40,6 +52,28 @@ export class ReportComponent implements OnInit, OnDestroy {
   private reportDraft: { records: ReportRecord[] } = { records: [] };
   private readonly DRAFT_KEY = 'draftReport';
   private onlineListener: any = null;
+
+  // Propriedades para câmera
+  cameraActive = false;
+  cameraStream: MediaStream | null = null;
+  capturedImageBase64: string | null = null;
+  currentRecordIndexForCamera: number | null = null;
+
+  // Propriedades para o turno da próxima visita
+  selectedNextVisitShift: string = '';
+  selectedNextVisitDate: string = '';
+  selectedDate: Date | null = null;
+  
+  // ID da visita técnica (para validação de conflito)
+  visitId: number | null = null;
+
+  // Estados de validação de duplicidade
+  duplicityCheckPending = false;
+  duplicityError: string | null = null;
+  isDuplicityBlocked = false;
+  
+  // Timers para debounce
+  private duplicityCheckTimer: any = null;
 
   async ngOnInit(): Promise<void> {
     // Carrega rascunho salvo do localStorage
@@ -96,7 +130,6 @@ export class ReportComponent implements OnInit, OnDestroy {
   private async loadCompanies(): Promise<void> {
     try {
       const companiesData = await this.report.fetchCompanies();
-      console.log('[Report] Empresas carregadas:', companiesData);
       if (companiesData && Array.isArray(companiesData)) {
         this.companies = companiesData;
         // Popula o dropdown de empresas
@@ -134,10 +167,8 @@ export class ReportComponent implements OnInit, OnDestroy {
         option.setAttribute('data-company', JSON.stringify(company)); // Armazena dados da empresa
         
         selectElement.appendChild(option);
-        console.log('[Report] Empresa adicionada:', companyName, 'ID:', companyId);
       });
       
-      console.log('[Report] Dropdown populado com', this.companies.length, 'empresas');
     } catch (e) {
       console.warn('Erro ao popular dropdown de empresas', e);
     }
@@ -147,6 +178,8 @@ export class ReportComponent implements OnInit, OnDestroy {
     // Ao sair do componente, limpa o rascunho para que o próximo "Novo Relatório" comece vazio
     this.clearDraft();
     try { if (this.onlineListener) window.removeEventListener('online', this.onlineListener); } catch(_) {}
+    // Limpar timer de duplicity check
+    if (this.duplicityCheckTimer) clearTimeout(this.duplicityCheckTimer);
   }
 
   private clearDraft(): void {
@@ -276,47 +309,135 @@ export class ReportComponent implements OnInit, OnDestroy {
 
   async onCaptureClick(recordIndex: number): Promise<void> {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      const track = stream.getVideoTracks()[0];
-      const imageCapture = new (window as any).ImageCapture(track);
-      const blob = await imageCapture.takePhoto();
+      this.currentRecordIndexForCamera = recordIndex;
+      this.cameraActive = true;
       
-      // Redimensiona a imagem capturada antes de armazenar
-      this.resizeImageTo6_8cm(blob).then((resizedBase64: string) => {
+      // Solicitar acesso à câmera
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'environment' } // Câmera traseira por padrão em celulares
+      });
+      
+      this.cameraStream = stream;
+      
+      // Pequeno delay para garantir que o elemento de vídeo foi renderizado
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Anexar stream ao elemento de vídeo
+      const videoElement = document.getElementById('cameraVideoFeed') as HTMLVideoElement;
+      if (videoElement) {
+        videoElement.srcObject = stream;
+        videoElement.play().catch(err => console.error('Erro ao reproduzir vídeo:', err));
+      }
+    } catch (e) {
+      this.cameraActive = false;
+      this.ui.showToast(`Não foi possível acessar a câmera: ${(e as Error).message}`, 'error');
+    }
+  }
+
+  async capturePhotoFromCamera(): Promise<void> {
+    try {
+      const videoElement = document.getElementById('cameraVideoFeed') as HTMLVideoElement;
+      if (!videoElement) return;
+
+      // Criar canvas e capturar frame do vídeo
+      const canvas = document.createElement('canvas');
+      canvas.width = videoElement.videoWidth;
+      canvas.height = videoElement.videoHeight;
+      const context = canvas.getContext('2d');
+      if (!context) return;
+
+      context.drawImage(videoElement, 0, 0);
+      this.capturedImageBase64 = canvas.toDataURL('image/jpeg', 0.9);
+    } catch (e) {
+      this.ui.showToast(`Erro ao capturar foto: ${(e as Error).message}`, 'error');
+    }
+  }
+
+  toggleCameraFacing(): void {
+    try {
+      if (this.cameraStream) {
+        // Parar stream atual
+        this.cameraStream.getTracks().forEach(track => track.stop());
+        this.cameraStream = null;
+      }
+      
+      // Obter facing mode atual do localStorage ou padrão
+      const currentFacing = localStorage.getItem('cameraFacing') || 'environment';
+      const newFacing = currentFacing === 'environment' ? 'user' : 'environment';
+      localStorage.setItem('cameraFacing', newFacing);
+      
+      // Reiniciar câmera com novo facing
+      this.cameraActive = false;
+      setTimeout(() => {
+        if (this.currentRecordIndexForCamera !== null) {
+          this.onCaptureClick(this.currentRecordIndexForCamera);
+        }
+      }, 300);
+    } catch (e) {
+      this.ui.showToast(`Erro ao trocar câmera: ${(e as Error).message}`, 'error');
+    }
+  }
+
+  confirmCapturedPhoto(): void {
+    try {
+      if (!this.capturedImageBase64 || this.currentRecordIndexForCamera === null) return;
+
+      const recordIndex = this.currentRecordIndexForCamera;
+      
+      // Redimensionar a imagem capturada
+      this.resizeImageToBase64(this.capturedImageBase64).then((resizedBase64: string) => {
         if (recordIndex >= 0 && recordIndex < this.records.length) {
           if (!this.records[recordIndex].photos) {
             this.records[recordIndex].photos = [];
           }
           // Adicionar à primeira foto vazia
           const slot = this.records[recordIndex].photos[0] ? 1 : 0;
-          this.records[recordIndex].photos[slot] = resizedBase64;
-          this.records[recordIndex].photos = [...this.records[recordIndex].photos];
-          this.records = [...this.records];
-          this.saveDraftToStorage();
-          track.stop();
-        }
-      }).catch((error: Error) => {
-        console.error('[Report] Erro ao redimensionar foto capturada:', error);
-        // Fallback: usa a foto original sem redimensionamento
-        const reader = new FileReader();
-        reader.onload = () => {
-          const dataUrl = reader.result as string;
-          if (recordIndex >= 0 && recordIndex < this.records.length) {
-            if (!this.records[recordIndex].photos) {
-              this.records[recordIndex].photos = [];
-            }
-            const slot = this.records[recordIndex].photos[0] ? 1 : 0;
-            this.records[recordIndex].photos[slot] = dataUrl;
+          if (slot < 2) {
+            this.records[recordIndex].photos[slot] = resizedBase64;
             this.records[recordIndex].photos = [...this.records[recordIndex].photos];
             this.records = [...this.records];
             this.saveDraftToStorage();
-            track.stop();
+            this.ui.showToast('Foto adicionada com sucesso!', 'success');
+          } else {
+            this.ui.showToast('Limite de 2 fotos por registro já atingido.', 'info');
           }
-        };
-        reader.readAsDataURL(blob);
+        }
+        this.closeCameraModal();
+      }).catch((error: Error) => {
+        console.error('[Report] Erro ao redimensionar foto capturada:', error);
+        // Fallback: usa a foto original
+        if (recordIndex >= 0 && recordIndex < this.records.length) {
+          if (!this.records[recordIndex].photos) {
+            this.records[recordIndex].photos = [];
+          }
+          const slot = this.records[recordIndex].photos[0] ? 1 : 0;
+          if (slot < 2) {
+            this.records[recordIndex].photos[slot] = this.capturedImageBase64!;
+            this.records[recordIndex].photos = [...this.records[recordIndex].photos];
+            this.records = [...this.records];
+            this.saveDraftToStorage();
+            this.ui.showToast('Foto adicionada com sucesso!', 'success');
+          }
+        }
+        this.closeCameraModal();
       });
     } catch (e) {
-      this.ui.showToast(`Não foi possível acessar a câmera: ${(e as Error).message}`, 'error');
+      this.ui.showToast(`Erro ao confirmar foto: ${(e as Error).message}`, 'error');
+    }
+  }
+
+  closeCameraModal(): void {
+    try {
+      if (this.cameraStream) {
+        this.cameraStream.getTracks().forEach(track => track.stop());
+        this.cameraStream = null;
+      }
+      this.cameraActive = false;
+      this.capturedImageBase64 = null;
+      this.currentRecordIndexForCamera = null;
+      localStorage.removeItem('cameraFacing');
+    } catch (e) {
+      console.error('Erro ao fechar modal de câmera:', e);
     }
   }
 
@@ -393,6 +514,251 @@ export class ReportComponent implements OnInit, OnDestroy {
   onRecordChange(index: number): void {
     // Método chamado quando qualquer campo do registro é alterado
     this.saveDraftToStorage();
+  }
+
+  /**
+   * Verifica duplicidade quando empresa, data ou turno mudam.
+   * Usa debounce para evitar requisições excessivas.
+   * 
+   * Este é o coração da "Reação em Cadeia":
+   * - Monitora mudanças nos 3 campos críticos
+   * - Só valida quando TODOS estão preenchidos
+   * - Envia requisição silenciosa ao backend
+   * - Fornece feedback visual instantâneo
+   */
+  async onReportFieldChange(): Promise<void> {
+    // Limpar timer anterior
+    if (this.duplicityCheckTimer) clearTimeout(this.duplicityCheckTimer);
+    
+    console.log('[Report.onReportFieldChange] Mudança detectada no formulário');
+    
+    // Debounce: só fazer a requisição 800ms após a última mudança
+    // Isso evita múltiplas requisições enquanto o usuário está digitando
+    this.duplicityCheckTimer = setTimeout(() => {
+      console.log('[Report.onReportFieldChange] Debounce expirado, chamando checkDuplicity...');
+      this.checkDuplicity();
+    }, 800);
+  }
+
+  /**
+   * Verifica se já existe relatório para a mesma empresa, data e turno.
+   * 
+   * Lógica da "Reação em Cadeia":
+   * 1. Verifica se os 3 campos críticos estão preenchidos
+   * 2. Converte hora (se aplicável) para turno (MANHA/TARDE)
+   * 3. Envia GET /technical-visits/check-duplicity
+   * 4. Envia GET /technical-visits/check-availability para validar turno
+   * 5. Fornece feedback visual instantâneo baseado na resposta
+   */
+  private async checkDuplicity(): Promise<void> {
+    try {
+      console.log('[Report.checkDuplicity] === INICIANDO VERIFICAÇÃO ===');
+      
+      // ====== PASSO 1: Coleta dos Dados ======
+      const companyIdValue = (document.getElementById('empresaCliente') as HTMLSelectElement)?.value?.trim();
+      const dateValue = this.selectedNextVisitDate || '';
+      const shiftValue = this.selectedNextVisitShift || '';
+
+      console.log('[Report.checkDuplicity] Estado dos campos:', {
+        empresaValue: companyIdValue,
+        dataValue: dateValue,
+        turnoValue: shiftValue,
+        isDuplicityBlocked: this.isDuplicityBlocked
+      });
+
+      console.log('[Report] Monitoramento de campos - Estado atual:', {
+        empresa: companyIdValue ? '✓ Preenchida' : '✗ Vazia',
+        data: dateValue ? '✓ Preenchida' : '✗ Vazia',
+        turno: shiftValue ? '✓ Preenchido' : '✗ Vazio'
+      });
+
+      // ====== PASSO 2: Validação - Todos os 3 campos devem estar preenchidos ======
+      // Este é o gatilho: se algum campo faltar, não faz nada
+      if (!companyIdValue || !dateValue || !shiftValue) {
+        console.log('[Report] Não validando - campos incompletos. Limpando erros anteriores.');
+        // Se algum campo ficou vazio, limpar erros da validação anterior
+        this.clearDuplicityError();
+        return;
+      }
+
+      const companyId = parseInt(companyIdValue);
+      
+      // Validar se é um número válido
+      if (isNaN(companyId)) {
+        this.clearDuplicityError();
+        return;
+      }
+
+      console.log('[Report] ✓ Todos os 3 campos preenchidos! Disparando verificação de duplicidade...');
+      console.log('[Report] Enviando para backend:', { companyId, dateValue, shiftValue });
+      
+      this.duplicityCheckPending = true;
+      this.clearDuplicityError();
+
+      // ====== PASSO 3: Verificações Silenciosas ao Backend ======
+      // 1. Verificar duplicidade (check-duplicity)
+      // 2. Verificar bloqueio de turno (check-availability)
+      
+      console.log('[Report] Chamando checkAvailability do TechnicalVisitService...');
+      await this.technicalVisit.checkAvailability(dateValue, shiftValue);
+
+      console.log('[Report] ✓ Resposta OK - Sem bloqueios encontrados');
+
+      // ====== PASSO 4: Sucesso (200 OK) - Agenda Está Livre ======
+      // Se passou na verificação, limpar erros e habilitar botão
+      console.log('[Report] ✓ Sem bloqueios encontrados - Agenda está LIVRE');
+      this.isDuplicityBlocked = false;
+      this.clearDuplicityError();
+      this.enableSubmitButton();
+      
+      // Feedback visual opcional (muito discreto)
+      console.log('[Report] Status: PRONTO PARA ENVIO');
+
+    } catch (error: any) {
+      const status = error?.status || error?.response?.status;
+      const message = (error as Error).message || 'Erro ao verificar disponibilidade';
+
+      console.error('[Report] ✗ Erro na verificação:', { status, message });
+
+      // ====== PASSO 5: Conflito (409) - Data/Turno Bloqueado ======
+      if (status === 409) {
+        console.log('[Report] ⚠ CONFLITO DETECTADO! Data/Turno bloqueado.');
+        console.log('[Report] Antes: isDuplicityBlocked =', this.isDuplicityBlocked);
+        this.isDuplicityBlocked = true;
+        console.log('[Report] Depois: isDuplicityBlocked =', this.isDuplicityBlocked);
+        this.duplicityError = message || 'Horário indisponível!';
+        console.log('[Report] duplicityError =', this.duplicityError);
+        this.disableSubmitButton();
+        
+        // Toast como feedback adicional (não obrigatório)
+        this.ui.showToast(message, 'warning', 4000);
+        
+        console.log('[Report] Status: BLOQUEADO - Botão de envio desabilitado');
+      } else {
+        // ====== Outros Erros (não bloqueam) ======
+        // Ex: erro de rede, timeout, etc.
+        console.warn('[Report] ⚠ Erro na verificação (não bloqueante):', message);
+        this.isDuplicityBlocked = false;
+        this.clearDuplicityError();
+        // Não mostrar toast em erro de rede, apenas logging
+      }
+
+    } finally {
+      this.duplicityCheckPending = false;
+    }
+  }
+
+  private clearDuplicityError(): void {
+    this.duplicityError = null;
+    this.isDuplicityBlocked = false;
+  }
+
+  private disableSubmitButton(): void {
+    try {
+      const btnSave = document.getElementById('handleSaveClickBtn') as HTMLButtonElement;
+      if (btnSave) {
+        btnSave.disabled = true;
+        btnSave.setAttribute('aria-disabled', 'true');
+        btnSave.classList.add('btn-disabled');
+        btnSave.title = 'Agenda bloqueada: já existe relatório para este turno';
+        console.log('[Report] Botão de envio desabilitado');
+      }
+    } catch (e) {
+      console.warn('[Report] Erro ao desabilitar botão:', e);
+    }
+  }
+
+  private enableSubmitButton(): void {
+    try {
+      const btnSave = document.getElementById('handleSaveClickBtn') as HTMLButtonElement;
+      if (btnSave) {
+        btnSave.disabled = false;
+        btnSave.removeAttribute('aria-disabled');
+        btnSave.classList.remove('btn-disabled');
+        btnSave.title = '';
+        console.log('[Report] Botão de envio habilitado');
+      }
+    } catch (e) {
+      console.warn('[Report] Erro ao habilitar botão:', e);
+    }
+  }
+
+  /**
+   * Método chamado quando usuário seleciona data no mat-datepicker
+   */
+  onDatePickerChange(event: any): void {
+    try {
+      const selectedDate = event.value as Date;
+      if (!selectedDate) {
+        return;
+      }
+
+      console.log('[Report] Data selecionada do datepicker:', selectedDate);
+
+      // Sincronizar com o campo de texto de data (formato YYYY-MM-DD)
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      this.selectedNextVisitDate = `${year}-${month}-${day}`;
+
+      console.log('[Report] Data sincronizada:', this.selectedNextVisitDate);
+
+      // Disparar validação de duplicidade
+      this.onReportFieldChange();
+
+      this.ui.showToast('Data selecionada', 'success', 1500);
+    } catch (e) {
+      console.error('[Report] Erro ao processar data do datepicker:', e);
+    }
+  }
+
+  /**
+   * Método para aplicar CSS classes aos dias do datepicker baseado na disponibilidade
+   * Retorna classe CSS para um dia específico
+   */
+  dateClass = (d: Date): string => {
+    try {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const dateKey = `${year}-${month}-${day}`;
+
+      // Para indicar visualmente que o componente de calendário separado tem mais informações
+      // Este é um placeholder visual - o verdadeiro filtro está no AvailabilityCalendarComponent
+      return '';
+    } catch (e) {
+      console.warn('[Report] Erro ao aplicar class ao dia:', e);
+      return '';
+    }
+  };
+
+  /**
+   * Handler para quando usuário seleciona data no calendário de disponibilidade (componente separado)
+   * Sincroniza com os campos de data e turno do formulário
+   */
+  onAvailabilityDateSelected(date: Date): void {
+    try {
+      console.log('[Report] Data selecionada do calendário de disponibilidade:', date);
+      
+      // Atualizar selectedDate para o datepicker do formulário
+      this.selectedDate = date;
+      
+      // Formatar e sincronizar com o campo de data de próxima visita
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      this.selectedNextVisitDate = `${year}-${month}-${day}`;
+      
+      console.log('[Report] Data sincronizada:', this.selectedNextVisitDate);
+      
+      // Disparar validação de duplicidade
+      this.onReportFieldChange();
+      
+      this.ui.showToast('Data da próxima visita atualizada', 'success', 2000);
+    } catch (e) {
+      console.error('[Report] Erro ao selecionar data do calendário:', e);
+      this.ui.showToast('Erro ao selecionar data', 'error', 3000);
+    }
   }
 
   onCompanyChange(e: Event): void {
@@ -525,102 +891,49 @@ export class ReportComponent implements OnInit, OnDestroy {
   private async loadLoggedTechnician(): Promise<void> {
     try {
       const me = await this.legacy.fetchUserProfile();
-      console.log('[Report] Perfil do técnico carregado completo:', JSON.stringify(me, null, 2));
-      console.table(me); // Exibe em forma de tabela para fácil visualização
       
       if (!me) {
-        console.warn('[Report] fetchUserProfile retornou null ou undefined');
         return;
       }
 
-      // Log TODAS as chaves do objeto para debug
-      const allKeys = Object.keys(me);
-      console.log('[Report] Chaves disponíveis no perfil:', allKeys);
-      console.log('[Report] Total de propriedades:', allKeys.length);
-      
-      // Log cada propriedade individualmente
-      allKeys.forEach(key => {
-        console.log(`[Report]   ${key}: ${me[key]}`);
-      });
-
       // Mapear possíveis campos de nome e conselho/registro
       const name = me.name || me.fullName || me.nome || me.usuario || '';
-      console.log('[Report] Nome extraído:', name, '| Todas as variantes:', { me_name: me.name, me_fullName: me.fullName, me_nome: me.nome, me_usuario: me.usuario });
 
       // ampliar aliases conhecidos para sigla e registro do conselho
       const councilAcronym = (
         me.councilAcronym || me.siglaConselhoClasse || me.conselhoSigla || me.sigla || me.siglaConselho || me.conselho || me.council || me.acronym || me.codigoConselho || ''
       );
-      console.log('[Report] Sigla extraída:', councilAcronym, '| Todas as variantes:', { 
-        me_councilAcronym: me.councilAcronym,
-        me_siglaConselhoClasse: me.siglaConselhoClasse,
-        me_conselhoSigla: me.conselhoSigla, 
-        me_sigla: me.sigla, 
-        me_siglaConselho: me.siglaConselho, 
-        me_conselho: me.conselho,
-        me_council: me.council,
-        me_acronym: me.acronym,
-        me_codigoConselho: me.codigoConselho
-      });
 
       const councilRegistration = (
         me.councilNumber || me.conselhoClasse || me.registration || me.registro || me.conselhoRegistro || me.registrationNumber || me.crm || me.crea || me.numeroRegistro || me.registroProfissional || ''
       );
-      console.log('[Report] Registro extraído:', councilRegistration, '| Todas as variantes:', { 
-        me_councilNumber: me.councilNumber,
-        me_conselhoClasse: me.conselhoClasse,
-        me_registration: me.registration, 
-        me_registro: me.registro, 
-        me_conselhoRegistro: me.conselhoRegistro, 
-        me_registrationNumber: me.registrationNumber,
-        me_crm: me.crm,
-        me_crea: me.crea,
-        me_numeroRegistro: me.numeroRegistro,
-        me_registroProfissional: me.registroProfissional
-      });
 
-      // Buscar os inputs com log detalhado
+      // Buscar os inputs
       const respInput = this.host.nativeElement.querySelector('#responsavel') as HTMLInputElement;
       const siglaInput = this.host.nativeElement.querySelector('#responsavelSigla') as HTMLInputElement;
       const regInput = this.host.nativeElement.querySelector('#responsavelRegistro') as HTMLInputElement;
       const techNameInput = this.host.nativeElement.querySelector('#techNameReport') as HTMLInputElement;
 
-      console.log('[Report] Inputs encontrados:', {
-        respInput: !!respInput,
-        siglaInput: !!siglaInput,
-        regInput: !!regInput,
-        techNameInput: !!techNameInput,
-        respInput_id: respInput?.id,
-        siglaInput_id: siglaInput?.id,
-        regInput_id: regInput?.id,
-        techNameInput_id: techNameInput?.id
-      });
-
       // Preenche os inputs e dispara evento 'input' para notificar possíveis listeners
       const dispatchInput = (el: HTMLInputElement | null, fieldName: string, val: string) => {
         if (!el) {
-          console.warn(`[Report] Input ${fieldName} não encontrado no DOM`);
           return;
         }
-        console.log(`[Report] Preenchendo ${fieldName} com valor: "${val}"`);
         el.value = val || '';
-        console.log(`[Report] Valor atribuído a ${fieldName}. Valor no input agora: "${el.value}"`);
         try { 
           el.dispatchEvent(new Event('input', { bubbles: true }));
           el.dispatchEvent(new Event('change', { bubbles: true }));
-          console.log(`[Report] Eventos 'input' e 'change' disparados para ${fieldName}`);
         } catch (_) {
           console.warn(`[Report] Erro ao disparar eventos para ${fieldName}`);
         }
       };
 
-      // Sempre preencher mesmo se vazio para debug
+      // Sempre preencher mesmo se vazio
       if (respInput) dispatchInput(respInput, 'responsavel', name);
       if (siglaInput) dispatchInput(siglaInput, 'responsavelSigla', councilAcronym);
       if (regInput) dispatchInput(regInput, 'responsavelRegistro', councilRegistration);
       if (techNameInput) dispatchInput(techNameInput, 'techNameReport', name);
 
-      console.log('[Report] Técnico preenchido:', { name, councilAcronym, councilRegistration });
     } catch (e) {
       console.warn('Erro ao carregar técnico logado', e);
       console.error('[Report] Stack trace:', e);
@@ -850,6 +1163,12 @@ export class ReportComponent implements OnInit, OnDestroy {
   async handleSaveClick(e: Event): Promise<void> {
     e.preventDefault();
     
+    // Verificar se há erro de duplicidade
+    if (this.isDuplicityBlocked || this.duplicityError) {
+      this.ui.showToast('Não é possível enviar: ' + (this.duplicityError || 'Conflito de agenda detectado'), 'error');
+      return;
+    }
+    
     // Validar campos mínimos
     const title = (document.getElementById('reportTitle') as HTMLInputElement)?.value || '';
     const visitDate = (document.getElementById('dataInspecao') as HTMLInputElement)?.value || '';
@@ -858,6 +1177,35 @@ export class ReportComponent implements OnInit, OnDestroy {
     if (!title || !visitDate || !location) {
       this.ui.showToast('Preencha os campos obrigatórios: Título, Data da Visita e Local.', 'warning');
       return;
+    }
+
+    // Validar agenda ANTES de abrir modal de assinatura
+    try {
+      // Se houver visitId, validar conflito de agenda
+      if (this.visitId) {
+        console.log('[Report] Validando relatório com visitId:', this.visitId);
+        
+        // Formatar data para YYYY-MM-DD se necessário
+        const formattedDate = this.formatDate(visitDate);
+        const shift = this.selectedNextVisitShift || 'MANHA'; // Usar turno selecionado ou padrão
+        
+        // Chamar validação no backend
+        await this.agendaValidation.validateReportSubmission(this.visitId, formattedDate, shift);
+        
+        console.log('[Report] Validação de agenda passou');
+        this.ui.showToast('✓ Agendamento validado com sucesso!', 'success', 2000);
+      }
+    } catch (validationError: any) {
+      const errorMsg = (validationError as Error).message || 'Erro na validação de agenda';
+      console.error('[Report] Erro na validação de agenda:', errorMsg);
+      
+      // Se for bloqueio de agenda (409), mostrar mensagem específica
+      if (errorMsg.includes('BLOQUEIO DE AGENDA')) {
+        this.ui.showToast(errorMsg, 'error', 6000);
+      } else {
+        this.ui.showToast(`Falha na validação: ${errorMsg}`, 'warning', 4000);
+      }
+      return; // Bloquear avanço
     }
 
     // Capturar geolocalização antes de abrir o modal de assinatura
@@ -943,6 +1291,16 @@ export class ReportComponent implements OnInit, OnDestroy {
         const nextVisit = (document.getElementById('nextVisitDate') as HTMLInputElement)?.value || '';
         payload.nextVisitDate = this.formatDate(nextVisit) || null;
       } catch(_) { payload.nextVisitDate = null; }
+
+      // campo opcional: turno da próxima visita
+      try {
+        console.log('[report] selectedNextVisitShift from component:', this.selectedNextVisitShift);
+        payload.nextVisitShift = this.selectedNextVisitShift && this.selectedNextVisitShift.trim() ? this.selectedNextVisitShift : null;
+        console.log('[report] nextVisitShift final payload value:', payload.nextVisitShift);
+      } catch(e) { 
+        console.error('[report] error capturing nextVisitShift:', e);
+        payload.nextVisitShift = null; 
+      }
 
       const resp = await this.report.postTechnicalVisit(payload);
       if (!resp) throw new Error('Resposta vazia do servidor');
@@ -1057,6 +1415,16 @@ export class ReportComponent implements OnInit, OnDestroy {
         const nextVisit = (document.getElementById('nextVisitDate') as HTMLInputElement)?.value || '';
         (payload as any).nextVisitDate = this.formatDate(nextVisit) || null;
       } catch(_) { (payload as any).nextVisitDate = null; }
+
+      // campo opcional: turno da próxima visita
+      try {
+        console.log('[report] selectedNextVisitShift from component:', this.selectedNextVisitShift);
+        (payload as any).nextVisitShift = this.selectedNextVisitShift && this.selectedNextVisitShift.trim() ? this.selectedNextVisitShift : null;
+        console.log('[report] nextVisitShift final payload value:', (payload as any).nextVisitShift);
+      } catch(e) { 
+        console.error('[report] error capturing nextVisitShift:', e);
+        (payload as any).nextVisitShift = null; 
+      }
 
       console.log('[report] payload to send', payload);
       console.log('[report] findings count:', payload.findings.length);
@@ -1340,6 +1708,46 @@ export class ReportComponent implements OnInit, OnDestroy {
         reject(new Error('Falha ao ler arquivo'));
       };
       reader.readAsDataURL(file);
+    });
+  }
+
+  private resizeImageToBase64(base64String: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        // 6.8 cm = ~256 pixels (assumindo 96 DPI)
+        const maxWidth = 256;
+        let width = img.width;
+        let height = img.height;
+
+        // Calcula a proporção
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+
+        // Cria um canvas com as novas dimensões
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+
+        // Desenha a imagem redimensionada no canvas
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Não foi possível obter contexto 2D do canvas'));
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Converte para base64 com qualidade reduzida (0.85 = 85%)
+        const resizedBase64 = canvas.toDataURL('image/jpeg', 0.85);
+        console.log('[Report] Imagem (base64) redimensionada para', width, 'x', height, 'pixels');
+        resolve(resizedBase64);
+      };
+      img.onerror = () => {
+        reject(new Error('Falha ao carregar imagem base64'));
+      };
+      img.src = base64String;
     });
   }
 

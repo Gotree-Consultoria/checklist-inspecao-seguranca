@@ -16,7 +16,8 @@ describe('AgendaComponent', () => {
       date: '2025-11-15',
       type: 'EVENTO',
       referenceId: 1,
-      description: 'Planejamento final'
+      description: 'Planejamento final',
+      shift: 'MANHA'
     },
     {
       title: 'Próxima Visita: Empresa X',
@@ -24,7 +25,8 @@ describe('AgendaComponent', () => {
       type: 'VISITA',
       referenceId: 2,
       unitName: 'Unidade A',
-      sectorName: 'Setor Técnico'
+      sectorName: 'Setor Técnico',
+      shift: 'MANHA'
     },
     {
       title: 'Próxima Visita: Empresa Y',
@@ -32,7 +34,8 @@ describe('AgendaComponent', () => {
       type: 'VISITA_REAGENDADA',
       referenceId: 3,
       sourceVisitId: 999,
-      originalVisitDate: '2025-11-25'
+      originalVisitDate: '2025-11-25',
+      shift: 'MANHA'
     }
   ];
 
@@ -200,7 +203,9 @@ describe('AgendaComponent', () => {
       expect(agendaService.createEvento).toHaveBeenCalledWith({
         title: data.title,
         description: data.description || null,
-        eventDate: data.date
+        eventDate: data.date,
+        shift: 'MANHA',
+        clientName: null
       });
       expect(uiService.showToast).toHaveBeenCalledWith(
         jasmine.stringContaining('criado'),
@@ -239,7 +244,9 @@ describe('AgendaComponent', () => {
           title: data.title,
           description: data.description || null,
           eventDate: data.date,
-          eventType: 'EVENTO'
+          eventType: 'EVENTO',
+          shift: 'MANHA',
+          clientName: null
         }
       );
       expect(uiService.showToast).toHaveBeenCalledWith(

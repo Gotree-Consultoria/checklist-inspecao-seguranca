@@ -11,13 +11,18 @@ export interface AgendaModalData {
   description?: string | null;
   date?: string;
   reason?: string | null;
-  // campos extras para visualização
+  shift?: 'MANHA' | 'TARDE'; // Turno do evento/visita (agora)
+  
+  // campos extras para visualização (dados híbridos)
   type?: string | null;
   referenceId?: number | null;
+  clientName?: string | null;      // Nome da empresa
   unitName?: string | null;
   sectorName?: string | null;
   originalVisitDate?: string | null;
-  sourceVisitId?: number | null;
+  sourceVisitId?: number | null;   // Indica se é Visita Oficial
+  nextVisitDate?: string | null;   // Data da próxima visita agendada
+  nextVisitShift?: 'MANHA' | 'TARDE'; // Turno da próxima visita agendada
   responsibleName?: string | null;
 }
 
@@ -59,17 +64,33 @@ export interface AgendaModalData {
 
                 <div class="meta-grid">
                   <div class="meta-item">
+                    <div class="label">Cliente/Empresa</div>
+                    <div class="value">{{ formData.clientName || '—' }}</div>
+                  </div>
+                  <div class="meta-item">
+                    <div class="label">Turno</div>
+                    <div class="value">{{ formData.shift === 'MANHA' ? 'Manhã' : formData.shift === 'TARDE' ? 'Tarde' : '—' }}</div>
+                  </div>
+                  <div class="meta-item">
                     <div class="label">Data Original</div>
                     <div class="value">{{ formData.originalVisitDate ? formatDateToBrazil(formData.originalVisitDate) : '—' }}</div>
+                  </div>
+                  <div class="meta-item">
+                    <div class="label">Próxima Visita</div>
+                    <div class="value">{{ formData.nextVisitDate ? formatDateToBrazil(formData.nextVisitDate) : '—' }}</div>
+                  </div>
+                  <div class="meta-item">
+                    <div class="label">Turno Próxima Visita</div>
+                    <div class="value">{{ formData.nextVisitShift === 'MANHA' ? 'Manhã' : formData.nextVisitShift === 'TARDE' ? 'Tarde' : '—' }}</div>
                   </div>
                   <div class="meta-item">
                     <div class="label">Visit ID Origem</div>
                     <div class="value">{{ formData.sourceVisitId || '—' }}</div>
                   </div>
-                    <div class="meta-item">
-                      <div class="label">Responsável</div>
-                      <div class="value">{{ formData.responsibleName || '—' }}</div>
-                    </div>
+                  <div class="meta-item">
+                    <div class="label">Responsável</div>
+                    <div class="value">{{ formData.responsibleName || '—' }}</div>
+                  </div>
                 </div>
                 </div>
 
@@ -114,6 +135,26 @@ export interface AgendaModalData {
                     <label for="modalDate">Data *</label>
                     <input id="modalDate" type="date" [(ngModel)]="formData.date" required />
                     <small class="error" *ngIf="errors['date']">{{ errors['date'] }}</small>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="modalShift">Turno</label>
+                    <select id="modalShift" [(ngModel)]="formData.shift">
+                      <option value="MANHA">Manhã</option>
+                      <option value="TARDE">Tarde</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="modalClientName">Empresa/Cliente</label>
+                    <input
+                      id="modalClientName"
+                      type="text"
+                      [(ngModel)]="formData.clientName"
+                      placeholder="Nome da empresa"
+                    />
                   </div>
                 </div>
 
@@ -259,7 +300,9 @@ export interface AgendaModalData {
     .form-group { flex:1; display:flex; flex-direction:column; }
     .form-group label { font-weight:600; color:#475569; margin-bottom:6px; }
     .form-group input, .form-group textarea { padding:8px 10px; border-radius:8px; border:1px solid #e6eef7; font-size:0.95rem; }
+    .form-group select { padding:8px 10px; border-radius:8px; border:1px solid #e6eef7; font-size:0.95rem; background-color: #fff; cursor: pointer; }
     .form-group input:focus, .form-group textarea:focus { outline: none; box-shadow: 0 0 0 3px rgba(59,130,246,0.06); border-color:#93c5fd; }
+    .form-group select:focus { outline: none; box-shadow: 0 0 0 3px rgba(59,130,246,0.06); border-color:#93c5fd; }
     .error { color:#b91c1c; font-size:0.85rem; margin-top:6px; }
 
     .modal-footer { padding: 14px 20px; border-top: 1px solid #f0f0f0; display:flex; align-items:center; gap:12px; }
@@ -295,13 +338,15 @@ export class AgendaModalComponent {
     description: null,
     date: '',
     reason: null,
+    shift: 'MANHA',
     type: null,
     referenceId: null,
+    clientName: null,
     unitName: null,
     sectorName: null,
     originalVisitDate: null,
-    sourceVisitId: null
-    , responsibleName: null
+    sourceVisitId: null,
+    responsibleName: null
   };
 
   errors: Record<string, string> = {};
@@ -338,13 +383,15 @@ export class AgendaModalComponent {
       description: initialData?.description || null,
       date: initialData?.date || '',
       reason: initialData?.reason || null,
+      shift: initialData?.shift || 'MANHA',
       type: initialData?.type || null,
       referenceId: initialData?.referenceId || null,
+      clientName: initialData?.clientName || null,
       unitName: initialData?.unitName || null,
       sectorName: initialData?.sectorName || null,
       originalVisitDate: initialData?.originalVisitDate || null,
-      sourceVisitId: initialData?.sourceVisitId || null
-      , responsibleName: initialData?.responsibleName || null
+      sourceVisitId: initialData?.sourceVisitId || null,
+      responsibleName: initialData?.responsibleName || null
     };
     setTimeout(() => {
       try {

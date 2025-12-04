@@ -4,6 +4,7 @@ import { LegacyService } from './legacy.service';
 /**
  * Interface que representa a resposta da API de agenda.
  * Contém informações sobre eventos, visitas e visitas reagendadas.
+ * Suporta lógica híbrida: Eventos Manuais + Visitas Técnicas Oficiais
  */
 export interface AgendaResponseDTO {
   title: string;
@@ -12,10 +13,19 @@ export interface AgendaResponseDTO {
   type: 'EVENTO' | 'VISITA' | 'VISITA_REAGENDADA' | null;
   referenceId: number;
   description?: string | null;
+  shift?: 'MANHA' | 'TARDE'; // Turno do evento/visita (agora)
+  
+  // --- Dados Híbridos ---
+  clientName?: string | null;      // Nome da empresa (oficial ou manual)
   unitName?: string | null;
   sectorName?: string | null;
+  
+  // --- Visita Oficial ---
+  sourceVisitId?: number | null;   // Se existir, é uma Visita Técnica Oficial
   originalVisitDate?: string | null;
-  sourceVisitId?: number | null;
+  nextVisitDate?: string | null;   // Data da próxima visita agendada
+  nextVisitShift?: 'MANHA' | 'TARDE'; // Turno da próxima visita agendada
+  
   // nome do usuário responsável pelo evento (presente no endpoint admin)
   responsibleName?: string | null;
 }
@@ -56,11 +66,11 @@ export class AgendaService {
   /**
    * Cria um novo evento na agenda.
    * 
-   * @param payload Objeto com title, description e eventDate
+   * @param payload Objeto com title, description, eventDate, shift e clientName
    * @returns Promise contendo o AgendaResponseDTO do evento criado
    * @throws Error se a requisição falhar
    */
-  async createEvento(payload: { title: string; description?: string | null; eventDate: string; }): Promise<AgendaResponseDTO> {
+  async createEvento(payload: { title: string; description?: string | null; eventDate: string; shift?: 'MANHA' | 'TARDE'; clientName?: string | null; }): Promise<AgendaResponseDTO> {
     const url = `${this.baseUrl()}/eventos`;
     const resp = await fetch(url, { 
       method: 'POST', 
@@ -78,11 +88,11 @@ export class AgendaService {
    * Atualiza um evento existente na agenda.
    * 
    * @param id Identificador do evento (AgendaEvent ID)
-   * @param payload Objeto com title, description, eventDate e eventType
+   * @param payload Objeto com title, description, eventDate, eventType, shift e clientName
    * @returns Promise contendo o AgendaResponseDTO do evento atualizado
    * @throws Error se a requisição falhar
    */
-  async updateEvento(id: number | string, payload: { title: string; description?: string | null; eventDate: string; eventType: string; }): Promise<AgendaResponseDTO> {
+  async updateEvento(id: number | string, payload: { title: string; description?: string | null; eventDate: string; eventType: string; shift?: 'MANHA' | 'TARDE'; clientName?: string | null; }): Promise<AgendaResponseDTO> {
     const url = `${this.baseUrl()}/eventos/${id}`;
     const resp = await fetch(url, { 
       method: 'PUT', 

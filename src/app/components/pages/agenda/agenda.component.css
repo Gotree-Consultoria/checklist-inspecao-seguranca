@@ -360,6 +360,17 @@
   font-weight: 600;
 }
 
+.shift-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: #f3f4f6;
+  color: #374151;
+  margin: 0 4px;
+}
+
 .agenda-item .desc { 
   margin-top: 8px; 
   color: #666;

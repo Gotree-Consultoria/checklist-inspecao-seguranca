@@ -1,0 +1,57 @@
+<div class="availability-calendar-container">
+  <!-- Legend -->
+  <div class="availability-legend">
+    <div class="legend-item">
+      <div class="legend-color morning"></div>
+      <span>Manhã ocupada</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color afternoon"></div>
+      <span>Tarde ocupada</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color fullday"></div>
+      <span>Dia cheio</span>
+    </div>
+  </div>
+
+  <!-- Calendar Header -->
+  <div class="calendar-header">
+    <button class="nav-button" (click)="previousMonth()">← Anterior</button>
+    <h3 class="calendar-title">{{ monthYearDisplay }}</h3>
+    <button class="nav-button" (click)="nextMonth()">Próximo →</button>
+  </div>
+
+  <!-- Calendar Grid -->
+  <div class="calendar-grid">
+    <!-- Weekday Headers -->
+    <div class="calendar-weekdays">
+      <div *ngFor="let weekDay of weekDays" class="weekday">
+        {{ weekDay }}
+      </div>
+    </div>
+
+    <!-- Calendar Days -->
+    <div class="calendar-days">
+      <!-- Empty Days (before 1st day of month) -->
+      <div *ngFor="let empty of emptyDays" class="calendar-day empty"></div>
+
+      <!-- Days of Month -->
+      <div
+        *ngFor="let day of daysInMonth"
+        class="calendar-day"
+        [class.today]="isToday(day)"
+        [class.selected]="isSelected(day)"
+        [class.disabled]="isFullDayBusy(day)"
+        [title]="getDayTooltip(day)"
+        (click)="selectDay(day)"
+      >
+        <span class="day-number">{{ day }}</span>
+        <div
+          *ngIf="getIndicatorClass(day)"
+          [ngClass]="['availability-indicator', 'indicator-' + getIndicatorClass(day).split('-')[1]]"
+        ></div>
+      </div>
+    </div>
+  </div>
+</div>
