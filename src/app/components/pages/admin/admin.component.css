@@ -287,11 +287,13 @@
 /* Ações da Tabela */
 .actions-col {
   text-align: center;
-  width: auto;
+  width: 140px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .btn-action {
@@ -390,11 +392,13 @@
 
 .companies-table .actions-col {
   text-align: center;
-  width: auto;
+  width: 140px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .btn-action {
@@ -1149,7 +1153,7 @@ label.btn.disabled {
 /* Dropdown Content */
 .dropdown-content {
   max-height: 100vh;
-  overflow: hidden;
+  overflow: visible;
   animation: slideDown 0.3s ease;
 }
 
@@ -1462,7 +1466,7 @@ label.btn.disabled {
 /* Dropdown Content */
 .dropdown-content {
   max-height: 100vh;
-  overflow: hidden;
+  overflow: visible;
   animation: slideDown 0.3s ease;
 }
 

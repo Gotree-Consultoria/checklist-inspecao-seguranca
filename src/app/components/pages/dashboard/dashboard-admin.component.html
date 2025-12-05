@@ -142,8 +142,17 @@
         <div class="agenda-list mt-16">
           <div *ngIf="adminAgenda && adminAgenda.length; else noTeamAgenda">
             <div class="agenda-item" *ngFor="let ev of adminAgenda">
-              <div class="agenda-date"><div class="dt-day">{{ ev.date.slice(8,10) }}</div><div class="dt-month">{{ ev.date.slice(5,7) }}</div></div>
-              <div class="agenda-body"><div class="agenda-title">{{ ev.title }}</div><div class="agenda-meta">{{ ev.date.slice(0,10) }} • <strong>{{ ev.responsibleName || '-' }}</strong></div></div>
+              <div class="agenda-date">
+                <div class="dt-day">{{ ev.date.slice(8,10) }}</div>
+                <div class="dt-divider"></div>
+                <div class="dt-month">{{ ev.date.slice(5,7) }}</div>
+                <div class="dt-divider"></div>
+                <div class="dt-year">{{ ev.date.slice(2,4) }}</div>
+              </div>
+              <div class="agenda-body">
+                <div class="agenda-title">{{ ev.title }}</div>
+                <div class="agenda-meta">{{ formatDateToBrazil(ev.date) }} • <strong>{{ ev.responsibleName || '-' }}</strong></div>
+              </div>
             </div>
           </div>
           <ng-template #noTeamAgenda>
